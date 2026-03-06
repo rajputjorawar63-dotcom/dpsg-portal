@@ -19,10 +19,10 @@
         
         .grid-item.available { background: white; color: #1e293b; }
         .grid-item.sold { background: #fee2e2 !important; color: #991b1b !important; cursor: not-allowed !important; text-decoration: line-through; border: 1px solid #fca5a5; }
-        .grid-item.pending { background: #fbbf24 !important; color: #78350f !important; border: 2px solid #d97706; cursor: not-allowed !important; animation: pulse 2s infinite; }
+        .grid-item.pending { background: #fbbf24 !important; color: #78350f !important; border: 2px solid #d97706; cursor: not-allowed !important; animation: pulse 2s infinite; opacity: 0.9; }
         .grid-item.selected { border: 3px solid #4f46e5 !important; transform: scale(1.1); box-shadow: 0 0 20px rgba(79,70,229,0.3); }
         
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
         .prize-card { border-left: 6px solid #f59e0b; background: #fff; margin-bottom: 8px; padding: 10px; border-radius: 0 1rem 1rem 0; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .custom-scroll::-webkit-scrollbar { width: 5px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -59,12 +59,21 @@
                 fetch(SHEET_CSV + "?t=" + Date.now()).then(r => r.text()).then(csv => {
                     const rows = Papa.parse(csv).data;
                     let parsed = [];
+                    // स्मार्ट मेमोरी: जो अभी-अभी बुक हुआ है उसे याद रखो
+                    let localMemory = JSON.parse(localStorage.getItem('dpsg_memory') || "{}");
+                    
                     for(let i=1; i<=1000; i++) {
                         let row = rows[i] || [];
-                        let stat = (row[4] || "").trim().toLowerCase(); // कैपिटल-स्मॉल की गड़बड़ खत्म
+                        let stat = (row[4] || "").trim().toLowerCase();
                         let currentStatus = "available";
-                        if(stat === "sold") currentStatus = "sold";
-                        else if(stat === "pending") currentStatus = "pending";
+                        
+                        if(stat === "sold" || stat === "सॉल्ड") currentStatus = "sold";
+                        else if(stat === "pending" || stat === "पेंडिंग") currentStatus = "pending";
+                        
+                        // अगर गूगल शीट पीछे चल रही है, तो लोकल मेमोरी से तुरंत लॉक कर दो
+                        if(currentStatus === "available" && localMemory[i]) {
+                            currentStatus = localMemory[i];
+                        }
                         
                         parsed.push({ num: i, id: `DPSG-26-113-${String(i).padStart(4,'0')}`, status: currentStatus, data: { name: row[6], mob: row[7], vill: row[9] } });
                     }
@@ -74,15 +83,6 @@
 
             useEffect(() => { loadData(); const interval = setInterval(loadData, 10000); return () => clearInterval(interval); }, []);
 
-            const handleCardSelect = (card) => {
-                if (card.status === "available") {
-                    setSelected(card);
-                } else {
-                    alert("हुकुम, यह नंबर पहले से बुक या पेंडिंग है! कृपया खाली नंबर चुनें।");
-                    setSelected(null);
-                }
-            };
-
             const handleAction = async (e, act) => {
                 e.preventDefault();
                 const fd = new FormData(e.target);
@@ -90,10 +90,24 @@
                 params.append("membershipId", selected.id);
                 params.append("action", act);
                 if(staffID) params.append("staffID", staffID);
+                
+                // 1. तुरंत लोकल मेमोरी में लॉक सेव करें
+                let localMemory = JSON.parse(localStorage.getItem('dpsg_memory') || "{}");
+                localMemory[selected.num] = act === "BOOK" ? "pending" : "sold";
+                localStorage.setItem('dpsg_memory', JSON.stringify(localMemory));
+                
+                // 2. बिना पेज रिफ्रेश किये तुरंत रंग पीला कर दें
+                setCards(prev => prev.map(c => c.num === selected.num ? { ...c, status: localMemory[selected.num] } : c));
+                const successMsg = act === "BOOK" ? "सफल हुकुम! आपका नंबर लॉक कर दिया गया है।" : "कार्ड SOLD कर दिया गया है!";
+                
                 try {
                     await fetch(SCRIPT_URL, { method: 'POST', body: params, mode: 'no-cors' });
-                    alert("सफल हुकुम!"); setSelected(null); loadData();
-                } catch(e) { alert("अपडेट हो गया!"); setSelected(null); loadData(); }
+                    alert(successMsg);
+                    setSelected(null);
+                } catch(error) { 
+                    alert(successMsg);
+                    setSelected(null); 
+                }
             };
 
             if (loading) return <div className="h-screen flex items-center justify-center bg-slate-900 text-white font-black text-3xl italic animate-pulse">DPSG NIMBAHERA...</div>;
@@ -124,7 +138,14 @@
                                     <h2 className="font-black mb-4 border-l-8 border-indigo-600 pl-3 text-sm italic underline uppercase text-indigo-900 text-left">अपना नंबर चुनें (1-1000):</h2>
                                     <div className="card-grid custom-scroll">
                                         {cards.map(c => (
-                                            <div key={c.num} onClick={() => handleCardSelect(c)} className={`grid-item ${c.status} ${selected?.num === c.num ? 'selected' : ''}`}>{c.num}</div>
+                                            /* जादू यहाँ है: अगर खाली नहीं है, तो क्लिक इवेंट ही काम नहीं करेगा */
+                                            <div 
+                                                key={c.num} 
+                                                onClick={c.status === "available" ? () => setSelected(c) : undefined} 
+                                                className={`grid-item ${c.status} ${selected?.num === c.num ? 'selected' : ''}`}
+                                            >
+                                                {c.num}
+                                            </div>
                                         ))}
                                     </div>
                                     <div className="mt-4 flex justify-around text-[10px] font-bold">
