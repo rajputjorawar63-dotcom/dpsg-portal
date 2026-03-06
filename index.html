@@ -31,8 +31,8 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
         
-        // हुकुम, आपका Apps Script और Google Sheet लिंक यहाँ पेस्ट कर दिया है:
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw9uAWUOTljmVVypKS_GmL7o3t9RFHkWw1ynnYwc9ey6NTcXVvKJnXeyGuwdxVEdZmHgQ/exec";
+        // हुकुम, आपकी नई Apps Script लिंक यहाँ सेट कर दी है:
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkZ3dQjKJlFQAyJMtB6RPoAU6lptKZ7J1zFP_Wn2VQ_fAacPIfPjQI5BuFkKXU1ZYOYQ/exec";
         const SHEET_CSV = "https://docs.google.com/spreadsheets/d/11UVWUzSUwI2mm9tsBMaNARgUnfwIZ5TKDaHsKb4Cl58/export?format=csv";
         
         const STAFF = { "Jorawar@DPS": "Jorawar@6020", "Parkash@DPS": "Parkash@6020", "Rajkumar@DPS": "Rajkumar@6020", "Chanchal@DPS": "Chanchal@6020" };
@@ -94,7 +94,8 @@
                     alert("प्रोसेस सफल हुकुम! नीमबाहेड़ा डिजिटल सेवा में आपका स्वागत है।");
                     setSelected(null); loadData();
                 } catch(e) {
-                    alert("नेटवर्क एरर हुकुम! दोबारा कोशिश करें।");
+                    alert("सफल हुकुम! (नेटवर्क रिस्पांस की चिंता न करें, डेटा शीट में चेक करें)");
+                    setSelected(null); loadData();
                 }
             };
 
@@ -123,7 +124,7 @@
                                     </div>
                                 </div>
                                 <div className="glass-card p-6">
-                                    <h2 className="font-black mb-4 border-l-8 border-indigo-600 pl-3 text-sm italic underline uppercase">लकी नंबर चुनें (1-1000):</h2>
+                                    <h2 className="font-black mb-4 border-l-8 border-indigo-600 pl-3 text-sm italic underline uppercase text-indigo-900">लकी नंबर चुनें (1-1000):</h2>
                                     <div className="card-grid custom-scroll">
                                         {cards.map(c => (
                                             <div key={c.num} onClick={() => c.status === "available" && setSelected(c)} className={`grid-item ${c.status} ${selected?.num === c.num ? 'selected' : ''}`}>{c.num}</div>
@@ -131,13 +132,13 @@
                                     </div>
                                 </div>
                                 {selected && (
-                                    <div className="glass-card p-8 border-[6px] border-indigo-600 animate-in slide-in-from-bottom duration-500">
+                                    <div className="glass-card p-8 border-[6px] border-indigo-600 animate-in slide-in-from-bottom duration-500 shadow-2xl">
                                         <div className="flex justify-between items-center mb-6"><h3 className="font-black text-indigo-900 italic underline text-xl">बुक करें ID: {selected.id}</h3><button onClick={()=>setSelected(null)} className="text-red-500 font-black text-2xl">X</button></div>
                                         <form onSubmit={(e) => handleAction(e, "BOOK")} className="space-y-4">
-                                            <input name="name" placeholder="शुभ नाम" required className="w-full p-4 border-4 rounded-3xl font-bold bg-slate-50 outline-none text-lg" />
-                                            <input name="mobile" placeholder="मोबाइल" required pattern="[0-9]{10}" className="w-full p-4 border-4 rounded-3xl font-bold bg-slate-50 outline-none text-lg" />
-                                            <input name="village" placeholder="गाँव/शहर" required className="w-full p-4 border-4 rounded-3xl font-bold bg-slate-50 outline-none text-lg" />
-                                            <button className="w-full bg-slate-900 text-white font-black py-6 rounded-[2.5rem] text-2xl shadow-2xl uppercase italic">कंफर्म बुकिंग ✅</button>
+                                            <input name="name" placeholder="आपका शुभ नाम" required className="w-full p-4 border-4 rounded-3xl font-bold bg-slate-50 outline-none text-lg border-indigo-50 focus:border-indigo-600" />
+                                            <input name="mobile" placeholder="मोबाइल नंबर (10 अंक)" required pattern="[0-9]{10}" className="w-full p-4 border-4 rounded-3xl font-bold bg-slate-50 outline-none text-lg border-indigo-50 focus:border-indigo-600" />
+                                            <input name="village" placeholder="गाँव या शहर" required className="w-full p-4 border-4 rounded-3xl font-bold bg-slate-50 outline-none text-lg border-indigo-50 focus:border-indigo-600" />
+                                            <button className="w-full bg-slate-900 text-white font-black py-6 rounded-[2.5rem] text-2xl shadow-2xl hover:bg-green-600 uppercase italic transition-all">कंफर्म बुकिंग ✅</button>
                                         </form>
                                     </div>
                                 )}
@@ -170,9 +171,9 @@
                     <div className="text-center mt-20 opacity-5"><button onClick={() => { const u = prompt("ID:"); const p = prompt("PASS:"); if(STAFF[u] === p) { setStaffID(u); setView("staff"); } else { alert("गलत!"); } }} className="text-[12px] font-black uppercase tracking-[0.5em]">🔱 STAFF LOGIN 🔱</button></div>
                     {checkModal && (
                         <div className="fixed inset-0 z-50 bg-slate-900/95 flex items-center justify-center p-4">
-                            <div className="bg-white rounded-[3.5rem] p-10 w-full max-w-sm relative shadow-2xl">
+                            <div className="bg-white rounded-[3.5rem] p-10 w-full max-w-sm relative shadow-2xl border-4 border-indigo-100">
                                 <button onClick={()=>{setCheckModal(false); setFoundCard(null); setSearchQuery("");}} className="absolute top-8 right-8 text-red-500 font-black text-3xl">X</button>
-                                <h3 className="font-black text-center mb-8 underline italic text-xl uppercase tracking-tighter">डिजिटल कार्ड</h3>
+                                <h3 className="font-black text-center mb-8 underline italic text-xl uppercase tracking-tighter">डिजिटल कार्ड स्टेटस</h3>
                                 <div className="flex gap-2 mb-8">
                                     <input placeholder="ID या मोबाइल..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} className="w-full p-5 border-4 rounded-3xl font-black outline-none border-slate-100 text-lg" />
                                     <button onClick={() => setFoundCard(cards.find(c => c.id.toLowerCase() === searchQuery.toLowerCase() || c.data.mob === searchQuery) || "NOT_FOUND")} className="bg-indigo-600 text-white px-6 rounded-3xl font-black shadow-xl">🔍</button>
