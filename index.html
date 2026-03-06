@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPSG Master Portal - Digital Seva Nimbahera</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap');
+        body { font-family: 'Poppins', sans-serif; background: #f1f5f9; margin: 0; }
+        .glass-card { background: white; border-radius: 2.5rem; box-shadow: 0 15px 45px rgba(0,0,0,0.1); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; max-height: 450px; overflow-y: auto; padding: 15px; background: #fff; border-radius: 1.5rem; border: 2px inset #edf2f7; }
+        .grid-item { padding: 15px 2px; text-align: center; border-radius: 12px; font-weight: 900; cursor: pointer; border: 2px solid transparent; transition: 0.2s; font-size: 13px; border: 1px solid #eee; }
+        .grid-item.sold { background: #fee2e2; color: #991b1b; cursor: not-allowed; text-decoration: line-through; }
+        .grid-item.pending { background: #fef3c7; color: #92400e; animation: pulse 2s infinite; }
+        .grid-item.selected { border: 3px solid #4f46e5 !important; transform: scale(1.1); box-shadow: 0 0 20px rgba(79,70,229,0.3); }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .prize-card { border-left: 6px solid #f59e0b; background: #fff; margin-bottom: 8px; padding: 10px; border-radius: 0 1rem 1rem 0; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        @media print { 
+            body * { visibility: hidden; } 
+            #digital-card, #digital-card * { visibility: visible; } 
+            #digital-card { position: absolute; left: 0; top: 0; width: 100%; border: 6px solid #1e293b; padding: 40px; border-radius: 40px; background: #fff !important; color: #000 !important; } 
+            .no-print { display: none !important; } 
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // आपका असली सर्वर लिंक और शीट डेटा
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw9uAWUOTljmVVypKS_GmL7o3t9RFHkWw1ynnYwc9ey6NTcXVvKJnXeyGuwdxVEdZmHgQ/exec";
+        const SHEET_CSV = "https://docs.google.com/spreadsheets/d/11UVWUzSUwI2mm9tsBMaNARgUnfwIZ5TKDaHsKb4Cl58/export?format=csv";
+        
+        // स्टाफ लॉगिन हुकुम
+        const STAFF = { 
+            "Jorawar@DPS": "Jorawar@6020", 
+            "Parkash@DPS": "Parkash@6020", 
+            "Rajkumar@DPS": "Rajkumar@6020", 
+            "Chanchal@DPS": "Chanchal@6020" 
+        };
+
+        // पूरे 51 इनामों की लिस्ट (मिक्सर हटा दिया गया है)
+        const generatePrizes = () => {
+            const list = [
+                { r: "1", n: "नगद ₹5000 💰", m: "बम्पर धमाका इनाम" },
+                { r: "2", n: "LED TV 32 इंच 📺", m: "शानदार डिजिटल अनुभव" },
+                { r: "3", n: "किड्स साइकिल 🚲", m: "नन्हे बच्चों की सवारी" },
+                { r: "4", n: "सीलिंग पंखा 🌀", m: "गर्मियों का सबसे बड़ा तोहफा" },
+                { r: "5", n: "बाटी ओवन 🍳", m: "राजस्थानी रसोई का मान" },
+                { r: "6", n: "इलेक्ट्रिक प्रेस 👔", m: "कपड़ों की बढ़िया चमक" },
+                { r: "7", n: "दीवार घड़ी ⏰", m: "सटीक समय की पहचान" },
+                { r: "8", n: "डिनर सेट 🍽️", m: "पारिवारिक सत्कार हेतु" },
+                { r: "9", n: "हॉट पॉट सैट 🍲", m: "गरमा-गरम खाने का आनंद" },
+                { r: "10", n: "इंडक्शन चूल्हा ⚡", m: "आधुनिक रसोई की शान" }
+            ];
+            for (let i = 11; i <= 51; i++) {
+                list.push({ r: i.toString(), n: `सरप्राइज गिफ्ट ${i} 🎁`, m: "DPSG स्पेशल उपहार" });
+            }
+            return list;
+        };
+
+        const prizeList = generatePrizes();
+
+        const App = () => {
+            const [cards, setCards] = useState([]);
+            const [selected, setSelected] = useState(null);
+            const [view, setView] = useState("user");
+            const [loading, setLoading] = useState(true);
+            const [staffID, setStaffID] = useState("");
+            const [checkModal, setCheckModal] = useState(false);
+            const [searchQuery, setSearchQuery] = useState("");
+            const [foundCard, setFoundCard] = useState(null);
+
+            const loadData = () => {
+                fetch(SHEET_CSV + "?t=" + Date.now()).then(r => r.text()).then(csv => {
+                    const rows = Papa.parse(csv).data;
+                    let parsed = [];
+                    for(let i=1; i<=1000; i++) {
+                        let row = rows[i] || [];
+                        let stat = (row[4] || "").trim();
+                        parsed.push({ 
+                            num: i, 
+                            id: `DPSG-26-113-${String(i).padStart(4,'0')}`, 
+                            status: stat === "Sold" ? "sold" : (stat === "Pending" ? "pending" : "available"), 
+                            data: { name: row[6], mob: row[7], vill: row[9] } 
+                        });
+                    }
+                    setCards(parsed); setLoading(false);
+                });
+            };
+
+            useEffect(() => { loadData(); const itv = setInterval(loadData, 20000); return () => clearInterval(itv); }, []);
+
+            const handleAction = async (e, act) => {
+                e.preventDefault();
+                const fd = new FormData(e.target);
+                const params = new URLSearchParams(fd);
+                params.append("membershipId", selected.id);
+                params.append("action", act);
+                if(staffID) params.append("staffID", staffID);
+                await fetch(SCRIPT_URL, { method: 'POST', body: params, mode: 'no-cors' });
+                alert("प्रोसेस सफल हुकुम! नीमबाहेड़ा डिजिटल सेवा में आपका स्वागत है।");
+                setSelected(null); loadData();
+            };
+
+            if (loading) return <div className="h-screen flex flex-col items-center justify-center bg-slate-900 text-white font-black text-3xl italic animate-pulse tracking-tighter uppercase">DPSG NIMBAHERA...</div>;
+
+            return (
+                <div className="max-w-md mx-auto pb-20">
+                    <header className="bg-slate-900 text-white p-10 rounded-b-[4rem] text-center shadow-2xl border-b-[10px] border-amber-500 relative">
+                        <button onClick={()=>setCheckModal(true)} className="absolute top-4 right-4 bg-amber-500 text-slate-900 px-4 py-1 rounded-full font-black text-[10px] shadow-lg">🔍 STATUS</button>
+                        <h1 className="text-5xl font-black italic tracking-tighter">DPSG</h1>
+                        <p className="text-amber-400 text-[10px] font-bold tracking-[0.3em] uppercase mt-1 italic">Nimbahera Digital Seva</p>
+                    </header>
+
+                    <div className="px-4 mt-8 space-y-6">
+                        {view === "user" ? (
+                            <>
+                                <div className="glass-card p-6 border-t-[12px] border-amber-500 shadow-xl">
+                                    <h2 className="font-black text-center text-sm italic underline mb-4 uppercase tracking-widest text-amber-700">🏆 पूरे 51 धमाकेदार इनाम 🏆</h2>
+                                    <div className="max-h-52 overflow-y-auto pr-2 custom-scroll grid grid-cols-1 gap-2">
+                                        {prizeList.map(p => (
+                                            <div key={p.r} className="prize-card">
+                                                <p className="text-[12px] font-black italic text-indigo-900">इनाम #{p.r}: {p.n}</p>
+                                                <p className="text-[10px] text-slate-500 font-bold">{p.m}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="glass-card p-6">
+                                    <h2 className="font-black mb-4 border-l-8 border-indigo-600 pl-3 text-sm italic underline uppercase">अपना लकी नंबर चुनें (1-1000):</h2>
+                                    <div className="card-grid custom-scroll">
+                                        {cards.map(c => (
+                                            <div key={c.num} onClick={() => c.status === "available" && setSelected(c)}
+                                                 className={`grid-item ${c.status} ${selected?.num === c.num ? 'selected' : ''}`}>
+                                                {c.num}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {selected && (
+                                    <div className="glass-card p-8 border-[6px] border-indigo-600 animate-in slide-in-from-bottom duration-500">
+                                        <div className="flex justify-between items-center mb-6">
+                                            <h3 className="font-black text-indigo-900 italic underline text-xl">बुक करें ID: {selected.id}</h3>
+                                            <button onClick={()=>setSelected(null)} className="text-red-500 font-black text-2xl">X</button>
+                                        </div>
+                                        <form onSubmit={(e) => handleAction(e, "BOOK")} className="space-y-4">
+                                            <input name="name" placeholder="आपका शुभ नाम लिखें" required className="w-full p-4 border-4 rounded-3xl font-bold bg-slate-50 focus:border-indigo-600 outline-none text-lg" />
+                                            <input name="mobile" placeholder="मोबाइल नंबर (10 अंक)" required pattern="[0-9]{10}" className="w-full p-4 border-4 rounded-3xl font-bold bg-slate-50 focus:border-indigo-600 outline-none text-lg" />
+                                            <input name="village" placeholder="गाँव या शहर का नाम" required className="w-full p-4 border-4 rounded-3xl font-bold bg-slate-50 focus:border-indigo-600 outline-none text-lg" />
+                                            <button className="w-full bg-slate-900 text-white font-black py-6 rounded-[2.5rem] text-2xl shadow-2xl hover:bg-green-600 transition-all uppercase italic">कंफर्म बुकिंग ✅</button>
+                                        </form>
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <div className="space-y-6">
+                                <div className="bg-indigo-950 text-white p-8 rounded-[2.5rem] flex justify-between items-center shadow-xl border-b-[8px] border-indigo-500">
+                                    <h2 className="font-black italic text-lg uppercase tracking-tighter">नमस्ते: {staffID}</h2>
+                                    <button onClick={()=>setView("user")} className="bg-red-500 px-6 py-2 rounded-full text-xs font-black italic uppercase">Exit</button>
+                                </div>
+                                <div className="glass-card p-6">
+                                    <h2 className="font-black underline italic mb-6 uppercase text-sm tracking-widest text-center">पेंडिंग बुकिंग्स:</h2>
+                                    <div className="space-y-3">
+                                        {cards.filter(c => c.status === "pending").map(c => (
+                                            <div key={c.id} className="p-5 border-4 border-amber-300 rounded-3xl flex justify-between items-center bg-amber-50 shadow-md">
+                                                <div className="text-[12px] font-black italic">
+                                                    <p className="text-indigo-900 text-lg underline">{c.id}</p>
+                                                    <p className="text-slate-600 mt-1 uppercase">{c.data.name}</p>
+                                                    <p className="text-slate-500 text-[10px]">{c.data.mob}</p>
+                                                </div>
+                                                <button onClick={()=>setSelected(c)} className="bg-green-600 text-white px-6 py-3 rounded-2xl font-black shadow-xl uppercase italic">Verify</button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                {selected && (
+                                    <div className="glass-card p-8 border-[8px] border-green-500 shadow-2xl animate-bounce-short">
+                                        <h3 className="font-black mb-6 italic underline text-center text-green-700 text-xl">पेमेंट रिसीव: {selected.id}</h3>
+                                        <form onSubmit={(e) => handleAction(e, "VERIFY")} className="space-y-4">
+                                            <input name="finalAmount" placeholder="एमाउंट ₹" required className="w-full p-6 border-[6px] border-green-100 rounded-[2.5rem] font-black text-center text-4xl text-green-800" />
+                                            <button className="w-full bg-green-600 text-white font-black py-7 rounded-[3rem] text-3xl shadow-2xl uppercase italic">SOLD ✅</button>
+                                        </form>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="text-center mt-20 opacity-5">
+                        <button onClick={() => {
+                            const u = prompt("ID:"); const p = prompt("PASS:");
+                            if(STAFF[u] === p) { setStaffID(u); setView("staff"); } else { alert("गलत पासवर्ड!"); }
+                        }} className="text-[12px] font-black uppercase tracking-[0.5em]">🔱 STAFF LOGIN 🔱</button>
+                    </div>
+
+                    {checkModal && (
+                        <div className="fixed inset-0 z-50 bg-slate-900/95 flex items-center justify-center p-4">
+                            <div className="bg-white rounded-[3.5rem] p-10 w-full max-w-sm relative shadow-2xl border-[6px] border-indigo-100">
+                                <button onClick={()=>{setCheckModal(false); setFoundCard(null); setSearchQuery("");}} className="absolute top-8 right-8 text-red-500 font-black text-3xl">X</button>
+                                <h3 className="font-black text-center mb-8 underline italic text-xl uppercase tracking-tighter">चेक डिजिटल कार्ड</h3>
+                                <div className="flex gap-2 mb-8">
+                                    <input placeholder="ID या मोबाइल नंबर..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} className="w-full p-5 border-4 rounded-3xl font-black outline-none border-slate-100 focus:border-indigo-600 text-lg shadow-inner" />
+                                    <button onClick={() => setFoundCard(cards.find(c => c.id.toLowerCase() === searchQuery.toLowerCase() || c.data.mob === searchQuery) || "NOT_FOUND")} className="bg-indigo-600 text-white px-6 rounded-3xl font-black shadow-xl">🔍</button>
+                                </div>
+                                {foundCard && foundCard !== "NOT_FOUND" && (
+                                    <div id="digital-card" className="p-8 rounded-[3rem] text-white shadow-2xl bg-gradient-to-br from-slate-900 to-black border-[6px] border-amber-500 relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl italic font-black text-white">DPSG</div>
+                                        <p className="font-black text-[10px] uppercase tracking-widest opacity-60 mb-3 text-amber-400">Digital Bachat Card Member</p>
+                                        <h4 className="text-3xl font-black mb-8 tracking-tighter text-white italic underline">{foundCard.id}</h4>
+                                        <div className="space-y-3 font-black italic">
+                                            <p className="text-2xl text-amber-100 uppercase">{foundCard.data.name}</p>
+                                            <p className="text-lg opacity-90">📱 {foundCard.data.mob}</p>
+                                            <p className="text-lg opacity-90 uppercase tracking-widest text-indigo-300">📍 {foundCard.data.vill}</p>
+                                        </div>
+                                        {foundCard.status === 'sold' ? (
+                                            <div className="mt-10 no-print">
+                                                <div className="bg-green-500/20 text-green-400 text-[10px] p-3 text-center font-black rounded-2xl mb-4 border-2 border-green-500/50 uppercase italic tracking-widest">✅ सदस्य सत्यापित (Verified)</div>
+                                                <button onClick={()=>window.print()} className="w-full bg-white text-slate-900 font-black py-5 rounded-[2rem] text-sm uppercase shadow-2xl hover:scale-105 transition-transform">🖨️ डिजिटल कार्ड प्रिंट</button>
+                                            </div>
+                                        ) : <div className="mt-8 text-[12px] font-black bg-white/10 p-3 rounded-2xl text-center uppercase tracking-widest italic text-amber-200 border-2 border-white/10">Status: {foundCard.status}</div>}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
