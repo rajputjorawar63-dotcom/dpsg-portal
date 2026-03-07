@@ -52,7 +52,7 @@
         const SLOGAN = "आपकी समस्या हमारा समाधान, उचित मूल्य बेहतरीन सेवा";
         const ADMINS = { "Jorawar@DPS": "Jorawar@6020", "Parkash@DPS": "Parkash@6020", "Rajkumar@DPS": "Rajkumar@6020" };
 
-        // 🎁 51 इनामों की हूबहू लिस्ट (No Shortcuts) 🎁
+        // 🎁 51 इनामों की हूबहू लिस्ट 🎁
         const PRIZES = [
             {r:1, n:"₹5000 Cash", d:"किस्मत चमकेगी और जेब भरेगी सीधा ₹5000 कैश के साथ।"},
             {r:2, n:"LED TV", d:"घर बनेगा सिनेमा हॉल, जब आप जीतेंगे शानदार LED TV।"},
@@ -79,7 +79,7 @@
             {r:23, n:"₹101 Cash", d:"बचत कार्ड के साथ जीतें ₹101 नकद।"},
             {r:24, n:"Photo Frame", d:"राधा कृष्ण की कृपा का सुंदर फ्रेम।"},
             {r:25, n:"Wall Clock", d:"समय की कीमत समझें और जीतें घड़ी।"},
-            {r:26, n:"Tea Cup Set", d:"सुंदर टी कप सेट के साथ स्वागत करें।"},
+            {r:26, n:"Tea Cup Set", d:"सुंदर टी Cup सेट के साथ स्वागत करें।"},
             {r:27, n:"Movie Ticket", d:"पसंदीदा फिल्म की टिकट।"},
             {r:28, n:"Umbrella", d:"यह रंगीन और मजबूत छाता रहेगा साथ।"},
             {r:29, n:"Sunglasses", d:"दिखें सबसे अलग और स्टाइलिश।"},
@@ -107,23 +107,6 @@
             {r:51, n:"Electric Iron", d:"कपड़ों पर लाएं परफेक्ट चमक।"}
         ];
 
-        // ⚠️ 100% पक्का कोमा (,) CSV रीडर ⚠️
-        const parseCSV = (text) => {
-            let p = '', row = [''], ret = [row], i = 0, r = 0, s = !0, l;
-            for (l of text) {
-                if ('"' === l) {
-                    if (s && l === p) row[i] += l;
-                    s = !s;
-                } else if (',' === l && s) l = row[++i] = '';
-                else if ('\n' === l && s) {
-                    if ('\r' === p) row[i] = row[i].slice(0, -1);
-                    row = ret[++r] = [l = '']; i = 0;
-                } else row[i] += l;
-                p = l;
-            }
-            return ret;
-        };
-
         const App = () => {
             const [cards, setCards] = useState([]);
             const [activeTab, setActiveTab] = useState('ALL'); 
@@ -137,19 +120,22 @@
             const [quickQrCard, setQuickQrCard] = useState(null); 
             const [payMode, setPayMode] = useState("");
             const [isUploading, setIsUploading] = useState(false);
-            const [discount, setDiscount] = useState(0); // डिस्काउंट वापस आ गया
+            const [discount, setDiscount] = useState(0);
 
-            // ⚠️ ऑटो-फिल और Sold को लाल करने वाला फुल-प्रूफ डेटा लोडिंग ⚠️
+            // ⚠️ 100% पक्का ओरिजिनल लोडिंग इंजन ⚠️
             const loadData = () => {
                 fetch(CSV_URL + "?t=" + Date.now()).then(r => r.text()).then(csv => {
-                    const rows = parseCSV(csv);
+                    // ओरिजिनल सिंपल स्प्लिट जो एकदम सही काम कर रहा था
+                    const rows = csv.split('\n').map(r => r.split(','));
                     let temp = [];
                     for(let i=1; i<=1000; i++) {
-                        let rD = rows.find(r => r[0] && parseInt(r[0]) === i) || [];
+                        let rD = rows.find(r => parseInt(r[0]) === i) || [];
+                        
                         let rawStatus = (rD[4] || 'Available').trim().toLowerCase();
                         let s = 'Available';
                         
-                        if(rawStatus === "सॉल्ड" || rawStatus === "sold" || rawStatus === "सॉल्ड " || rawStatus.includes("sold")) {
+                        // एकदम पक्का सॉल्ड फ़िल्टर
+                        if(rawStatus === "सॉल्ड" || rawStatus === "sold" || rawStatus.includes("sold")) {
                             s = "Sold";
                         } else if(rawStatus === "पेंडिंग" || rawStatus === "pending" || rawStatus.includes("pending")) {
                             s = "Pending";
@@ -157,7 +143,7 @@
                         
                         let cat = i <= 100 ? "VIP Card" : i <= 600 ? "Gold Card" : "Silver Card";
                         temp.push({ 
-                            n: i, status: s, cat, price: rD[16] || (i<=100?500:i<=600?100:50),
+                            n: i, status: s, cat, price: parseInt(rD[16] || (i<=100?500:i<=600?100:50)),
                             mid: rD[3] || `DPSG-26-113-${i.toString().padStart(4,'0')}`,
                             d: { 
                                 name: rD[6]||"", mob: rD[7]||"", dob: rD[8]||"", vill: rD[9]||"", 
@@ -185,6 +171,7 @@
                 params.append("action", "BOOK"); params.append("S_No", n.toString()); 
                 params.append("Category", selected.cat); params.append("Base_Price", selected.price);
                 
+                // 📸 गैलरी से फोटो अपलोड का इंजन 📸
                 const fileInput = document.getElementById('file_upload_gallery');
                 if (fileInput && fileInput.files.length > 0) {
                     const file = fileInput.files[0];
@@ -209,7 +196,7 @@
                 setSelected(null); setPayMode(""); setIsUploading(false);
             };
 
-            // 🌟 मास्टर अपडेट: स्टाफ के लिए 🌟
+            // 🌟 मास्टर अपडेट (स्टाफ के लिए) 🌟
             const masterUpdate = (c, status, isInsideForm = false) => {
                 let sName = c.d.name; let sMob = c.d.mob; let sAdhar = c.d.adhar; 
                 let sPan = c.d.pan; let sPay = c.d.pay; let sRef = c.d.ref; 
@@ -241,17 +228,18 @@
                 
                 setSelected(null); 
                 alert(status === 'Available' ? "❌ रिजेक्ट: कार्ड वापस Available (खाली) हो गया।" : "✅ कन्फर्म: कार्ड Sold (लाल) हो गया!");
-                setTimeout(loadData, 2000); // 2 सेकंड बाद शीट रिफ्रेश
+                setTimeout(loadData, 1500);
             };
 
             const handleCardClick = (c, s) => {
-                if(s === 'Sold') return;
+                if(s === 'Sold') return; // Sold पर क्लिक 100% बंद
+                
                 if(staff) {
                     setSelected(c); 
                     setPayMode(c.d.pay || "");
-                    setDiscount(c.d.discount || 0);
+                    setDiscount(parseInt(c.d.discount || 0));
                 } else {
-                    if(s === 'Pending') return;
+                    if(s === 'Pending') return; // ग्राहक Pending को नहीं खोल सकता
                     setSelected(c); 
                     setPayMode("");
                     setDiscount(0);
@@ -276,7 +264,6 @@
             if(loading) return <div className="h-screen flex items-center justify-center font-black text-amber-500 text-6xl animate-pulse">DPSG Loading...</div>;
 
             const pendingCards = cards.filter(c => localLocks.has(c.n) || c.status === 'Pending');
-            // स्टाफ की अपनी वर्क हिस्ट्री (Verified_By कॉलम से)
             const staffHistory = staff ? cards.filter(c => c.status === 'Sold' && c.d.verifiedBy === staff.id) : [];
 
             return (
@@ -296,7 +283,6 @@
                                     <input type="text" placeholder="ex: 7229874128@paytm" value={staffUpi} onChange={(e)=>setStaffUpi(e.target.value)} className="bg-black border-2 border-slate-700 text-white p-4 rounded-lg font-bold w-full text-xl" />
                                 </div>
                                 
-                                {/* स्टाफ की वर्क हिस्ट्री */}
                                 <div className="bg-slate-900/80 p-6 rounded-2xl border border-green-500 max-h-[160px] overflow-y-auto custom-scroll">
                                     <label className="text-green-400 font-black text-lg block mb-2"><i className="fa-solid fa-clipboard-check"></i> My Confirmed Works ({staffHistory.length}):</label>
                                     {staffHistory.length === 0 ? <p className="text-slate-500 font-bold italic">No cards confirmed yet...</p> : 
@@ -313,14 +299,13 @@
                                         <div className="mb-4 md:mb-0 w-full md:w-auto">
                                             <p className="text-2xl font-black text-white">#{c.n} - <span className="text-amber-400">{c.d.name || "नाम दर्ज़ नहीं"}</span></p>
                                             <p className="text-lg text-slate-300 font-bold"><i className="fa-solid fa-phone text-sm"></i> {c.d.mob || "N/A"} | ID: {c.mid}</p>
-                                            {/* 📸 फोटो देखने का बटन (बाहर ही) */}
                                             {c.d.link && <a href={c.d.link} target="_blank" className="text-blue-400 text-sm font-bold underline mt-1 inline-block"><i className="fa-solid fa-camera"></i> View Uploaded Photo</a>}
                                         </div>
                                         <div className="flex flex-wrap gap-3 w-full md:w-auto">
                                             <button onClick={() => masterUpdate(c, 'Sold', false)} className="bg-green-600 hover:bg-green-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">✅ Verify</button>
                                             <button onClick={() => masterUpdate(c, 'Available', false)} className="bg-red-700 hover:bg-red-600 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">❌ Reject</button>
                                             <button onClick={() => {if(!staffUpi){alert("पहले ऊपर अपनी UPI ID डालें!");return;} setQuickQrCard(c);}} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">📲 Pay QR</button>
-                                            <button onClick={() => { setSelected(c); setPayMode(c.d.pay || ""); setDiscount(c.d.discount || 0); }} className="bg-slate-600 hover:bg-slate-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">✏️ Edit Inside</button>
+                                            <button onClick={() => { setSelected(c); setPayMode(c.d.pay || ""); setDiscount(parseInt(c.d.discount || 0)); }} className="bg-slate-600 hover:bg-slate-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">✏️ Edit Inside</button>
                                         </div>
                                     </div>
                                 ))}
@@ -396,9 +381,9 @@
                         <div className="fixed inset-0 z-[150] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm">
                             <div className="bg-white p-10 rounded-3xl text-center max-w-sm w-full shadow-[0_0_50px_rgba(251,191,36,0.5)] relative">
                                 <button onClick={() => setQuickQrCard(null)} className="absolute top-4 right-6 text-4xl text-black hover:text-red-500">&times;</button>
-                                <h3 className="text-2xl font-black text-black mb-2">Pay ₹{quickQrCard.price}</h3>
+                                <h3 className="text-2xl font-black text-black mb-2">Pay ₹{quickQrCard.price - (quickQrCard.d.discount || 0)}</h3>
                                 <p className="text-sm font-bold text-slate-600 mb-6">{COMPANY}</p>
-                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=${staffUpi}%26pn=Digital%20Problem%20Solution%20Group%26am=${quickQrCard.price}%26tr=${quickQrCard.mid}%26tn=Digital_Problem_Solution_Group_ID_${quickQrCard.mid}`} alt="Live QR" className="mx-auto border-8 border-slate-100 rounded-xl" />
+                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=${staffUpi}%26pn=Digital%20Problem%20Solution%20Group%26am=${quickQrCard.price - (quickQrCard.d.discount || 0)}%26tr=${quickQrCard.mid}%26tn=Digital_Problem_Solution_Group_ID_${quickQrCard.mid}`} alt="Live QR" className="mx-auto border-8 border-slate-100 rounded-xl" />
                                 <p className="text-sm font-black text-slate-700 mt-6 bg-slate-100 py-2 rounded-lg">Auto-ID: {quickQrCard.mid}</p>
                             </div>
                         </div>
@@ -419,7 +404,6 @@
                                     <div className="space-y-6">
                                         <p className="text-indigo-400 font-black text-2xl border-b border-indigo-500 pb-2">✏️ Full Edit Mode</p>
                                         
-                                        {/* 📸 फोटो देखने का लिंक अंदर भी 📸 */}
                                         {selected.d.link && (
                                             <div className="bg-blue-900/40 p-4 rounded-xl border border-blue-500 text-center">
                                                 <a href={selected.d.link} target="_blank" className="text-blue-300 font-black text-xl hover:text-white"><i className="fa-solid fa-camera"></i> View Customer Uploaded Photo</a>
@@ -434,8 +418,7 @@
                                             <div><label className="text-sm text-slate-400 font-bold ml-1">PAN Card (If Airtel)</label><input id="s_pan" defaultValue={selected.d.pan} className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 text-white uppercase focus:border-indigo-500 outline-none" /></div>
                                             <div><label className="text-sm text-slate-400 font-bold ml-1">Txn ID / Ref (Optional)</label><input id="s_ref" defaultValue={selected.d.ref} className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 text-amber-400 focus:border-indigo-500 outline-none" /></div>
                                             
-                                            {/* 💰 डिस्काउंट डब्बा वापस आ गया 💰 */}
-                                            <div><label className="text-sm text-red-400 font-bold ml-1">Discount (₹)</label><input type="number" value={discount} onChange={(e)=>setDiscount(e.target.value)} className="w-full bg-slate-900 p-4 rounded-xl text-xl font-bold border border-slate-700 text-red-400 focus:border-red-500 outline-none" /></div>
+                                            <div><label className="text-sm text-red-400 font-bold ml-1">Discount (₹)</label><input type="number" value={discount} onChange={(e)=>setDiscount(parseInt(e.target.value) || 0)} className="w-full bg-slate-900 p-4 rounded-xl text-xl font-bold border border-slate-700 text-red-400 focus:border-red-500 outline-none" /></div>
                                             <div><label className="text-sm text-green-400 font-bold ml-1">Final Amount Paid (₹)</label><input id="s_paid" type="number" value={selected.price - discount} readOnly className="w-full bg-green-900/40 p-4 rounded-xl text-3xl font-black border-2 border-green-500 text-green-400 focus:outline-none" /></div>
                                         </div>
                                         
