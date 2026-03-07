@@ -98,7 +98,7 @@
             {r:42, n:"Leather Bag", d:"मजबूत लेदर बैग।"},
             {r:43, n:"20L Water Bottle", d:"शुद्ध पानी का बड़ा स्टोरेज।"},
             {r:44, n:"Bathing Bucket", d:"सालों-साल आपका साथ निभाए।"},
-            {r:45, n:"Mobile Recharge", d:"₹349 का फ्री মোবাইল रिचार्ज।"},
+            {r:45, n:"Mobile Recharge", d:"₹349 का फ्री मोबाइल रिचार्ज।"},
             {r:46, n:"Spice Box", d:"सुंदर मसाला दानी।"},
             {r:47, n:"Veg Chopper", d:"स्मार्ट किचन का स्मार्ट टूल।"},
             {r:48, n:"Photo Frame", d:"प्यारा फोटो फ्रेम।"},
@@ -107,26 +107,21 @@
             {r:51, n:"Electric Iron", d:"कपड़ों पर लाएं परफेक्ट चमक।"}
         ];
 
-        // ⚠️ यह है वो मास्टर फ़िल्टर जो कोमा (,) वाली बीमारी को जड़ से ख़त्म करेगा ⚠️
-        const parseCSV = (csvText) => {
-            let rows = []; let row = []; let cur = ''; let inQuote = false;
-            for (let i = 0; i < csvText.length; i++) {
-                let char = csvText[i];
-                if (inQuote) {
-                    if (char === '"') {
-                        if (i + 1 < csvText.length && csvText[i + 1] === '"') { cur += '"'; i++; } 
-                        else { inQuote = false; }
-                    } else { cur += char; }
-                } else {
-                    if (char === '"') { inQuote = true; } 
-                    else if (char === ',') { row.push(cur); cur = ''; } 
-                    else if (char === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; } 
-                    else if (char !== '\r') { cur += char; }
-                }
+        // ⚠️ 100% पक्का कोमा (,) CSV रीडर ⚠️
+        const parseCSV = (text) => {
+            let p = '', row = [''], ret = [row], i = 0, r = 0, s = !0, l;
+            for (l of text) {
+                if ('"' === l) {
+                    if (s && l === p) row[i] += l;
+                    s = !s;
+                } else if (',' === l && s) l = row[++i] = '';
+                else if ('\n' === l && s) {
+                    if ('\r' === p) row[i] = row[i].slice(0, -1);
+                    row = ret[++r] = [l = '']; i = 0;
+                } else row[i] += l;
+                p = l;
             }
-            if (cur !== '' || csvText.endsWith(',')) row.push(cur);
-            if (row.length > 0) rows.push(row);
-            return rows;
+            return ret;
         };
 
         const App = () => {
@@ -142,19 +137,18 @@
             const [quickQrCard, setQuickQrCard] = useState(null); 
             const [payMode, setPayMode] = useState("");
             const [isUploading, setIsUploading] = useState(false);
+            const [discount, setDiscount] = useState(0); // डिस्काउंट वापस आ गया
 
             // ⚠️ ऑटो-फिल और Sold को लाल करने वाला फुल-प्रूफ डेटा लोडिंग ⚠️
             const loadData = () => {
                 fetch(CSV_URL + "?t=" + Date.now()).then(r => r.text()).then(csv => {
-                    const rows = parseCSV(csv); // नया मास्टर फ़िल्टर
+                    const rows = parseCSV(csv);
                     let temp = [];
                     for(let i=1; i<=1000; i++) {
-                        // S_No को सही से नंबर में बदलकर मैच करना
-                        let rD = rows.find(r => parseInt(r[0]) === i) || [];
+                        let rD = rows.find(r => r[0] && parseInt(r[0]) === i) || [];
                         let rawStatus = (rD[4] || 'Available').trim().toLowerCase();
                         let s = 'Available';
                         
-                        // एकदम पक्का सॉल्ड फ़िल्टर
                         if(rawStatus === "सॉल्ड" || rawStatus === "sold" || rawStatus === "सॉल्ड " || rawStatus.includes("sold")) {
                             s = "Sold";
                         } else if(rawStatus === "पेंडिंग" || rawStatus === "pending" || rawStatus.includes("pending")) {
@@ -167,7 +161,8 @@
                             mid: rD[3] || `DPSG-26-113-${i.toString().padStart(4,'0')}`,
                             d: { 
                                 name: rD[6]||"", mob: rD[7]||"", dob: rD[8]||"", vill: rD[9]||"", 
-                                adhar: rD[10]||"", pan: rD[11]||"", pay: rD[12]||"", ref: rD[13]||"", link: rD[14]||"" 
+                                adhar: rD[10]||"", pan: rD[11]||"", pay: rD[12]||"", ref: rD[13]||"", 
+                                link: rD[14]||"", discount: rD[17]||"0", verifiedBy: rD[22]||"" 
                             } 
                         });
                     }
@@ -190,7 +185,6 @@
                 params.append("action", "BOOK"); params.append("S_No", n.toString()); 
                 params.append("Category", selected.cat); params.append("Base_Price", selected.price);
                 
-                // 📸 असली गैलरी से फोटो को Base64 में बदलने का कोड 📸
                 const fileInput = document.getElementById('file_upload_gallery');
                 if (fileInput && fileInput.files.length > 0) {
                     const file = fileInput.files[0];
@@ -215,10 +209,11 @@
                 setSelected(null); setPayMode(""); setIsUploading(false);
             };
 
-            // 🌟 मास्टर अपडेट: स्टाफ के लिए 'Available' (Reject) और 'Sold' (Verify) 🌟
+            // 🌟 मास्टर अपडेट: स्टाफ के लिए 🌟
             const masterUpdate = (c, status, isInsideForm = false) => {
                 let sName = c.d.name; let sMob = c.d.mob; let sAdhar = c.d.adhar; 
-                let sPan = c.d.pan; let sPay = c.d.pay; let sRef = c.d.ref; let sPaid = c.price;
+                let sPan = c.d.pan; let sPay = c.d.pay; let sRef = c.d.ref; 
+                let sPaid = c.price; let finalDisc = 0;
 
                 if(isInsideForm) {
                     sName = document.getElementById('s_name').value;
@@ -228,17 +223,17 @@
                     sPay = document.getElementById('s_pay').value;
                     sRef = document.getElementById('s_ref').value;
                     sPaid = document.getElementById('s_paid').value;
+                    finalDisc = discount;
                 }
 
                 const params = new URLSearchParams({
                     action: 'UPDATE', S_No: c.n, Status: status, staffID: staff.id, staffPass: staff.pass,
                     Customer_Name: sName, Mobile: sMob, Aadhaar: sAdhar, PAN: sPan,
-                    Payment_Mode: sPay, Payment_Ref: sRef, Paid: sPaid, LogMsg: `Staff ${status}`
+                    Payment_Mode: sPay, Payment_Ref: sRef, Paid: sPaid, Discount: finalDisc, LogMsg: `Staff ${status}`
                 });
                 
                 fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
                 
-                // रिजेक्ट होने पर तुरंत लोक हटा दें (Available)
                 if(status === 'Available') {
                     setLocalLocks(prev => { const nSet = new Set(prev); nSet.delete(c.n); return nSet; });
                     localStorage.setItem('dps_locks', JSON.stringify([...localLocks].filter(x => x !== c.n)));
@@ -246,30 +241,26 @@
                 
                 setSelected(null); 
                 alert(status === 'Available' ? "❌ रिजेक्ट: कार्ड वापस Available (खाली) हो गया।" : "✅ कन्फर्म: कार्ड Sold (लाल) हो गया!");
-                loadData(); 
+                setTimeout(loadData, 2000); // 2 सेकंड बाद शीट रिफ्रेश
             };
 
-            // ⚠️ कार्ड क्लिक करने का सख्त (Strict) नियम ⚠️
             const handleCardClick = (c, s) => {
-                // नियम 1: अगर कार्ड Sold है, तो कोई क्लिक नहीं कर सकता
                 if(s === 'Sold') return;
-                
                 if(staff) {
-                    // नियम 2: अगर स्टाफ है, तो वह Pending या Available दोनों को क्लिक कर सकता है
                     setSelected(c); 
                     setPayMode(c.d.pay || "");
+                    setDiscount(c.d.discount || 0);
                 } else {
-                    // नियम 3: ग्राहक 'Pending' कार्ड को बिल्कुल क्लिक नहीं कर सकता
                     if(s === 'Pending') return;
                     setSelected(c); 
                     setPayMode("");
+                    setDiscount(0);
                 }
             };
 
             const renderCard = (c) => {
                 const isLocked = localLocks.has(c.n) || c.status === 'Pending';
                 let s = c.status === 'Sold' ? 'Sold' : isLocked ? 'Pending' : 'Available';
-                
                 const color = s === 'Sold' ? 'sold-card' : s === 'Pending' ? 'pending-card' : `card-${c.cat.split(' ')[0]}`;
                 
                 return (
@@ -285,11 +276,13 @@
             if(loading) return <div className="h-screen flex items-center justify-center font-black text-amber-500 text-6xl animate-pulse">DPSG Loading...</div>;
 
             const pendingCards = cards.filter(c => localLocks.has(c.n) || c.status === 'Pending');
+            // स्टाफ की अपनी वर्क हिस्ट्री (Verified_By कॉलम से)
+            const staffHistory = staff ? cards.filter(c => c.status === 'Sold' && c.d.verifiedBy === staff.id) : [];
 
             return (
                 <div className="max-w-[1600px] mx-auto p-4 py-10">
                     
-                    {/* 🛡️ STAFF LIVE DASHBOARD (शॉर्टकट बाहर ही) 🛡️ */}
+                    {/* 🛡️ STAFF LIVE DASHBOARD 🛡️ */}
                     {staff ? (
                         <div className="mb-12 glass p-8 border-t-[10px] border-indigo-500 shadow-2xl relative">
                             <button onClick={() => setStaff(null)} className="absolute top-8 right-8 bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-xl font-black transition-colors text-lg shadow-lg">LOGOUT</button>
@@ -297,12 +290,22 @@
                             <h2 className="text-4xl md:text-5xl font-black text-indigo-400 uppercase tracking-widest mb-2">{COMPANY}</h2>
                             <p className="text-xl text-amber-400 font-bold mb-8">Live Admin Dashboard | User: {staff.id}</p>
 
-                            <div className="bg-slate-900/80 p-6 rounded-2xl border border-amber-500 mb-8">
-                                <label className="text-amber-400 font-black text-lg md:text-xl mb-4 block"><i className="fa-solid fa-qrcode"></i> आपकी UPI ID (Live QR बनाने के लिए):</label>
-                                <input type="text" placeholder="ex: 7229874128@paytm" value={staffUpi} onChange={(e)=>setStaffUpi(e.target.value)} className="bg-black border-2 border-slate-700 text-white p-4 rounded-lg font-bold w-full md:w-1/2 text-xl" />
+                            <div className="grid md:grid-cols-2 gap-8 mb-8">
+                                <div className="bg-slate-900/80 p-6 rounded-2xl border border-amber-500">
+                                    <label className="text-amber-400 font-black text-lg md:text-xl mb-4 block"><i className="fa-solid fa-qrcode"></i> आपकी UPI ID (Live QR के लिए):</label>
+                                    <input type="text" placeholder="ex: 7229874128@paytm" value={staffUpi} onChange={(e)=>setStaffUpi(e.target.value)} className="bg-black border-2 border-slate-700 text-white p-4 rounded-lg font-bold w-full text-xl" />
+                                </div>
+                                
+                                {/* स्टाफ की वर्क हिस्ट्री */}
+                                <div className="bg-slate-900/80 p-6 rounded-2xl border border-green-500 max-h-[160px] overflow-y-auto custom-scroll">
+                                    <label className="text-green-400 font-black text-lg block mb-2"><i className="fa-solid fa-clipboard-check"></i> My Confirmed Works ({staffHistory.length}):</label>
+                                    {staffHistory.length === 0 ? <p className="text-slate-500 font-bold italic">No cards confirmed yet...</p> : 
+                                        staffHistory.map(h => <p key={h.n} className="text-sm text-slate-300 font-bold border-b border-slate-700 pb-1 mb-1">✅ Card #{h.n} - {h.d.name}</p>)
+                                    }
+                                </div>
                             </div>
 
-                            <h3 className="text-2xl font-black text-yellow-400 mb-4 border-b-2 border-slate-700 pb-2">लाइव पेंडिंग रिक्वेस्ट (बाहर से एक्शन लें):</h3>
+                            <h3 className="text-2xl font-black text-yellow-400 mb-4 border-b-2 border-slate-700 pb-2">लाइव पेंडिंग रिक्वेस्ट:</h3>
                             <div className="flex flex-col gap-4 max-h-[400px] overflow-y-auto custom-scroll pr-2">
                                 {pendingCards.length === 0 ? <p className="text-slate-400 italic font-bold">कोई पेंडिंग रिक्वेस्ट नहीं है...</p> : 
                                 pendingCards.map(c => (
@@ -310,12 +313,14 @@
                                         <div className="mb-4 md:mb-0 w-full md:w-auto">
                                             <p className="text-2xl font-black text-white">#{c.n} - <span className="text-amber-400">{c.d.name || "नाम दर्ज़ नहीं"}</span></p>
                                             <p className="text-lg text-slate-300 font-bold"><i className="fa-solid fa-phone text-sm"></i> {c.d.mob || "N/A"} | ID: {c.mid}</p>
+                                            {/* 📸 फोटो देखने का बटन (बाहर ही) */}
+                                            {c.d.link && <a href={c.d.link} target="_blank" className="text-blue-400 text-sm font-bold underline mt-1 inline-block"><i className="fa-solid fa-camera"></i> View Uploaded Photo</a>}
                                         </div>
                                         <div className="flex flex-wrap gap-3 w-full md:w-auto">
                                             <button onClick={() => masterUpdate(c, 'Sold', false)} className="bg-green-600 hover:bg-green-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">✅ Verify</button>
                                             <button onClick={() => masterUpdate(c, 'Available', false)} className="bg-red-700 hover:bg-red-600 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">❌ Reject</button>
                                             <button onClick={() => {if(!staffUpi){alert("पहले ऊपर अपनी UPI ID डालें!");return;} setQuickQrCard(c);}} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">📲 Pay QR</button>
-                                            <button onClick={() => { setSelected(c); setPayMode(c.d.pay || ""); }} className="bg-slate-600 hover:bg-slate-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">✏️ Edit Inside</button>
+                                            <button onClick={() => { setSelected(c); setPayMode(c.d.pay || ""); setDiscount(c.d.discount || 0); }} className="bg-slate-600 hover:bg-slate-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">✏️ Edit Inside</button>
                                         </div>
                                     </div>
                                 ))}
@@ -349,7 +354,7 @@
                     </div>
 
                     <div className="grid lg:grid-cols-12 gap-10">
-                        {/* 🎁 51 MEGA PRIZES (Hide for Staff) 🎁 */}
+                        {/* 🎁 51 MEGA PRIZES 🎁 */}
                         {!staff && (
                             <div className="lg:col-span-4 glass p-6 h-[800px] flex flex-col border-t-[8px] border-amber-500">
                                 <h2 className="text-3xl font-black italic text-amber-500 mb-6 text-center underline">51 MEGA PRIZES</h2>
@@ -367,7 +372,6 @@
                             </div>
                         )}
 
-                        {/* 🎴 JUMBO GRID SECTION 🎴 */}
                         <div className={`${staff ? 'lg:col-span-12' : 'lg:col-span-8'} glass p-4 md:p-8 h-[800px] flex flex-col border-t-[8px] border-indigo-500`}>
                             {staff && <h3 className="text-3xl text-indigo-400 font-black mb-4">All Cards Status (Red = Sold)</h3>}
                             <div className="card-grid overflow-y-auto flex-1 custom-scroll">
@@ -387,7 +391,7 @@
                         </div>
                     )}
 
-                    {/* 📲 बाहर वाला क्विक QR पॉपअप 📲 */}
+                    {/* 📲 क्विक QR पॉपअप 📲 */}
                     {quickQrCard && (
                         <div className="fixed inset-0 z-[150] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm">
                             <div className="bg-white p-10 rounded-3xl text-center max-w-sm w-full shadow-[0_0_50px_rgba(251,191,36,0.5)] relative">
@@ -400,9 +404,8 @@
                         </div>
                     )}
 
-                    {/* ✨ STYLISH FORM MODAL (CUSTOMER & STAFF EDIT) ✨ */}
+                    {/* ✨ STYLISH FORM MODAL ✨ */}
                     {selected && (
-                        /* ⚠️ key={selected.n} ऑटो-फिल मास्टर लॉक ⚠️ */
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <div className="glass p-8 md:p-12 w-full max-w-5xl border-2 border-amber-500 rounded-[2rem] shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
                                 <button onClick={() => setSelected(null)} className="absolute top-6 right-8 text-5xl text-slate-400 hover:text-white">&times;</button>
@@ -414,7 +417,15 @@
 
                                 {staff ? (
                                     <div className="space-y-6">
-                                        <p className="text-indigo-400 font-black text-2xl border-b border-indigo-500 pb-2">✏️ Full Edit Mode (Live Auto-Filled Data)</p>
+                                        <p className="text-indigo-400 font-black text-2xl border-b border-indigo-500 pb-2">✏️ Full Edit Mode</p>
+                                        
+                                        {/* 📸 फोटो देखने का लिंक अंदर भी 📸 */}
+                                        {selected.d.link && (
+                                            <div className="bg-blue-900/40 p-4 rounded-xl border border-blue-500 text-center">
+                                                <a href={selected.d.link} target="_blank" className="text-blue-300 font-black text-xl hover:text-white"><i className="fa-solid fa-camera"></i> View Customer Uploaded Photo</a>
+                                            </div>
+                                        )}
+
                                         <div className="grid md:grid-cols-2 gap-6">
                                             <div><label className="text-sm text-slate-400 font-bold ml-1">Customer Name</label><input id="s_name" defaultValue={selected.d.name?.replace(/'/g,'')} className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 text-white focus:border-indigo-500 outline-none" /></div>
                                             <div><label className="text-sm text-slate-400 font-bold ml-1">Mobile</label><input id="s_mob" defaultValue={selected.d.mob?.replace(/'/g,'')} className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 text-white focus:border-indigo-500 outline-none" /></div>
@@ -423,7 +434,9 @@
                                             <div><label className="text-sm text-slate-400 font-bold ml-1">PAN Card (If Airtel)</label><input id="s_pan" defaultValue={selected.d.pan} className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 text-white uppercase focus:border-indigo-500 outline-none" /></div>
                                             <div><label className="text-sm text-slate-400 font-bold ml-1">Txn ID / Ref (Optional)</label><input id="s_ref" defaultValue={selected.d.ref} className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 text-amber-400 focus:border-indigo-500 outline-none" /></div>
                                             
-                                            <div className="md:col-span-2"><label className="text-sm text-green-400 font-bold ml-1">Final Amount Paid (₹)</label><input id="s_paid" type="number" defaultValue={selected.price} className="w-full bg-green-900/40 p-4 rounded-xl text-3xl font-black border-2 border-green-500 text-green-400 focus:outline-none" /></div>
+                                            {/* 💰 डिस्काउंट डब्बा वापस आ गया 💰 */}
+                                            <div><label className="text-sm text-red-400 font-bold ml-1">Discount (₹)</label><input type="number" value={discount} onChange={(e)=>setDiscount(e.target.value)} className="w-full bg-slate-900 p-4 rounded-xl text-xl font-bold border border-slate-700 text-red-400 focus:border-red-500 outline-none" /></div>
+                                            <div><label className="text-sm text-green-400 font-bold ml-1">Final Amount Paid (₹)</label><input id="s_paid" type="number" value={selected.price - discount} readOnly className="w-full bg-green-900/40 p-4 rounded-xl text-3xl font-black border-2 border-green-500 text-green-400 focus:outline-none" /></div>
                                         </div>
                                         
                                         <div className="flex gap-4 mt-8 pt-4 border-t border-slate-700">
@@ -460,7 +473,6 @@
                                             )}
                                         </div>
 
-                                        {/* 📸 गैलरी से असली फोटो/वीडियो अपलोड बटन 📸 */}
                                         <div>
                                             <label className="text-sm font-bold text-amber-400 ml-2"><i className="fa-solid fa-camera"></i> फोटो / स्क्रीनशॉट अपलोड करें (Optional)</label>
                                             <input type="file" id="file_upload_gallery" accept="image/*,video/*" className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 focus:border-amber-500 outline-none text-white text-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-amber-500 file:text-black hover:file:bg-amber-400 cursor-pointer" />
