@@ -21,28 +21,36 @@
         body { font-family: 'Poppins', sans-serif; background: #020617; color: white; user-select: none; overflow-x: hidden; }
         .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); border-radius: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        /* 🎴 असली विशाल 3D कार्ड्स ग्रिड 🎴 */
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 12px; max-height: 700px; overflow-y: auto; padding: 15px; }
-        .grid-item { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-weight: 900; cursor: pointer; border: 2px solid rgba(255,255,255,0.1); transition: 0.3s; font-size: 24px; box-shadow: 0 5px 15px rgba(0,0,0,0.4); position: relative; overflow: hidden; }
-        .grid-item:hover { transform: scale(1.1); z-index: 10; border-color: #fff; box-shadow: 0 15px 25px rgba(251,191,36,0.4); }
+        /* 🎴 असली विशाल 3D कार्ड्स ग्रिड (जंबो साइज़ और बहुत सारा स्पेस) 🎴 */
+        /* minmax(140px) का मतलब है कार्ड बहुत बड़े होंगे और gap: 20px से दूर-दूर होंगे */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 24px; max-height: 800px; overflow-y: auto; padding: 20px; }
         
-        /* Available Colors (कैटेगरी के अनुसार ग्रेडिएंट) */
-        .card-VIP { background: linear-gradient(135deg, #ef4444 0%, #7f1d1d 100%); color: white; }
-        .card-Gold { background: linear-gradient(135deg, #fde047 0%, #b45309 100%); color: black; }
-        .card-Silver { background: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%); color: black; } /* सिल्वर के 2 रंग */
+        /* कार्ड का डिज़ाइन: ऊँचाई 120px, बड़े अक्षर (36px) */
+        .grid-item { aspect-ratio: auto; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 20px; font-weight: 900; cursor: pointer; border: 2px solid rgba(255,255,255,0.2); transition: 0.3s; font-size: 36px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); position: relative; overflow: hidden; }
+        
+        .grid-item:hover { transform: scale(1.05) translateY(-5px); z-index: 10; border-color: #fff; box-shadow: 0 15px 30px rgba(255,255,255,0.3); }
+        
+        /* 🎨 नए और स्पष्ट रंग (ताकि Sold/Pending से कंफ्यूजन न हो) 🎨 */
+        /* VIP अब रॉयल ब्लू है (लाल नहीं) */
+        .card-VIP { background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%); color: white; }
+        /* Gold अब डार्क सुनहरा है (पीला नहीं) */
+        .card-Gold { background: linear-gradient(135deg, #d97706 0%, #78350f 100%); color: white; }
+        /* Silver चमचमाता ग्रे है */
+        .card-Silver { background: linear-gradient(135deg, #cbd5e1 0%, #64748b 100%); color: black; }
         .card-Normal { background: #334155; color: white; }
 
-        /* Pending (पीला) और Sold (लाल) */
-        .pending-card { background: #eab308 !important; color: black !important; animation: pulse 1.5s infinite; border: 3px solid #fff; pointer-events: none; } 
-        .sold-card { background: #dc2626 !important; color: white !important; opacity: 0.5; pointer-events: none; border: 2px solid #7f1d1d; } 
+        /* 🔴 सिर्फ SOLD ही लाल होगा 🔴 */
+        .sold-card { background: #dc2626 !important; color: white !important; opacity: 0.6; pointer-events: none; border: 4px solid #7f1d1d; } 
+        /* 🟡 सिर्फ PENDING ही पीला होगा 🟡 */
+        .pending-card { background: #eab308 !important; color: black !important; animation: pulse 1.5s infinite; border: 4px solid #fff; pointer-events: none; } 
 
-        /* Banners */
-        .banner-VIP { background: linear-gradient(145deg, #7f1d1d, #450a0a); border: 2px solid #ef4444; }
-        .banner-Gold { background: linear-gradient(145deg, #b45309, #78350f); border: 2px solid #fbbf24; }
+        /* ऊपर वाले 3 जानकारी बैनर */
+        .banner-VIP { background: linear-gradient(145deg, #312e81, #1e1b4b); border: 2px solid #4f46e5; }
+        .banner-Gold { background: linear-gradient(145deg, #78350f, #451a03); border: 2px solid #d97706; }
         .banner-Silver { background: linear-gradient(145deg, #475569, #1e293b); border: 2px solid #94a3b8; }
 
-        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(0.95); } }
-        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 10px; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(0.98); } }
+        ::-webkit-scrollbar { width: 10px; } ::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -64,7 +72,7 @@
         const App = () => {
             const [cards, setCards] = useState([]);
             const [search, setSearch] = useState("");
-            const [activeTab, setActiveTab] = useState('ALL'); // 4 Buttons Logic
+            const [activeTab, setActiveTab] = useState('ALL'); 
             const [selected, setSelected] = useState(null);
             const [staff, setStaff] = useState(null);
             const [successModal, setSuccessModal] = useState(null);
@@ -112,233 +120,233 @@
                 setSelected(null); setPaymentMode("");
             };
 
+            // कार्ड को डिज़ाइन करने वाला फंक्शन (इसमें अब साफ़-साफ़ SOLD/PENDING लिखा आएगा)
             const renderCard = (c) => {
                 let colorClass = "";
-                if (c.status === 'Pending') colorClass = "pending-card";
-                else if (c.status === 'Sold') colorClass = "sold-card";
-                else colorClass = `card-${c.cat.split(' ')[0]}`;
+                let overlay = null;
+
+                if (c.status === 'Pending') {
+                    colorClass = "pending-card";
+                    overlay = <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 rounded-xl"><i className="fa-solid fa-clock text-4xl mb-1 text-yellow-300"></i><span className="text-[10px] font-black text-white bg-black/60 px-2 py-1 rounded">PENDING</span></div>;
+                } 
+                else if (c.status === 'Sold') {
+                    colorClass = "sold-card";
+                    overlay = <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-xl"><i className="fa-solid fa-lock text-4xl mb-1 text-red-400"></i><span className="text-[10px] font-black text-white bg-black/80 px-2 py-1 rounded">SOLD</span></div>;
+                } 
+                else {
+                    colorClass = `card-${c.cat.split(' ')[0]}`;
+                    overlay = <div className="absolute bottom-2 text-[12px] font-black tracking-widest opacity-80 uppercase">{c.cat.split(' ')[0]}</div>;
+                }
 
                 return (
                     <div key={c.n} onClick={c.status === 'Available' ? () => {setSelected(c); setPaymentMode("");} : undefined} className={`grid-item ${colorClass}`}>
-                        <span className="z-10">{c.n}</span>
-                        {c.status === 'Sold' && <i className="fa-solid fa-lock absolute text-white/30 text-4xl"></i>}
-                        {c.status === 'Pending' && <i className="fa-solid fa-clock absolute text-black/20 text-4xl"></i>}
+                        <span className="z-10 relative">{c.n}</span>
+                        {overlay}
                     </div>
                 );
             };
 
-            if(loading) return <div className="h-screen flex items-center justify-center font-black text-amber-500 text-3xl animate-pulse">DPSG PRO LOADING...</div>;
+            if(loading) return <div className="h-screen flex items-center justify-center font-black text-amber-500 text-4xl animate-pulse">DPSG PRO LOADING...</div>;
 
-            // Search Filter
             const filteredCards = cards.filter(c => 
                 c.n.toString().includes(search) || 
                 (c.d.name && c.d.name.toLowerCase().includes(search.toLowerCase())) ||
                 (c.d.mob && c.d.mob.includes(search))
             );
 
-            // Tab Filter Logic
             const displayCards = search ? filteredCards : (activeTab === 'ALL' ? cards : cards.filter(c => c.cat === activeTab));
 
             return (
                 <div className="max-w-7xl mx-auto p-4 py-8">
-                    {/* 1. TOP BANNERS (सिर्फ जानकारी के लिए) */}
+                    {/* 1. TOP BANNERS (सिर्फ जानकारी के लिए - ये कार्ड नहीं हैं) */}
                     <header className="text-center mb-10">
-                        <h1 className="text-5xl md:text-7xl font-black italic text-white rajdhani tracking-tighter drop-shadow-lg">DPSG <span className="text-amber-500">PRO</span> 2026</h1>
-                        <marquee className="mt-4 bg-amber-500 text-black py-2 font-black text-sm uppercase rounded shadow-lg">🔥 51 महा-इनाम + निश्चित गिफ्ट! आज ही अपना लकी नंबर चुनें! 🔥</marquee>
+                        <h1 className="text-6xl md:text-8xl font-black italic text-white rajdhani tracking-tighter drop-shadow-2xl">DPSG <span className="text-amber-500">PRO</span> 2026</h1>
+                        <marquee className="mt-6 bg-amber-500 text-black py-3 font-black text-lg uppercase rounded-lg shadow-xl">🔥 51 महा-इनाम + निश्चित गिफ्ट! बड़े कार्ड्स पर क्लिक करें और आज ही अपना लकी नंबर चुनें! 🔥</marquee>
                         
-                        <div className="mt-8 max-w-2xl mx-auto relative mb-10">
-                            <i className="fa-solid fa-search absolute left-5 top-5 text-slate-400 text-2xl"></i>
-                            <input type="text" placeholder="कार्ड नंबर, नाम या मोबाइल से खोजें..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full bg-slate-900 border-2 border-slate-700 p-4 pl-14 rounded-full font-bold text-white focus:border-amber-500 outline-none text-xl shadow-inner" />
+                        <div className="mt-10 max-w-3xl mx-auto relative mb-12">
+                            <i className="fa-solid fa-search absolute left-6 top-6 text-slate-400 text-3xl"></i>
+                            <input type="text" placeholder="कार्ड नंबर, नाम या मोबाइल से खोजें..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full bg-slate-900 border-4 border-slate-700 p-5 pl-20 rounded-full font-black text-white focus:border-amber-500 outline-none text-2xl shadow-inner" />
                         </div>
 
                         {!search && (
-                            <div className="grid md:grid-cols-3 gap-6 text-left">
-                                <div className="banner-VIP p-6 rounded-2xl shadow-xl flex flex-col justify-between">
+                            <div className="grid md:grid-cols-3 gap-8 text-left">
+                                <div className="banner-VIP p-8 rounded-3xl shadow-2xl flex flex-col justify-between">
                                     <div>
-                                        <h2 className="text-2xl font-black text-white uppercase"><i className="fa-solid fa-crown text-amber-400"></i> VIP कार्ड</h2>
-                                        <p className="text-xs text-slate-300 mt-2 font-bold">सीरियल: 1 से 100</p>
-                                        <ul className="text-sm mt-4 space-y-2 font-bold text-slate-200">
+                                        <h2 className="text-3xl font-black text-white uppercase"><i className="fa-solid fa-crown text-indigo-400"></i> VIP कार्ड</h2>
+                                        <p className="text-sm text-indigo-200 mt-2 font-black tracking-widest bg-black/30 inline-block px-3 py-1 rounded">सीरियल: 1 - 100</p>
+                                        <ul className="text-lg mt-6 space-y-3 font-bold text-slate-200">
                                             <li>✅ 6 महीने वैलिडिटी</li><li>✅ पूरी फैमिली कवर</li><li>✅ 100% फ्री ई-मित्र सेवा</li>
                                         </ul>
                                     </div>
-                                    <div className="mt-6 text-2xl font-black text-amber-400">₹500</div>
+                                    <div className="mt-8 text-4xl font-black text-indigo-300">₹500</div>
                                 </div>
-                                <div className="banner-Gold p-6 rounded-2xl shadow-xl flex flex-col justify-between">
+                                <div className="banner-Gold p-8 rounded-3xl shadow-2xl flex flex-col justify-between">
                                     <div>
-                                        <h2 className="text-2xl font-black text-white uppercase"><i className="fa-solid fa-star text-yellow-300"></i> GOLD कार्ड</h2>
-                                        <p className="text-xs text-slate-300 mt-2 font-bold">सीरियल: 101 से 600</p>
-                                        <ul className="text-sm mt-4 space-y-2 font-bold text-slate-200">
+                                        <h2 className="text-3xl font-black text-white uppercase"><i className="fa-solid fa-star text-yellow-400"></i> GOLD कार्ड</h2>
+                                        <p className="text-sm text-yellow-200 mt-2 font-black tracking-widest bg-black/30 inline-block px-3 py-1 rounded">सीरियल: 101 - 600</p>
+                                        <ul className="text-lg mt-6 space-y-3 font-bold text-slate-200">
                                             <li>✅ 3 महीने वैलिडिटी</li><li>✅ 40 प्रिंट + 24 फोटो</li><li>✅ 50% ई-मित्र छूट</li>
                                         </ul>
                                     </div>
-                                    <div className="mt-6 text-2xl font-black text-yellow-400">₹100</div>
+                                    <div className="mt-8 text-4xl font-black text-yellow-400">₹100</div>
                                 </div>
-                                <div className="banner-Silver p-6 rounded-2xl shadow-xl flex flex-col justify-between">
+                                <div className="banner-Silver p-8 rounded-3xl shadow-2xl flex flex-col justify-between">
                                     <div>
-                                        <h2 className="text-2xl font-black text-white uppercase"><i className="fa-solid fa-gem text-slate-300"></i> SILVER कार्ड</h2>
-                                        <p className="text-xs text-slate-300 mt-2 font-bold">सीरियल: 601 से 1000</p>
-                                        <ul className="text-sm mt-4 space-y-2 font-bold text-slate-200">
+                                        <h2 className="text-3xl font-black text-white uppercase"><i className="fa-solid fa-gem text-slate-300"></i> SILVER कार्ड</h2>
+                                        <p className="text-sm text-slate-300 mt-2 font-black tracking-widest bg-black/30 inline-block px-3 py-1 rounded">सीरियल: 601 - 1000</p>
+                                        <ul className="text-lg mt-6 space-y-3 font-bold text-slate-200">
                                             <li>✅ 1 महीना वैलिडिटी</li><li>✅ 15 प्रिंट + 12 फोटो</li><li>✅ लकी ड्रा में शामिल</li>
                                         </ul>
                                     </div>
-                                    <div className="mt-6 text-2xl font-black text-slate-300">₹50</div>
+                                    <div className="mt-8 text-4xl font-black text-slate-300">₹50</div>
                                 </div>
                             </div>
                         )}
                     </header>
 
-                    <div className="grid lg:grid-cols-12 gap-8">
+                    <div className="grid lg:grid-cols-12 gap-10">
                         {/* 2. PRIZES SECTION */}
-                        <div className="lg:col-span-4 glass p-6 h-[850px] flex flex-col border-t-4 border-amber-500">
-                            <h2 className="text-3xl font-black italic text-amber-500 mb-6 text-center underline"><i className="fa-solid fa-trophy"></i> 51 महा-इनाम</h2>
-                            <div className="overflow-y-auto pr-2 space-y-4 flex-1">
+                        <div className="lg:col-span-4 glass p-8 h-[950px] flex flex-col border-t-8 border-amber-500">
+                            <h2 className="text-4xl font-black italic text-amber-500 mb-8 text-center underline"><i className="fa-solid fa-trophy"></i> 51 महा-इनाम</h2>
+                            <div className="overflow-y-auto pr-4 space-y-5 flex-1 custom-scroll">
                                 {PRIZES.map((p, i) => (
-                                    <div key={p.r} className={`p-4 rounded-xl border-l-8 shadow-lg ${i===51 ? 'bg-green-900/60 border-green-500' : 'bg-slate-800/80 border-amber-500'}`}>
-                                        <div className="flex items-center gap-4 mb-2">
-                                            <div className={`w-10 h-10 flex items-center justify-center font-black text-xl rounded-lg ${i===51 ? 'bg-green-500 text-white' : 'bg-amber-500 text-black'}`}>{i===51 ? '🎁' : p.r}</div>
-                                            <h4 className="font-black text-lg text-white">{p.n}</h4>
+                                    <div key={p.r} className={`p-5 rounded-2xl border-l-8 shadow-xl ${i===51 ? 'bg-green-900/60 border-green-500' : 'bg-slate-800/80 border-amber-500'}`}>
+                                        <div className="flex items-center gap-5 mb-3">
+                                            <div className={`w-14 h-14 flex items-center justify-center font-black text-2xl rounded-xl ${i===51 ? 'bg-green-500 text-white' : 'bg-amber-500 text-black'}`}>{i===51 ? '🎁' : p.r}</div>
+                                            <h4 className="font-black text-xl text-white">{p.n}</h4>
                                         </div>
-                                        <p className="text-[11px] text-slate-300 font-bold ml-14">{p.d}</p>
+                                        <p className="text-sm text-slate-300 font-bold ml-16 leading-relaxed">{p.d}</p>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        {/* 3. GRID SECTION WITH 4 TABS */}
-                        <div className="lg:col-span-8 glass p-6 h-[850px] flex flex-col border-t-4 border-indigo-500">
+                        {/* 3. JUMBO GRID SECTION WITH 4 TABS */}
+                        <div className="lg:col-span-8 glass p-8 h-[950px] flex flex-col border-t-8 border-indigo-500">
                             {/* 4 BUTTONS (ALL, VIP, GOLD, SILVER) */}
                             {!search && (
-                                <div className="flex flex-wrap gap-2 mb-6 bg-slate-900/50 p-2 rounded-2xl justify-center">
-                                    <button onClick={() => setActiveTab('ALL')} className={`px-6 py-3 rounded-xl font-black uppercase transition-all ${activeTab === 'ALL' ? 'bg-indigo-600 text-white shadow-lg scale-105' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>
-                                        <i className="fa-solid fa-border-all"></i> सभी कार्ड्स (ALL)
+                                <div className="flex flex-wrap gap-4 mb-8 bg-slate-900/60 p-4 rounded-3xl justify-center">
+                                    <button onClick={() => setActiveTab('ALL')} className={`px-8 py-4 rounded-2xl font-black text-xl uppercase transition-all shadow-lg ${activeTab === 'ALL' ? 'bg-indigo-600 text-white scale-105' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>
+                                        <i className="fa-solid fa-border-all mr-2"></i> सभी कार्ड्स
                                     </button>
-                                    <button onClick={() => setActiveTab('VIP Card')} className={`px-4 py-3 rounded-xl font-black uppercase transition-all ${activeTab === 'VIP Card' ? 'bg-red-600 text-white shadow-lg scale-105' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>VIP (1-100)</button>
-                                    <button onClick={() => setActiveTab('Gold Card')} className={`px-4 py-3 rounded-xl font-black uppercase transition-all ${activeTab === 'Gold Card' ? 'bg-yellow-500 text-black shadow-lg scale-105' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>GOLD (101-600)</button>
-                                    <button onClick={() => setActiveTab('Silver Card')} className={`px-4 py-3 rounded-xl font-black uppercase transition-all ${activeTab === 'Silver Card' ? 'bg-slate-300 text-black shadow-lg scale-105' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>SILVER (601-1000)</button>
+                                    <button onClick={() => setActiveTab('VIP Card')} className={`px-6 py-4 rounded-2xl font-black text-lg uppercase transition-all shadow-lg ${activeTab === 'VIP Card' ? 'bg-indigo-600 text-white scale-105' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>VIP (1-100)</button>
+                                    <button onClick={() => setActiveTab('Gold Card')} className={`px-6 py-4 rounded-2xl font-black text-lg uppercase transition-all shadow-lg ${activeTab === 'Gold Card' ? 'bg-amber-600 text-white scale-105' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>GOLD (101-600)</button>
+                                    <button onClick={() => setActiveTab('Silver Card')} className={`px-6 py-4 rounded-2xl font-black text-lg uppercase transition-all shadow-lg ${activeTab === 'Silver Card' ? 'bg-slate-400 text-black scale-105' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>SILVER (601-1000)</button>
                                 </div>
                             )}
 
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-2xl font-black text-white uppercase">{search ? 'खोज परिणाम' : activeTab === 'ALL' ? 'सीरियल वाइज़ सभी कार्ड्स' : `${activeTab} लिस्ट`}</h2>
-                                <div className="flex gap-4 text-[10px] font-black uppercase bg-black/40 p-2 rounded-lg border border-slate-700">
-                                    <span className="flex items-center gap-2"><div className="w-3 h-3 bg-yellow-500 rounded"></div> पेंडिंग</span>
-                                    <span className="flex items-center gap-2"><div className="w-3 h-3 bg-red-600 rounded"></div> सोल्ड</span>
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-4xl font-black text-white uppercase">{search ? 'खोज परिणाम' : activeTab === 'ALL' ? 'सभी लकी कार्ड्स' : `${activeTab} लिस्ट`}</h2>
+                                <div className="flex gap-6 text-sm font-black uppercase bg-black/50 p-3 rounded-xl border border-slate-700">
+                                    <span className="flex items-center gap-3"><div className="w-5 h-5 bg-yellow-500 border-2 border-white rounded"></div> पेंडिंग</span>
+                                    <span className="flex items-center gap-3"><div className="w-5 h-5 bg-red-600 border-2 border-white rounded"></div> सोल्ड</span>
                                 </div>
                             </div>
                             
-                            <div className="card-grid bg-black/30 rounded-2xl border border-white/5 p-4 flex-1">
+                            {/* The Jumbo Grid */}
+                            <div className="card-grid bg-black/40 rounded-3xl border border-white/10 p-6 flex-1">
                                 {displayCards.map(renderCard)}
                             </div>
-                            {search && displayCards.length === 0 && <p className="text-center text-slate-500 font-bold mt-10 text-2xl">कोई कार्ड नहीं मिला!</p>}
+                            {search && displayCards.length === 0 && <p className="text-center text-slate-500 font-bold mt-10 text-3xl">कोई कार्ड नहीं मिला!</p>}
                         </div>
                     </div>
 
-                    {/* 4. CUSTOMER BOOKING MODAL (Strict Rules) */}
+                    {/* 4. CUSTOMER BOOKING MODAL */}
                     {selected && selected.status === 'Available' && !staff && (
                         <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 backdrop-blur-md">
-                            <div className="glass p-8 w-full max-w-xl shadow-[0_0_40px_rgba(251,191,36,0.3)] border-2 border-amber-500 overflow-y-auto max-h-[90vh]">
-                                <div className="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
-                                    <h3 className="text-4xl font-black italic uppercase text-white">बुक कार्ड: #{selected.n}</h3>
-                                    <span className="bg-amber-500 text-black px-4 py-1 rounded-full text-lg font-black">{selected.cat} | ₹{selected.price}</span>
+                            <div className="glass p-10 w-full max-w-2xl shadow-[0_0_50px_rgba(251,191,36,0.4)] border-4 border-amber-500 overflow-y-auto max-h-[95vh] rounded-3xl">
+                                <div className="flex justify-between items-center mb-8 border-b-2 border-slate-700 pb-6">
+                                    <h3 className="text-5xl font-black italic uppercase text-white">बुक कार्ड: #{selected.n}</h3>
+                                    <span className="bg-amber-500 text-black px-6 py-2 rounded-full text-2xl font-black">{selected.cat} | ₹{selected.price}</span>
                                 </div>
                                 
-                                <form onSubmit={bookCard} className="space-y-5">
-                                    {/* Mandatory Fields */}
-                                    <div className="bg-slate-800/50 p-5 rounded-xl border border-slate-600">
-                                        <p className="text-sm text-amber-500 font-black uppercase mb-3"><i className="fa-solid fa-asterisk"></i> अनिवार्य जानकारी:</p>
-                                        <input name="Customer_Name" placeholder="पूरा नाम *" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border border-slate-600 focus:border-amber-500 outline-none text-lg mb-3" />
-                                        <input name="Mobile" type="tel" pattern="[0-9]{10}" placeholder="मोबाइल (10 अंक) *" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border border-slate-600 focus:border-amber-500 outline-none text-lg mb-3" />
-                                        <input name="Aadhaar" type="tel" pattern="[0-9]{12}" placeholder="आधार नंबर (12 अंक) *" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border border-slate-600 focus:border-amber-500 outline-none text-lg" />
+                                <form onSubmit={bookCard} className="space-y-6">
+                                    <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-600">
+                                        <p className="text-lg text-amber-500 font-black uppercase mb-4"><i className="fa-solid fa-asterisk"></i> अनिवार्य जानकारी:</p>
+                                        <input name="Customer_Name" placeholder="पूरा नाम *" required className="w-full bg-slate-900 p-5 rounded-xl font-bold border-2 border-slate-600 focus:border-amber-500 outline-none text-2xl mb-4 text-white" />
+                                        <input name="Mobile" type="tel" pattern="[0-9]{10}" placeholder="मोबाइल (10 अंक) *" required className="w-full bg-slate-900 p-5 rounded-xl font-bold border-2 border-slate-600 focus:border-amber-500 outline-none text-2xl mb-4 text-white" />
+                                        <input name="Aadhaar" type="tel" pattern="[0-9]{12}" placeholder="आधार नंबर (12 अंक) *" required className="w-full bg-slate-900 p-5 rounded-xl font-bold border-2 border-slate-600 focus:border-amber-500 outline-none text-2xl text-white" />
                                     </div>
 
-                                    {/* Payment & Airtel Logic */}
-                                    <div className="bg-slate-800/50 p-5 rounded-xl border border-slate-600">
-                                        <p className="text-sm text-indigo-400 font-black uppercase mb-3"><i className="fa-solid fa-wallet"></i> पेमेंट जानकारी:</p>
-                                        <select required value={paymentMode} onChange={(e) => setPaymentMode(e.target.value)} className="w-full bg-slate-900 p-4 rounded-xl font-bold border border-slate-600 focus:border-indigo-500 outline-none text-lg mb-4">
+                                    <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-600">
+                                        <p className="text-lg text-indigo-400 font-black uppercase mb-4"><i className="fa-solid fa-wallet"></i> पेमेंट जानकारी:</p>
+                                        <select required value={paymentMode} onChange={(e) => setPaymentMode(e.target.value)} className="w-full bg-slate-900 p-5 rounded-xl font-bold border-2 border-slate-600 focus:border-indigo-500 outline-none text-2xl mb-4 text-white">
                                             <option value="" disabled>पेमेंट का तरीका चुनें *</option>
                                             <option value="Cash">नकद (Cash)</option>
                                             <option value="PhonePe/GPay">PhonePe / Google Pay</option>
                                             <option value="Airtel Payment Bank">Airtel Payment Bank</option>
                                         </select>
                                         
-                                        {/* PAN Card required ONLY for Airtel */}
                                         {paymentMode === 'Airtel Payment Bank' && (
-                                            <div className="animate-pulse bg-red-900/40 p-4 rounded-xl border-2 border-red-500">
-                                                <p className="text-xs text-white font-black mb-2 uppercase"><i className="fa-solid fa-circle-exclamation text-red-500"></i> Airtel Bank के लिए पैन कार्ड अनिवार्य है:</p>
-                                                <input name="PAN" placeholder="PAN Card Number *" required className="w-full bg-black p-4 rounded-xl font-bold border border-red-500 outline-none text-lg uppercase text-white tracking-widest" />
+                                            <div className="animate-pulse bg-red-900/50 p-6 rounded-2xl border-4 border-red-500 mt-4">
+                                                <p className="text-lg text-white font-black mb-3 uppercase"><i className="fa-solid fa-circle-exclamation text-red-500"></i> Airtel Bank के लिए पैन कार्ड अनिवार्य है:</p>
+                                                <input name="PAN" placeholder="PAN Card Number *" required className="w-full bg-black p-5 rounded-xl font-black border-2 border-red-500 outline-none text-3xl uppercase text-white tracking-widest text-center" />
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* Optional Fields */}
-                                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase mb-2">अन्य जानकारी (ऐच्छिक):</p>
-                                        <div className="grid md:grid-cols-2 gap-4">
-                                            <input name="Village" placeholder="गाँव / शहर का नाम" className="w-full bg-slate-900 p-3 rounded-lg font-bold border border-slate-700 outline-none" />
-                                        </div>
+                                    <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
+                                        <p className="text-sm text-slate-400 font-bold uppercase mb-4">अन्य जानकारी (ऐच्छिक):</p>
+                                        <input name="Village" placeholder="गाँव / शहर का नाम" className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 outline-none text-xl text-white" />
                                     </div>
 
-                                    <div className="flex gap-4 pt-2">
-                                        <button type="submit" className="flex-1 bg-gradient-to-r from-amber-500 to-yellow-600 text-black font-black py-5 rounded-2xl text-2xl shadow-lg hover:scale-[1.02] transition-transform uppercase italic">कन्फर्म बुकिंग 🔱</button>
-                                        <button type="button" onClick={() => setSelected(null)} className="bg-slate-700 text-white font-black px-6 py-5 rounded-2xl text-xl">रद्द</button>
+                                    <div className="flex gap-6 pt-4">
+                                        <button type="submit" className="flex-1 bg-gradient-to-r from-amber-500 to-yellow-600 text-black font-black py-6 rounded-2xl text-3xl shadow-2xl hover:scale-[1.02] transition-transform uppercase italic">कन्फर्म बुकिंग 🔱</button>
+                                        <button type="button" onClick={() => setSelected(null)} className="bg-slate-700 text-white font-black px-10 py-6 rounded-2xl text-2xl hover:bg-red-600 transition-colors">रद्द</button>
                                     </div>
                                 </form>
                             </div>
                         </div>
                     )}
 
-                    {/* 5. STAFF EDIT & VERIFY MODAL (Super Admin Power) */}
+                    {/* 5. STAFF EDIT & VERIFY MODAL */}
                     {selected && selected.status !== 'Available' && (
                         <div className="fixed inset-0 z-[70] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
-                            <div className="glass p-8 w-full max-w-2xl border-2 border-indigo-500 shadow-[0_0_50px_rgba(99,102,241,0.2)]">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h3 className="text-3xl font-black text-white">स्टाफ कंट्रोल: #{selected.n}</h3>
-                                    <span className={`px-4 py-1 rounded-full text-sm font-black uppercase ${selected.status==='Pending'?'bg-yellow-500 text-black':'bg-red-600 text-white'}`}>{selected.status}</span>
-                                    <button onClick={() => setSelected(null)} className="text-4xl text-slate-500 hover:text-white">&times;</button>
+                            <div className="glass p-10 w-full max-w-3xl border-4 border-indigo-500 shadow-[0_0_60px_rgba(99,102,241,0.3)] rounded-3xl">
+                                <div className="flex justify-between items-center mb-8 border-b-2 border-slate-700 pb-4">
+                                    <h3 className="text-4xl font-black text-white">स्टाफ कंट्रोल: #{selected.n}</h3>
+                                    <span className={`px-6 py-2 rounded-full text-xl font-black uppercase ${selected.status==='Pending'?'bg-yellow-500 text-black':'bg-red-600 text-white'}`}>{selected.status}</span>
+                                    <button onClick={() => setSelected(null)} className="text-5xl text-slate-500 hover:text-white">&times;</button>
                                 </div>
 
                                 {staff ? (
                                     <div className="space-y-6">
-                                        <p className="text-center font-black text-amber-500 text-xs bg-slate-900 p-2 rounded-lg border border-amber-500/30">लॉगिन: {staff.id}</p>
+                                        <p className="text-center font-black text-amber-500 text-lg bg-slate-900 p-3 rounded-xl border border-amber-500/30">लॉगिन: {staff.id}</p>
                                         
-                                        {/* Editable Fields by Staff */}
-                                        <div className="grid md:grid-cols-2 gap-4 bg-slate-800 p-5 rounded-xl border border-slate-600">
-                                            <div><label className="text-[10px] text-slate-400 font-bold uppercase">ग्राहक का नाम</label><input id="s_name" defaultValue={selected.d.name} className="w-full bg-slate-900 p-3 rounded-lg text-sm font-bold border border-slate-700 outline-none text-white" /></div>
-                                            <div><label className="text-[10px] text-slate-400 font-bold uppercase">मोबाइल</label><input id="s_mob" defaultValue={selected.d.mob?.replace(/'/g,'')} className="w-full bg-slate-900 p-3 rounded-lg text-sm font-bold border border-slate-700 outline-none text-white" /></div>
-                                            <div><label className="text-[10px] text-slate-400 font-bold uppercase">आधार नंबर</label><input id="s_aadhaar" defaultValue={selected.d.aadhaar?.replace(/'/g,'')} className="w-full bg-slate-900 p-3 rounded-lg text-sm font-bold border border-slate-700 outline-none text-white" /></div>
-                                            <div><label className="text-[10px] text-slate-400 font-bold uppercase">पेमेंट मोड</label>
-                                                <select id="s_payMode" defaultValue={selected.d.payMode} className="w-full bg-slate-900 p-3 rounded-lg text-sm font-bold border border-slate-700 outline-none text-white">
-                                                    <option value="Cash">Cash</option>
-                                                    <option value="PhonePe/GPay">PhonePe/GPay</option>
-                                                    <option value="Airtel Payment Bank">Airtel Payment Bank</option>
+                                        <div className="grid md:grid-cols-2 gap-6 bg-slate-800 p-8 rounded-2xl border-2 border-slate-600">
+                                            <div><label className="text-xs text-slate-400 font-bold uppercase">ग्राहक का नाम</label><input id="s_name" defaultValue={selected.d.name} className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 outline-none text-white mt-1" /></div>
+                                            <div><label className="text-xs text-slate-400 font-bold uppercase">मोबाइल</label><input id="s_mob" defaultValue={selected.d.mob?.replace(/'/g,'')} className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 outline-none text-white mt-1" /></div>
+                                            <div><label className="text-xs text-slate-400 font-bold uppercase">आधार नंबर</label><input id="s_aadhaar" defaultValue={selected.d.aadhaar?.replace(/'/g,'')} className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 outline-none text-white mt-1" /></div>
+                                            <div><label className="text-xs text-slate-400 font-bold uppercase">पेमेंट मोड</label>
+                                                <select id="s_payMode" defaultValue={selected.d.payMode} className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 outline-none text-white mt-1">
+                                                    <option value="Cash">Cash</option><option value="PhonePe/GPay">PhonePe/GPay</option><option value="Airtel Payment Bank">Airtel Payment Bank</option>
                                                 </select>
                                             </div>
-                                            <div><label className="text-[10px] text-slate-400 font-bold uppercase">रेफ़्रेन्स / ID</label><input id="s_ref" defaultValue={selected.d.ref} placeholder="Txn ID..." className="w-full bg-slate-900 p-3 rounded-lg text-sm font-bold border border-slate-700 outline-none text-amber-400" /></div>
-                                            <div><label className="text-[10px] text-slate-400 font-bold uppercase">प्राप्त राशि (Paid ₹)</label><input id="s_paid" type="number" defaultValue={selected.price} className="w-full bg-green-900/40 p-3 rounded-lg text-lg font-black border border-green-500 outline-none text-green-400" /></div>
-                                            <div className="md:col-span-2"><label className="text-[10px] text-slate-400 font-bold uppercase">फोटो / डॉक्यूमेंट लिंक</label><input id="s_img" placeholder="Google Drive Link..." className="w-full bg-slate-900 p-3 rounded-lg text-sm font-bold border border-slate-700 outline-none text-blue-400" /></div>
+                                            <div><label className="text-xs text-slate-400 font-bold uppercase">रेफ़्रेन्स / ID</label><input id="s_ref" defaultValue={selected.d.ref} placeholder="Txn ID..." className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 outline-none text-amber-400 mt-1" /></div>
+                                            <div><label className="text-xs text-slate-400 font-bold uppercase">प्राप्त राशि (Paid ₹)</label><input id="s_paid" type="number" defaultValue={selected.price} className="w-full bg-green-900/50 p-4 rounded-xl text-2xl font-black border-2 border-green-500 outline-none text-green-400 mt-1" /></div>
+                                            <div className="md:col-span-2"><label className="text-xs text-slate-400 font-bold uppercase">फोटो / डॉक्यूमेंट लिंक</label><input id="s_img" placeholder="Google Drive Link..." className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 outline-none text-blue-400 mt-1" /></div>
                                         </div>
 
-                                        <div className="bg-black p-4 rounded-xl border border-slate-700 max-h-32 overflow-y-auto text-[11px] font-mono text-green-400 whitespace-pre-wrap">
-                                            <span className="text-white font-bold block mb-1">AUDIT HISTORY (लॉग्स):</span>
-                                            {selected.d.history || "No history."}
+                                        <div className="bg-black p-6 rounded-2xl border-2 border-slate-700 max-h-40 overflow-y-auto text-xs font-mono text-green-400 whitespace-pre-wrap leading-relaxed">
+                                            <span className="text-white font-bold block mb-2 text-lg">AUDIT HISTORY (लॉग्स):</span>
+                                            {selected.d.history || "No history yet."}
                                         </div>
                                         
-                                        {/* Verify (Sold) and Reject Buttons */}
-                                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-700">
-                                            <button onClick={() => { handleAction({action:'UPDATE', S_No:selected.n, Status:'Sold', Customer_Name:document.getElementById('s_name').value, Mobile:document.getElementById('s_mob').value, Aadhaar:document.getElementById('s_aadhaar').value, Payment_Mode:document.getElementById('s_payMode').value, Payment_Ref:document.getElementById('s_ref').value, Paid:document.getElementById('s_paid').value, ImgLink:document.getElementById('s_img').value, LogMsg:'पेमेंट Verify किया और Sold किया'}); setSelected(null); alert("✅ कार्ड Verified & Sold!"); }} className="bg-red-600 hover:bg-red-500 text-white font-black py-4 rounded-2xl text-xl shadow-[0_0_20px_rgba(220,38,38,0.4)] uppercase"><i className="fa-solid fa-check-double"></i> Verify & Sold</button>
+                                        <div className="grid grid-cols-2 gap-6 pt-6 border-t-2 border-slate-700">
+                                            <button onClick={() => { handleAction({action:'UPDATE', S_No:selected.n, Status:'Sold', Customer_Name:document.getElementById('s_name').value, Mobile:document.getElementById('s_mob').value, Aadhaar:document.getElementById('s_aadhaar').value, Payment_Mode:document.getElementById('s_payMode').value, Payment_Ref:document.getElementById('s_ref').value, Paid:document.getElementById('s_paid').value, ImgLink:document.getElementById('s_img').value, LogMsg:'पेमेंट Verify किया और Sold किया'}); setSelected(null); alert("✅ कार्ड Verified & Sold!"); }} className="bg-red-600 hover:bg-red-500 text-white font-black py-6 rounded-2xl text-2xl shadow-[0_0_30px_rgba(220,38,38,0.5)] uppercase"><i className="fa-solid fa-check-double"></i> Verify & Sold</button>
                                             
-                                            <button onClick={() => { handleAction({action:'UPDATE', S_No:selected.n, Status:'Available', LogMsg:'बुकिंग REJECTED (डेटा डिलीट)'}); setSelected(null); alert("❌ Rejected & Cleared!"); }} className="bg-slate-700 hover:bg-slate-600 text-white font-black py-4 rounded-2xl text-xl shadow-lg uppercase"><i className="fa-solid fa-trash"></i> Reject (Clear)</button>
+                                            <button onClick={() => { handleAction({action:'UPDATE', S_No:selected.n, Status:'Available', LogMsg:'बुकिंग REJECTED (डेटा डिलीट)'}); setSelected(null); alert("❌ Rejected & Cleared!"); }} className="bg-slate-700 hover:bg-slate-600 text-white font-black py-6 rounded-2xl text-2xl shadow-xl uppercase"><i className="fa-solid fa-trash"></i> Reject (Clear)</button>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="text-center py-12">
-                                        <i className="fa-solid fa-user-shield text-7xl text-slate-600 mb-6"></i>
-                                        <h4 className="text-3xl font-black text-white mb-2">यह कार्ड {selected.status} है</h4>
-                                        <p className="text-slate-400 mb-8 font-bold text-lg">ग्राहक: {selected.d.name} | 📱 {selected.d.mob}</p>
+                                    <div className="text-center py-16">
+                                        <i className="fa-solid fa-user-shield text-8xl text-slate-600 mb-8"></i>
+                                        <h4 className="text-4xl font-black text-white mb-4">यह कार्ड {selected.status} है</h4>
+                                        <p className="text-slate-400 mb-10 font-bold text-2xl">ग्राहक: {selected.d.name} | 📱 {selected.d.mob}</p>
                                         <button onClick={() => {
                                             const id = prompt("Staff ID:"); const ps = prompt("Password:");
                                             if(ADMINS[id] === ps) setStaff({id, pass: ps}); else alert("Access Denied! गलत पासवर्ड।");
-                                        }} className="bg-indigo-600 text-white font-black px-10 py-5 rounded-full text-xl uppercase shadow-lg hover:bg-indigo-500 transition-colors">स्टाफ लॉगिन (Verify / Edit)</button>
+                                        }} className="bg-indigo-600 text-white font-black px-12 py-6 rounded-full text-2xl uppercase shadow-2xl hover:bg-indigo-500 transition-colors">स्टाफ लॉगिन (Verify / Edit)</button>
                                     </div>
                                 )}
                             </div>
@@ -348,17 +356,22 @@
                     {/* 6. WhatsApp Auto-Message Modal */}
                     {successModal && (
                         <div className="fixed inset-0 z-[80] bg-black/95 flex items-center justify-center p-4">
-                            <div className="glass p-10 max-w-md text-center border-t-8 border-green-500 shadow-[0_0_50px_rgba(34,197,94,0.3)]">
-                                <i className="fa-regular fa-circle-check text-7xl text-green-500 mb-6 animate-bounce"></i>
-                                <h3 className="text-3xl font-black italic mb-2 text-white">बुकिंग पेंडिंग में गई!</h3>
-                                <p className="text-slate-300 text-sm mb-8 font-bold">हुकुम, कार्ड #{successModal.n} सुरक्षित है। स्टाफ द्वारा पेमेंट वेरीफाई होने पर यह पक्का (लाल) हो जाएगा।</p>
-                                <a href={`https://wa.me/917229874128?text=${encodeURIComponent(`जय माता दी! हुकुम, मैंने DPSG-PRO पर कार्ड #${successModal.n} बुक किया है। मेरा नाम ${successModal.name} है। कृपया पेमेंट Verify करें।`)}`} target="_blank" onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-3 w-full bg-[#25D366] text-white font-black py-5 rounded-2xl text-xl mb-4 shadow-lg hover:scale-105 transition-transform">
-                                    <i className="fa-brands fa-whatsapp text-3xl"></i> WhatsApp पर सूचित करें
+                            <div className="glass p-12 max-w-xl text-center border-t-8 border-green-500 shadow-[0_0_60px_rgba(34,197,94,0.4)] rounded-3xl">
+                                <i className="fa-regular fa-circle-check text-8xl text-green-500 mb-8 animate-bounce"></i>
+                                <h3 className="text-4xl font-black italic mb-4 text-white">बुकिंग पेंडिंग में गई!</h3>
+                                <p className="text-slate-300 text-lg mb-10 font-bold leading-relaxed">हुकुम, कार्ड #{successModal.n} सुरक्षित है। स्टाफ द्वारा पेमेंट वेरीफाई होने पर यह पक्का (लाल) हो जाएगा।</p>
+                                <a href={`https://wa.me/917229874128?text=${encodeURIComponent(`जय माता दी! हुकुम, मैंने DPSG-PRO पर कार्ड #${successModal.n} बुक किया है। मेरा नाम ${successModal.name} है। कृपया पेमेंट Verify करें।`)}`} target="_blank" onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-4 w-full bg-[#25D366] text-white font-black py-6 rounded-2xl text-2xl mb-6 shadow-2xl hover:scale-105 transition-transform">
+                                    <i className="fa-brands fa-whatsapp text-4xl"></i> WhatsApp पर सूचित करें
                                 </a>
-                                <button onClick={()=>setSuccessModal(null)} className="text-slate-500 font-bold text-sm underline hover:text-white">बंद करें</button>
+                                <button onClick={()=>setSuccessModal(null)} className="text-slate-500 font-bold text-lg underline hover:text-white">बंद करें</button>
                             </div>
                         </div>
                     )}
+
+                    {/* Staff Login Bottom Button */}
+                    <div className="mt-24 opacity-10 hover:opacity-100 text-center">
+                        <button onClick={()=>{let u=prompt("ID:");let p=prompt("Pass:");if(ADMINS[u]===p)setStaff({id:u,pass:p});}} className="text-xs tracking-[1em] font-black uppercase text-slate-500 hover:text-white">🔱 STAFF ACCESS 🔱</button>
+                    </div>
                 </div>
             );
         };
