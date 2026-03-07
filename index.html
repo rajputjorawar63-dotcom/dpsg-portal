@@ -79,7 +79,7 @@
             {r:23, n:"₹101 Cash", d:"बचत कार्ड के साथ जीतें ₹101 नकद।"},
             {r:24, n:"Photo Frame", d:"राधा कृष्ण की कृपा का सुंदर फ्रेम।"},
             {r:25, n:"Wall Clock", d:"समय की कीमत समझें और जीतें घड़ी।"},
-            {r:26, n:"Tea Cup Set", d:"सुंदर टी Cup सेट के साथ स्वागत करें।"},
+            {r:26, n:"Tea Cup Set", d:"सुंदर टी कप सेट के साथ स्वागत करें।"},
             {r:27, n:"Movie Ticket", d:"पसंदीदा फिल्म की टिकट।"},
             {r:28, n:"Umbrella", d:"यह रंगीन और मजबूत छाता रहेगा साथ।"},
             {r:29, n:"Sunglasses", d:"दिखें सबसे अलग और स्टाइलिश।"},
@@ -122,14 +122,15 @@
             const [isUploading, setIsUploading] = useState(false);
             const [discount, setDiscount] = useState(0);
 
-            // ⚠️ 100% पक्का ओरिजिनल लोडिंग इंजन ⚠️
+            // ⚠️ 100% पक्का ओरिजिनल लोडिंग इंजन (नंबर पकड़ने वाली मशीन के साथ) ⚠️
             const loadData = () => {
                 fetch(CSV_URL + "?t=" + Date.now()).then(r => r.text()).then(csv => {
-                    // ओरिजिनल सिंपल स्प्लिट जो एकदम सही काम कर रहा था
+                    // पुराना वाला एकदम सही डिज़ाइन
                     const rows = csv.split('\n').map(r => r.split(','));
                     let temp = [];
                     for(let i=1; i<=1000; i++) {
-                        let rD = rows.find(r => parseInt(r[0]) === i) || [];
+                        // ⚠️ बीमारी का इलाज: r[0] में से फालतू कोमा या स्पेस हटाकर सिर्फ नंबर पढ़ना
+                        let rD = rows.find(r => r[0] && parseInt(r[0].replace(/[^0-9]/g, '')) === i) || [];
                         
                         let rawStatus = (rD[4] || 'Available').trim().toLowerCase();
                         let s = 'Available';
