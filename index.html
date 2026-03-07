@@ -121,43 +121,28 @@
             const [isUploading, setIsUploading] = useState(false);
             const [discount, setDiscount] = useState(0);
 
-            // ⚠️ एकदम सीधा और 100% पक्का डेटा रीडर (No Fancy Regex) ⚠️
+            // ⚠️ आपका पुराना और 100% सही ओरिजिनल लोडिंग इंजन ⚠️
             const loadData = () => {
                 fetch(CSV_URL + "?t=" + Date.now()).then(r => r.text()).then(csv => {
-                    // कोमा को सही तरीके से काटने वाला कोड
-                    const rows = csv.split('\n').map(row => {
-                        const cols = [];
-                        let cur = '';
-                        let inQuote = false;
-                        for (let i = 0; i < row.length; i++) {
-                            if (row[i] === '"') inQuote = !inQuote;
-                            else if (row[i] === ',' && !inQuote) { cols.push(cur.trim()); cur = ''; }
-                            else cur += row[i];
-                        }
-                        cols.push(cur.trim());
-                        return cols;
-                    });
-
+                    const rows = csv.split('\n').map(r => r.split(',')); // पुराना सिंपल स्प्लिट
                     let temp = [];
                     for(let i=1; i<=1000; i++) {
-                        // सीधा नंबर मैच करेगा (जैसे '1' == 1)
-                        let rD = rows.find(r => r[0] && r[0] == i) || [];
+                        let rD = rows.find(r => r[0] == i) || []; // पुराना सही नंबर मैच
                         
-                        let rawStatus = (rD[4] || '').trim().toLowerCase();
+                        let rawStatus = rD[4] ? rD[4].trim().toLowerCase() : 'Available';
                         let s = 'Available';
                         
-                        // Solid Status Filter
-                        if(rawStatus === 'सॉल्ड' || rawStatus === 'sold' || rawStatus.includes('sold')) {
-                            s = 'Sold';
-                        } else if(rawStatus === 'पेंडिंग' || rawStatus === 'pending' || rawStatus.includes('pending')) {
-                            s = 'Pending';
+                        // सॉल्ड और पेंडिंग का पक्का फ़िल्टर
+                        if(rawStatus.includes("सॉल्ड") || rawStatus.includes("sold")) {
+                            s = "Sold";
+                        } else if(rawStatus.includes("पेंडिंग") || rawStatus.includes("pending")) {
+                            s = "Pending";
                         }
                         
                         let cat = i <= 100 ? "VIP Card" : i <= 600 ? "Gold Card" : "Silver Card";
                         temp.push({ 
-                            n: i, status: s, cat, 
-                            price: rD[16] ? parseInt(rD[16]) : (i<=100?500:i<=600?100:50),
-                            mid: rD[3] ? rD[3] : `DPSG-26-113-${i.toString().padStart(4,'0')}`,
+                            n: i, status: s, cat, price: parseInt(rD[16] || (i<=100?500:i<=600?100:50)),
+                            mid: rD[3] || `DPSG-26-113-${i.toString().padStart(4,'0')}`,
                             d: { 
                                 name: rD[6]||"", mob: rD[7]||"", dob: rD[8]||"", vill: rD[9]||"", 
                                 adhar: rD[10]||"", pan: rD[11]||"", pay: rD[12]||"", ref: rD[13]||"", 
@@ -247,14 +232,14 @@
             };
 
             const handleCardClick = (c, s) => {
-                if(s === 'Sold') return;
+                if(s === 'Sold') return; // Sold पर क्लिक बंद
                 
                 if(staff) {
                     setSelected(c); 
                     setPayMode(c.d.pay || "");
                     setDiscount(parseInt(c.d.discount || 0));
                 } else {
-                    if(s === 'Pending') return;
+                    if(s === 'Pending') return; // Pending पर ग्राहक का क्लिक बंद
                     setSelected(c); 
                     setPayMode("");
                     setDiscount(0);
@@ -284,7 +269,7 @@
             return (
                 <div className="max-w-[1600px] mx-auto p-4 py-10">
                     
-                    {/* 🛡️ STAFF DASHBOARD 🛡️ */}
+                    {/* 🛡️ STAFF LIVE DASHBOARD 🛡️ */}
                     {staff ? (
                         <div className="mb-12 glass p-8 border-t-[10px] border-indigo-500 shadow-2xl relative">
                             <button onClick={() => setStaff(null)} className="absolute top-8 right-8 bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-xl font-black transition-colors text-lg shadow-lg">LOGOUT</button>
@@ -294,7 +279,7 @@
 
                             <div className="grid md:grid-cols-2 gap-8 mb-8">
                                 <div className="bg-slate-900/80 p-6 rounded-2xl border border-amber-500">
-                                    <label className="text-amber-400 font-black text-lg md:text-xl mb-4 block"><i className="fa-solid fa-qrcode"></i> आपकी UPI ID:</label>
+                                    <label className="text-amber-400 font-black text-lg md:text-xl mb-4 block"><i className="fa-solid fa-qrcode"></i> आपकी UPI ID (Live QR के लिए):</label>
                                     <input type="text" placeholder="ex: 7229874128@paytm" value={staffUpi} onChange={(e)=>setStaffUpi(e.target.value)} className="bg-black border-2 border-slate-700 text-white p-4 rounded-lg font-bold w-full text-xl" />
                                 </div>
                                 
@@ -406,6 +391,7 @@
 
                     {/* ✨ FORM MODAL ✨ */}
                     {selected && (
+                        /* ⚠️ मास्टर लॉक (Auto-fill) ⚠️ */
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <div className="glass p-8 md:p-12 w-full max-w-5xl border-2 border-amber-500 rounded-[2rem] shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
                                 <button onClick={() => setSelected(null)} className="absolute top-6 right-8 text-5xl text-slate-400 hover:text-white">&times;</button>
