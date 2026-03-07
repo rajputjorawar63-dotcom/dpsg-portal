@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DPSG Master Portal 2026</title>
+    <title>DPSG Master PRO 2026</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -11,201 +11,321 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
     <script>
-        // 🛡️ ANTI-HACKER SECURITY SCRIPT 🛡️
-        document.addEventListener('contextmenu', event => event.preventDefault());
-        document.onkeydown = function(e) {
-            if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) || (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
-                return false;
-            }
-        };
-        setInterval(() => { console.clear(); console.log("%cSTOP! DPSG SECURED AREA", "color: red; font-size: 40px; font-weight: bold;"); }, 2000);
+        // 🛡️ ANTI-HACKER SECURITY 🛡️
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.onkeydown = e => { if(e.keyCode==123 || (e.ctrlKey && e.shiftKey && e.keyCode==73)) return false; };
     </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;900&display=swap');
-        body { font-family: 'Poppins', sans-serif; background: #070b14; color: white; margin: 0; user-select: none; }
-        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); border-radius: 1.5rem; }
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; max-height: 550px; overflow-y: auto; padding: 15px; background: #0a0f1c; border-radius: 1rem; border: 1px solid #1e293b; }
-        .grid-item { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: 900; cursor: pointer; transition: 0.2s; font-size: 13px; border: 1px solid rgba(255,255,255,0.05); }
-        .available { background: #1e293b; color: #94a3b8; }
-        .available:hover { background: #fbbf24; color: #000; transform: scale(1.05); }
-        .pending { background: #f59e0b; color: #000; border: 2px solid #b45309; animation: pulse 2s infinite; pointer-events: none; }
-        .sold { background: #ef4444; color: #fff; opacity: 0.4; pointer-events: none; }
-        .selected { background: #fbbf24 !important; color: #000 !important; transform: scale(1.1); border: 2px solid #fff; }
-        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 10px; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;900&family=Rajdhani:wght@700&display=swap');
+        body { font-family: 'Poppins', sans-serif; background: #020617; color: white; user-select: none; overflow-x: hidden; }
+        .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); border-radius: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        /* 🎴 बहुत बड़े 3D कार्ड्स 🎴 */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px; max-height: 550px; overflow-y: auto; padding: 15px; }
+        .grid-item { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 16px; font-weight: 900; cursor: pointer; border: 2px solid rgba(255,255,255,0.2); transition: 0.3s; font-size: 26px; box-shadow: 0 8px 15px rgba(0,0,0,0.4); position: relative; overflow: hidden; }
+        .grid-item:hover { transform: scale(1.08) translateY(-5px); z-index: 10; border-color: #fff; box-shadow: 0 15px 25px rgba(251,191,36,0.4); }
+        
+        /* 3D Dashboard Themes */
+        .dashboard-vip { background: linear-gradient(145deg, #7f1d1d, #450a0a); border: 2px solid #ef4444; }
+        .dashboard-gold { background: linear-gradient(145deg, #b45309, #78350f); border: 2px solid #fbbf24; }
+        .dashboard-silver { background: linear-gradient(145deg, #475569, #1e293b); border: 2px solid #94a3b8; }
+        
+        /* Available Colors (Gradients) */
+        .available-VIP { background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%); color: white; }
+        .available-Gold { background: linear-gradient(135deg, #fde047 0%, #d97706 100%); color: black; }
+        .available-Silver { background: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%); color: black; }
+        .available-Normal { background: #334155; color: white; }
+
+        /* Pending = Yellow, Sold = Red */
+        .pending-card { background: #eab308 !important; color: black !important; animation: pulse 1.5s infinite; border: 3px solid #fff; pointer-events: none; } 
+        .sold-card { background: #dc2626 !important; color: white !important; opacity: 0.6; pointer-events: none; border: 2px solid #7f1d1d; } 
+
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(0.98); } }
+        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 10px; }
     </style>
 </head>
 <body>
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzApJwnfryMBhVujtfGJo-HbWWFTiM2guvLQkxX4CoSDbGp1opeKc7SlE9ObvkgrPgrPw/exec";
-        const SHEET_CSV = "https://docs.google.com/spreadsheets/d/11UVWUzSUwI2mm9tsBMaNARgUnfwIZ5TKDaHsKb4Cl58/export?format=csv";
-        const _S = { "Jorawar@DPS": "Jorawar@6020", "Parkash@DPS": "Parkash@6020", "Rajkumar@DPS": "Rajkumar@6020" };
         
-        // Compact Prize Logic
-        const P = [{r:1,n:"₹5000 Cash 💰",d:"किस्मत बदलने का असली मौका"},{r:2,n:"LED TV 📺",d:"32 इंच की बड़ी स्क्रीन जीतने का चांस"},{r:3,n:"Kids Bicycle 🚲",d:"बचपन का सबसे प्यारा तोहफा"},{r:4,n:"Ceiling Fan 🌀",d:"तेज़ हवा और सुकून भरी नींद"},{r:5,n:"Bati Oven 🍳",d:"गरमा-गरम बाटी का स्वाद"},{r:6,n:"Keypad Mobile 📱",d:"भरोसेमंद मोबाइल"},{r:7,n:"Smart Watch ⌚",d:"स्मार्ट लुक"},{r:8,n:"Power Bank 🔋",d:"फुल चार्ज"},{r:9,n:"Sports Shoes 👟",d:"रफ़्तार का मेल"},{r:10,n:"Riding Helmet 🪖",d:"सुरक्षा और स्टाइल"}];
-        for(let i=11;i<=51;i++) P.push({r:i,n:`धमाका इनाम #${i} 🎁`,d:"DPSG स्पेशल उपहार"}); P.push({r:52,n:"🎁 निश्चित उपहार",d:"DPSG में कोई नहीं हारता!"});
+        // ⚠️ यहाँ अपनी नई एप्स स्क्रिप्ट की लिंक डालें ⚠️
+        const APP_URL = "https://script.google.com/macros/s/AKfycbzApJwnfryMBhVujtfGJo-HbWWFTiM2guvLQkxX4CoSDbGp1opeKc7SlE9ObvkgrPgrPw/exec";
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/11UVWUzSUwI2mm9tsBMaNARgUnfwIZ5TKDaHsKb4Cl58/export?format=csv";
+        const ADMINS = { "Jorawar@DPS": "Jorawar@6020", "Parkash@DPS": "Parkash@6020", "Rajkumar@DPS": "Rajkumar@6020" };
+
+        const PRIZES = [
+            {r:1,n:"₹5000 नकद 💰",d:"किस्मत का सबसे बड़ा धमाका! मात्र एक कार्ड में ₹5000 की नकद गड्डी जीतने का सुनहरा अवसर।"}, 
+            {r:2,n:"32' LED TV 📺",d:"सिनेमा का असली मज़ा अब आपके घर। स्मार्ट तकनीक और बेहतरीन पिक्चर क्वालिटी वाली बड़ी स्क्रीन।"}, 
+            {r:3,n:"किड्स साइकिल 🚲",d:"नन्हे मुन्नों की पसंदीदा सवारी। सेहत और मस्ती का बेहतरीन संगम।"}, 
+            {r:4,n:"सीलिंग पंखा 🌀",d:"गर्मी का पक्का समाधान। तेज़ हवा, बिजली की बचत और सुकून भरी नींद।"}, 
+            {r:5,n:"बाटी ओवन 🍳",d:"राजस्थानी रसोई की शान! अब घर पर बनाएँ शानदार और गरमा-गरम बाटी।"}, 
+            {r:6,n:"कीपैड मोबाइल 📱",d:"मज़बूत बनावट और लंबी बैटरी। अपनों से जुड़े रहने का भरोसेमंद साधन।"}, 
+            {r:7,n:"स्मार्ट वॉच ⌚",d:"सेहत और स्टाइल आपकी कलाई पर। आधुनिक तकनीक का बेहतरीन नमूना।"}, 
+            {r:8,n:"पावर बैंक 🔋",d:"सफ़र में बैटरी की चिंता खत्म। आपका पोर्टेबल और फास्ट एनर्जी पार्टनर।"}, 
+            {r:9,n:"स्पोर्ट्स शूज 👟",d:"हर कदम पर आराम और मज़बूती। खेल और स्टाइल का बेहतरीन कॉम्बिनेशन।"}, 
+            {r:10,n:"राइडिंग हेलमेट 🪖",d:"आपकी सुरक्षा हमारी जिम्मेदारी। मज़बूत, आरामदायक और स्टाइलिश लुक।"}
+        ];
+        for(let i=11; i<=51; i++) PRIZES.push({r:i, n:`धमाका सरप्राइज इनाम #${i} 🎁`, d:"DPSG निंबाहेड़ा का स्पेशल उपहार - आपकी घर-गृहस्थी और स्टाइल के लिए विशेष आइटम्स।"});
+        PRIZES.push({r:52, n:"🎁 निश्चित किराया/सांत्वना गिफ्ट", d:"DPSG में कोई खाली हाथ नहीं जाता! जो 51 में नहीं जीतेगा, उसे भी मिलेगा शानदार निश्चित उपहार।"});
 
         const App = () => {
             const [cards, setCards] = useState([]);
-            const [filter, setFilter] = useState('ALL');
+            const [search, setSearch] = useState("");
             const [selected, setSelected] = useState(null);
             const [staff, setStaff] = useState(null);
+            const [successModal, setSuccessModal] = useState(null);
             const [loading, setLoading] = useState(true);
-            const [successBooking, setSuccessBooking] = useState(null);
+            const [paymentMode, setPaymentMode] = useState("");
 
             const loadData = () => {
-                fetch(SHEET_CSV + "?t=" + Date.now()).then(r => r.text()).then(csv => {
-                    const rows = csv.split('\n').map(row => row.split(','));
-                    let parsed = [];
-                    for(let i=1; i<=1000; i++) {
-                        let stat = (rows[i] && rows[i][4]) ? rows[i][4].trim().toLowerCase() : "";
-                        parsed.push({ num: i, id: `DPSG-26-${String(i).padStart(4,'0')}`, status: (stat==="sold"||stat==="सॉल्ड")?"sold":(stat==="pending"||stat==="पेंडिंग"?"pending":"available"), data: { name: rows[i]?.[6]||"", mob: rows[i]?.[7]||"", aadhar: rows[i]?.[10]||"" } });
+                fetch(CSV_URL + "?t=" + Date.now()).then(r => r.text()).then(csv => {
+                    const rows = csv.split('\n').map(r => r.split(','));
+                    let temp = [];
+                    for(let i=1; i<rows.length; i++) {
+                        if(!rows[i][0]) continue;
+                        let status = rows[i][4]?.trim();
+                        if(status === "सॉल्ड") status = "Sold";
+                        if(status === "पेंडिंग") status = "Pending";
+                        temp.push({ 
+                            n: rows[i][0], status: status || 'Available', cat: rows[i][5]?.trim() || "Normal", price: rows[i][16] || 0,
+                            d: { name: rows[i][6], mob: rows[i][7], dob: rows[i][8], village: rows[i][9], aadhaar: rows[i][10], pan: rows[i][11], payMode: rows[i][12], ref: rows[i][13], history: rows[i][23] }
+                        });
                     }
-                    setCards(parsed); setLoading(false);
+                    setCards(temp); setLoading(false);
                 });
             };
 
             useEffect(() => { loadData(); const itvl = setInterval(loadData, 10000); return () => clearInterval(itvl); }, []);
 
-            const filteredCards = filter === 'ALL' ? cards : cards.filter(c => c.status === filter.toLowerCase());
-
-            const handleBooking = async (e) => {
-                e.preventDefault();
-                const fd = new FormData(e.target);
-                const params = new URLSearchParams(fd);
-                params.append("action", "BOOK");
-                params.append("S_No", selected.num.toString());
-                const cName = fd.get("Customer_Name");
-
-                setCards(prev => prev.map(c => c.num === selected.num ? { ...c, status: "pending" } : c));
-                setSuccessBooking({ num: selected.num, name: cName });
-                setSelected(null);
-                try { await fetch(SCRIPT_URL, { method: 'POST', body: params, mode: 'no-cors' }); } catch(err) {}
+            const handleAction = async (payload) => {
+                const params = new URLSearchParams(payload);
+                if(staff) { params.append("staffID", staff.id); params.append("staffPass", staff.pass); }
+                try { await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' }); } catch(err) {}
+                setTimeout(loadData, 2000);
             };
 
-            const handleVerify = async (e) => {
+            const bookCard = (e) => {
                 e.preventDefault();
                 const fd = new FormData(e.target);
-                const params = new URLSearchParams(fd);
-                params.append("action", "VERIFY"); params.append("S_No", selected.num.toString());
-                params.append("staffID", staff.id); params.append("staffPass", staff.pass);
-                setCards(prev => prev.map(c => c.num === selected.num ? { ...c, status: "sold" } : c));
-                setSelected(null); alert("✅ कार्ड SOLD!");
-                try { await fetch(SCRIPT_URL, { method: 'POST', body: params, mode: 'no-cors' }); } catch(err) {}
+                handleAction({ action: 'BOOK', S_No: selected.n, Category: selected.cat, Base_Price: selected.price, Payment_Mode: paymentMode, ...Object.fromEntries(fd) });
+                setSuccessModal({ n: selected.n, name: fd.get("Customer_Name") });
+                setSelected(null); setPaymentMode("");
             };
 
-            if (loading) return <div className="h-screen flex items-center justify-center bg-[#070b14] text-amber-500 font-black text-2xl tracking-widest animate-pulse">DPSG PRO INITIALIZING...</div>;
+            const filteredCards = cards.filter(c => 
+                c.n.toString().includes(search) || 
+                (c.d.name && c.d.name.toLowerCase().includes(search.toLowerCase())) ||
+                (c.d.mob && c.d.mob.includes(search))
+            );
+
+            const renderCard = (c) => {
+                let colorClass = "";
+                if (c.status === 'Pending') colorClass = "pending-card";
+                else if (c.status === 'Sold') colorClass = "sold-card";
+                else colorClass = `available-${c.cat.split(' ')[0]}`; 
+
+                return (
+                    <div key={c.n} onClick={c.status === 'Available' ? () => {setSelected(c); setPaymentMode("");} : undefined} className={`grid-item ${colorClass}`}>
+                        <span className="z-10">{c.n}</span>
+                        {c.status === 'Available' && <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity z-0"></div>}
+                        {c.status === 'Sold' && <i className="fa-solid fa-lock absolute text-white/30 text-4xl"></i>}
+                        {c.status === 'Pending' && <i className="fa-solid fa-clock absolute text-black/20 text-4xl"></i>}
+                    </div>
+                );
+            };
+
+            if(loading) return <div className="h-screen flex flex-col items-center justify-center font-black text-amber-500 text-3xl animate-pulse"><i className="fa-solid fa-dharmachakra fa-spin text-6xl mb-4"></i> DPSG PRO LOADING...</div>;
 
             return (
-                <div className="max-w-6xl mx-auto px-4 py-8">
-                    <header className="glass-card p-6 text-center mb-6 border-b-2 border-amber-500 shadow-[0_10px_30px_rgba(245,158,11,0.1)]">
-                        <h1 className="text-4xl md:text-5xl font-black italic text-white tracking-tighter">DPSG <span className="text-amber-500">PRO</span> 2026</h1>
-                        <marquee className="mt-4 bg-amber-500 text-black py-1 font-black text-sm uppercase">🔥 मात्र ₹100 में ₹5000 नकद और 51 महा-इनाम जीतने का मौका! अभी लकी नंबर चुनें 🔥</marquee>
+                <div className="max-w-7xl mx-auto p-4 py-8">
+                    {/* Header & Search */}
+                    <header className="glass p-8 text-center mb-10 shadow-[0_0_50px_rgba(251,191,36,0.1)]">
+                        <h1 className="text-5xl md:text-7xl font-black italic text-white rajdhani tracking-tighter drop-shadow-lg">DPSG <span className="text-amber-500">PRO</span> 2026</h1>
+                        <marquee className="mt-4 bg-amber-500 text-black py-2 font-black text-sm uppercase rounded-lg shadow-lg">🔥 साख और भरोसे का प्रतीक - निंबाहेड़ा! 51 महा-इनाम आपका इंतज़ार कर रहे हैं। आज ही अपना लकी नंबर चुनें! 🔥</marquee>
+                        <div className="mt-8 max-w-2xl mx-auto relative">
+                            <i className="fa-solid fa-search absolute left-5 top-5 text-slate-400 text-2xl"></i>
+                            <input type="text" placeholder="कार्ड नंबर, नाम या मोबाइल से खोजें..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full bg-slate-900 border-2 border-slate-700 p-4 pl-14 rounded-full font-bold text-white focus:border-amber-500 outline-none text-xl shadow-inner" />
+                        </div>
                     </header>
 
-                    <div className="grid lg:grid-cols-12 gap-6">
-                        <div className="lg:col-span-4 glass-card p-5 h-[650px] flex flex-col">
-                            <h2 className="text-xl font-black italic text-amber-500 mb-4 border-b border-amber-500/30 pb-2">🏆 51 महा-इनाम लिस्ट</h2>
-                            <div className="overflow-y-auto pr-2 flex-1 space-y-2">
-                                {P.map((p, i) => (
-                                    <div key={p.r} className={`p-3 rounded-lg flex items-center gap-3 ${i===51?'bg-green-900/40 border-l-4 border-green-500':'bg-slate-800/50 border-l-4 border-amber-500'}`}>
-                                        <div className={`w-8 h-8 flex items-center justify-center font-black rounded-md ${i===51?'bg-green-500':'bg-amber-500 text-black'}`}>{i===51?'🎁':p.r}</div>
-                                        <div><h4 className="font-black text-sm">{p.n}</h4><p className="text-[9px] text-slate-400">{p.d}</p></div>
+                    {/* TOP 3D DASHBOARDS (VIP, GOLD, SILVER) */}
+                    {!search && (
+                        <div className="grid lg:grid-cols-3 gap-6 mb-10">
+                            {['VIP Card', 'Gold Card', 'Silver Card'].map(cat => {
+                                const theme = cat === 'VIP Card' ? 'dashboard-vip' : cat === 'Gold Card' ? 'dashboard-gold' : 'dashboard-silver';
+                                const icon = cat === 'VIP Card' ? 'fa-crown text-red-400' : cat === 'Gold Card' ? 'fa-star text-yellow-400' : 'fa-gem text-slate-300';
+                                return (
+                                    <div key={cat} className={`glass p-6 rounded-3xl ${theme} flex flex-col items-center justify-center text-center shadow-2xl`}>
+                                        <i className={`fa-solid ${icon} text-5xl mb-4`}></i>
+                                        <h2 className="text-3xl font-black uppercase text-white mb-2">{cat.split(' ')[0]} ज़ोन</h2>
+                                        <p className="text-sm font-bold opacity-80 mb-6">कुल खाली: {cards.filter(c => c.cat === cat && c.status === 'Available').length}</p>
+                                        <div className="w-full card-grid !max-h-[250px] bg-black/40 rounded-xl border border-white/10 p-4">
+                                            {cards.filter(c => c.cat === cat && c.status === 'Available').slice(0, 15).map(renderCard)}
+                                        </div>
+                                        <p className="text-[10px] mt-3 opacity-60">नीचे स्क्रॉल करके सभी कार्ड्स देखें</p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    <div className="grid lg:grid-cols-12 gap-8">
+                        {/* 51 PRIZES DETAILED STORY SECTION */}
+                        <div className="lg:col-span-4 glass p-6 h-[800px] flex flex-col border-t-4 border-amber-500">
+                            <h2 className="text-3xl font-black italic text-amber-500 mb-6 text-center underline"><i className="fa-solid fa-trophy"></i> 51 महा-इनामों का खजाना</h2>
+                            <div className="overflow-y-auto pr-2 space-y-4 flex-1">
+                                {PRIZES.map((p, i) => (
+                                    <div key={p.r} className={`p-4 rounded-2xl border-l-8 shadow-lg transition-transform hover:scale-105 ${i===51 ? 'bg-green-900/60 border-green-500' : 'bg-slate-800/80 border-amber-500'}`}>
+                                        <div className="flex items-center gap-4 mb-2">
+                                            <div className={`w-12 h-12 flex items-center justify-center font-black text-2xl rounded-xl shadow-inner ${i===51 ? 'bg-green-500 text-white' : 'bg-gradient-to-br from-amber-400 to-yellow-600 text-black'}`}>{i===51 ? '🎁' : p.r}</div>
+                                            <h4 className="font-black text-lg text-white leading-tight">{p.n}</h4>
+                                        </div>
+                                        <p className="text-xs text-slate-300 font-bold ml-16">{p.d}</p>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        <div className="lg:col-span-8 glass-card p-5 h-[650px] flex flex-col">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-xl font-black italic text-indigo-400">लकी कार्ड ग्रिड</h2>
-                                <div className="flex gap-2 text-[10px] font-black uppercase">
-                                    <button onClick={()=>setFilter('ALL')} className={`px-3 py-1 rounded ${filter==='ALL'?'bg-indigo-600':'bg-slate-800'}`}>कुल ({cards.length})</button>
-                                    <button onClick={()=>setFilter('AVAILABLE')} className={`px-3 py-1 rounded ${filter==='AVAILABLE'?'bg-slate-600':'bg-slate-800'}`}>खाली</button>
-                                    <button onClick={()=>setFilter('PENDING')} className={`px-3 py-1 rounded ${filter==='PENDING'?'bg-amber-500 text-black':'bg-slate-800'}`}>पेंडिंग</button>
+                        {/* BIG CARD GRID SECTION (ALL CARDS) */}
+                        <div className="lg:col-span-8 glass p-6 h-[800px] flex flex-col border-t-4 border-indigo-500">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-3xl font-black text-white uppercase">सभी कार्ड्स (1-1000)</h2>
+                                <div className="flex gap-4 text-xs font-black uppercase bg-slate-900/50 p-3 rounded-xl border border-slate-700">
+                                    <span className="flex items-center gap-2"><div className="w-4 h-4 bg-yellow-500 border border-white rounded"></div> पेंडिंग</span>
+                                    <span className="flex items-center gap-2"><div className="w-4 h-4 bg-red-600 border border-white rounded"></div> सोल्ड</span>
                                 </div>
                             </div>
-                            <div className="card-grid flex-1">
-                                {filteredCards.map(c => <div key={c.num} onClick={c.status==='available'?()=>setSelected(c):undefined} className={`grid-item ${c.status} ${selected?.num===c.num?'selected':''}`}>{c.num}</div>)}
+                            <div className="card-grid flex-1 bg-black/30 rounded-2xl border border-white/5 p-4">
+                                {search ? filteredCards.map(renderCard) : cards.map(renderCard)}
                             </div>
+                            {search && filteredCards.length === 0 && <p className="text-center text-slate-500 font-bold mt-10 text-2xl">कोई कार्ड नहीं मिला!</p>}
                         </div>
                     </div>
 
-                    {/* Booking Modal */}
-                    {selected && selected.status === 'available' && (
-                        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
-                            <div className="glass-card border border-amber-500 p-6 w-full max-w-md">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h3 className="text-2xl font-black text-white italic">बुक कार्ड: #{selected.num}</h3>
-                                    <button onClick={()=>setSelected(null)} className="text-2xl font-black text-slate-500">&times;</button>
+                    {/* 📝 CUSTOMER BOOKING MODAL (Strict Rules) */}
+                    {selected && selected.status === 'Available' && !staff && (
+                        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm">
+                            <div className="glass p-8 w-full max-w-2xl shadow-[0_0_40px_rgba(251,191,36,0.3)] border-2 border-amber-500 overflow-y-auto max-h-[90vh]">
+                                <div className="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
+                                    <h3 className="text-4xl font-black italic uppercase text-white">लकी कार्ड: #{selected.n}</h3>
+                                    <span className="bg-amber-500 text-black px-4 py-1 rounded-full text-lg font-black">{selected.cat} | ₹{selected.price}</span>
+                                    <button onClick={() => setSelected(null)} className="text-5xl text-slate-500 hover:text-red-500 transition-colors">&times;</button>
                                 </div>
-                                <form onSubmit={handleBooking} className="space-y-4">
-                                    <select name="Category" required className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl font-bold text-white outline-none focus:border-amber-500">
-                                        <option value="" disabled selected>कार्ड प्रकार (Normal/VIP/Digital)</option>
-                                        <option value="Normal">Normal Card</option>
-                                        <option value="VIP">VIP Card</option>
-                                        <option value="Digital">Digital Card</option>
-                                    </select>
-                                    <input name="Customer_Name" placeholder="पूरा नाम (आधार अनुसार)" required className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl font-bold text-white outline-none focus:border-amber-500" />
-                                    <input name="Mobile" type="tel" pattern="[0-9]{10}" placeholder="मोबाइल (10 अंक)" required className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl font-bold text-white outline-none focus:border-amber-500" />
-                                    <input name="Aadhaar" type="tel" pattern="[0-9]{12}" placeholder="आधार नंबर" required className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl font-bold text-white outline-none focus:border-amber-500" />
-                                    <input name="Village" placeholder="गाँव/शहर" required className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl font-bold text-white outline-none focus:border-amber-500" />
-                                    <input type="hidden" name="Base_Price" value="100" />
-                                    <button className="w-full bg-amber-500 text-black font-black py-4 rounded-xl text-xl hover:bg-white transition-all uppercase italic mt-2">कन्फर्म बुकिंग 🔱</button>
+                                
+                                <form onSubmit={bookCard} className="space-y-5">
+                                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-600 mb-6">
+                                        <p className="text-xs text-amber-500 font-bold uppercase mb-2">अनिवार्य जानकारी (Mandatory):</p>
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            <input name="Customer_Name" placeholder="पूरा नाम *" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border border-slate-600 focus:border-amber-500 outline-none text-lg" />
+                                            <input name="Mobile" type="tel" pattern="[0-9]{10}" placeholder="मोबाइल (10 अंक) *" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border border-slate-600 focus:border-amber-500 outline-none text-lg" />
+                                            <input name="Aadhaar" type="tel" pattern="[0-9]{12}" placeholder="आधार नंबर (12 अंक) *" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border border-slate-600 focus:border-amber-500 outline-none text-lg md:col-span-2" />
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-600 mb-6">
+                                        <p className="text-xs text-indigo-400 font-bold uppercase mb-2">पेमेंट जानकारी:</p>
+                                        <select required value={paymentMode} onChange={(e) => setPaymentMode(e.target.value)} className="w-full bg-slate-900 p-4 rounded-xl font-bold border border-slate-600 focus:border-indigo-500 outline-none text-lg mb-4">
+                                            <option value="" disabled>पेमेंट का तरीका चुनें *</option>
+                                            <option value="Cash">नकद (Cash)</option>
+                                            <option value="PhonePe/GPay">PhonePe / Google Pay</option>
+                                            <option value="Airtel Payment Bank">Airtel Payment Bank</option>
+                                        </select>
+                                        
+                                        {/* AIRTEL PAN CARD LOGIC */}
+                                        {paymentMode === 'Airtel Payment Bank' && (
+                                            <div className="animate-pulse bg-red-900/30 p-3 rounded-xl border border-red-500">
+                                                <p className="text-[10px] text-red-400 font-black mb-1">Airtel Bank के लिए पैन कार्ड अनिवार्य है:</p>
+                                                <input name="PAN" placeholder="PAN Card Number *" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border border-red-500 outline-none text-lg uppercase" />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-600 mb-6">
+                                        <p className="text-xs text-slate-400 font-bold uppercase mb-2">अन्य जानकारी (ऐच्छिक / Optional):</p>
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            <input name="DOB" type="date" className="w-full bg-slate-900 p-4 rounded-xl font-bold border border-slate-700 outline-none text-slate-400" />
+                                            <input name="Village" placeholder="गाँव / शहर का नाम" className="w-full bg-slate-900 p-4 rounded-xl font-bold border border-slate-700 outline-none" />
+                                        </div>
+                                    </div>
+
+                                    <button className="w-full bg-gradient-to-r from-amber-500 to-yellow-600 text-black font-black py-5 rounded-2xl text-2xl shadow-[0_10px_20px_rgba(251,191,36,0.4)] hover:scale-[1.02] transition-transform uppercase italic">कन्फर्म बुकिंग 🔱</button>
                                 </form>
                             </div>
                         </div>
                     )}
 
-                    {/* WhatsApp Success Notification Modal */}
-                    {successBooking && (
-                        <div className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4">
-                            <div className="glass-card border-2 border-green-500 p-8 w-full max-w-md text-center">
-                                <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                                    <i className="fa-solid fa-check text-4xl text-white"></i>
+                    {/* 🕵️ STAFF AUDIT & EDIT MODAL (Full Authority) */}
+                    {selected && selected.status !== 'Available' && (
+                        <div className="fixed inset-0 z-[70] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
+                            <div className="glass p-8 w-full max-w-2xl border-2 border-indigo-500">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-3xl font-black text-white">स्टाफ कंट्रोल: #{selected.n}</h3>
+                                    <span className={`px-4 py-1 rounded-full text-sm font-black uppercase ${selected.status==='Pending'?'bg-yellow-500 text-black':'bg-red-600 text-white'}`}>{selected.status}</span>
+                                    <button onClick={() => setSelected(null)} className="text-4xl text-slate-500 hover:text-white">&times;</button>
                                 </div>
-                                <h3 className="text-2xl font-black text-white italic mb-2">बुकिंग पेंडिंग में गई!</h3>
-                                <p className="text-slate-400 font-bold mb-8">कार्ड #{successBooking.num} सुरक्षित कर लिया गया है। स्टाफ द्वारा पेमेंट वेरीफाई होने पर यह पक्का हो जाएगा।</p>
-                                
-                                <a href={`https://wa.me/917229874128?text=${encodeURIComponent(`जय माता दी! हुकुम, मैंने DPSG-PRO-2026 पर कार्ड #${successBooking.num} बुक किया है। मेरा नाम ${successBooking.name} है। कृपया पेमेंट लेकर इसे वेरिफाई करें।`)}`} target="_blank" onClick={()=>setSuccessBooking(null)} className="flex items-center justify-center gap-3 w-full bg-[#25D366] text-white font-black py-4 rounded-xl text-lg hover:opacity-90 transition-opacity mb-4 shadow-[0_0_20px_rgba(37,211,102,0.4)]">
-                                    <i className="fa-brands fa-whatsapp text-2xl"></i> WhatsApp पर हमें सूचित करें
-                                </a>
-                                <button onClick={()=>setSuccessBooking(null)} className="text-slate-500 font-bold underline text-sm">नहीं, धन्यवाद</button>
+
+                                {staff ? (
+                                    <div className="space-y-6">
+                                        <p className="text-center font-black text-amber-500 text-sm bg-slate-900 p-2 rounded-lg border border-amber-500/30">लॉगिन: {staff.id}</p>
+                                        
+                                        {/* EDITABLE FIELDS FOR STAFF */}
+                                        <div className="grid md:grid-cols-2 gap-4 bg-slate-800 p-5 rounded-xl border border-slate-600">
+                                            <div><label className="text-[10px] text-slate-400 font-bold">ग्राहक का नाम</label><input id="s_name" defaultValue={selected.d.name} className="w-full bg-slate-900 p-3 rounded-lg text-sm font-bold border border-slate-700 outline-none text-white" /></div>
+                                            <div><label className="text-[10px] text-slate-400 font-bold">मोबाइल</label><input id="s_mob" defaultValue={selected.d.mob?.replace(/'/g,'')} className="w-full bg-slate-900 p-3 rounded-lg text-sm font-bold border border-slate-700 outline-none text-white" /></div>
+                                            <div><label className="text-[10px] text-slate-400 font-bold">आधार नंबर</label><input id="s_aadhaar" defaultValue={selected.d.aadhaar?.replace(/'/g,'')} className="w-full bg-slate-900 p-3 rounded-lg text-sm font-bold border border-slate-700 outline-none text-white" /></div>
+                                            <div><label className="text-[10px] text-slate-400 font-bold">पेमेंट मोड बदलें</label>
+                                                <select id="s_payMode" defaultValue={selected.d.payMode} className="w-full bg-slate-900 p-3 rounded-lg text-sm font-bold border border-slate-700 outline-none text-white">
+                                                    <option value="Cash">Cash</option>
+                                                    <option value="PhonePe/GPay">PhonePe/GPay</option>
+                                                    <option value="Airtel Payment Bank">Airtel Payment Bank</option>
+                                                </select>
+                                            </div>
+                                            <div><label className="text-[10px] text-slate-400 font-bold">पेमेंट रेफ़्रेन्स / ID</label><input id="s_ref" defaultValue={selected.d.ref} placeholder="Txn ID..." className="w-full bg-slate-900 p-3 rounded-lg text-sm font-bold border border-slate-700 outline-none text-amber-400" /></div>
+                                            <div><label className="text-[10px] text-slate-400 font-bold">प्राप्त राशि (Paid ₹)</label><input id="s_paid" type="number" defaultValue={selected.price} className="w-full bg-green-900/40 p-3 rounded-lg text-lg font-black border border-green-500 outline-none text-green-400" /></div>
+                                            <div className="md:col-span-2"><label className="text-[10px] text-slate-400 font-bold">डॉक्यूमेंट / फोटो लिंक</label><input id="s_img" placeholder="Google Drive Link..." className="w-full bg-slate-900 p-3 rounded-lg text-sm font-bold border border-slate-700 outline-none text-blue-400" /></div>
+                                        </div>
+
+                                        <div className="bg-slate-900 p-4 rounded-xl border border-slate-700 max-h-32 overflow-y-auto text-[10px] font-mono text-slate-500 whitespace-pre-wrap">
+                                            <span className="text-white font-bold block mb-1">AUDIT HISTORY:</span>
+                                            {selected.d.history || "No history."}
+                                        </div>
+                                        
+                                        {/* ACTION BUTTONS */}
+                                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-700">
+                                            <button onClick={() => { handleAction({action:'UPDATE', S_No:selected.n, Status:'Sold', Customer_Name:document.getElementById('s_name').value, Mobile:document.getElementById('s_mob').value, Aadhaar:document.getElementById('s_aadhaar').value, Payment_Mode:document.getElementById('s_payMode').value, Payment_Ref:document.getElementById('s_ref').value, Paid:document.getElementById('s_paid').value, ImgLink:document.getElementById('s_img').value, LogMsg:'डेटा अपडेट & SOLD किया'}); setSelected(null); alert("✅ Verified & Sold!"); }} className="bg-red-600 hover:bg-red-500 text-white font-black py-4 rounded-2xl text-xl shadow-[0_0_20px_rgba(220,38,38,0.4)] uppercase">Verify & Sold ✅</button>
+                                            
+                                            <button onClick={() => { handleAction({action:'UPDATE', S_No:selected.n, Status:'Available', LogMsg:'बुकिंग REJECTED (वापस खाली)'}); setSelected(null); alert("❌ Rejected & Cleared!"); }} className="bg-slate-700 hover:bg-slate-600 text-white font-black py-4 rounded-2xl text-xl shadow-lg uppercase">Reject & Clear ❌</button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-10">
+                                        <i className="fa-solid fa-lock text-6xl text-slate-600 mb-6"></i>
+                                        <h4 className="text-2xl font-black text-white mb-2">यह कार्ड {selected.status} है</h4>
+                                        <p className="text-slate-400 mb-8 font-bold">ग्राहक: {selected.d.name} | {selected.d.mob}</p>
+                                        <button onClick={() => {
+                                            const id = prompt("Staff ID:"); const ps = prompt("Password:");
+                                            if(ADMINS[id] === ps) setStaff({id, pass: ps}); else alert("Access Denied!");
+                                        }} className="bg-indigo-600 text-white font-black px-10 py-4 rounded-full text-lg uppercase shadow-lg hover:bg-indigo-500 transition-colors">स्टाफ लॉगिन (Edit & Verify)</button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
 
-                    {/* Staff Trigger & Panel */}
-                    <div className="text-center mt-10 opacity-5 hover:opacity-100">
-                        <button onClick={() => { const u=prompt("Admin ID:"); const p=prompt("Pass:"); if(_S[u]===p) setStaff({id:u, pass:p}); }} className="text-[10px] font-black tracking-[1em] uppercase">🔱 Admin Access 🔱</button>
-                    </div>
-                    {staff && (
-                        <div className="fixed inset-0 z-[70] bg-slate-900 p-6 overflow-y-auto">
-                            <div className="flex justify-between items-center mb-6"><h2 className="text-3xl font-black text-amber-500 italic">Welcome, {staff.id}</h2><button onClick={()=>setStaff(null)} className="bg-red-500 text-white px-4 py-2 rounded font-black text-xs">LOGOUT</button></div>
-                            <div className="grid md:grid-cols-3 gap-4">
-                                {cards.filter(c=>c.status==='pending').map(c => (
-                                    <div key={c.id} className="glass-card p-5 border-l-4 border-amber-500">
-                                        <h3 className="text-2xl font-black text-white">#{c.num}</h3>
-                                        <p className="text-sm font-bold text-slate-400 my-2">{c.data.name} | {c.data.mob}</p>
-                                        <button onClick={()=>setSelected(c)} className="w-full bg-green-600 text-white py-2 rounded font-black mt-2">VERIFY PAYMENT</button>
-                                    </div>
-                                ))}
+                    {/* WhatsApp Success Alert */}
+                    {successModal && (
+                        <div className="fixed inset-0 z-[80] bg-black/95 flex items-center justify-center p-4">
+                            <div className="glass p-10 max-w-md text-center border-t-8 border-yellow-500 shadow-[0_0_50px_rgba(234,179,8,0.3)]">
+                                <i className="fa-solid fa-hourglass-half text-7xl text-yellow-500 mb-6 animate-pulse"></i>
+                                <h3 className="text-3xl font-black italic mb-2 text-white">बुकिंग पेंडिंग में गई!</h3>
+                                <p className="text-slate-300 text-sm mb-8 font-bold">हुकुम, कार्ड #{successModal.n} सुरक्षित है। स्टाफ द्वारा पेमेंट वेरीफाई होने पर यह पक्का (लाल) हो जाएगा।</p>
+                                <a href={`https://wa.me/917229874128?text=${encodeURIComponent(`जय माता दी! हुकुम, मैंने DPSG-PRO पर कार्ड #${successModal.n} बुक किया है। मेरा नाम ${successModal.name} है। कृपया पेमेंट Verify करें।`)}`} target="_blank" onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-3 w-full bg-[#25D366] text-white font-black py-5 rounded-2xl text-lg mb-4 shadow-lg hover:scale-105 transition-transform">
+                                    <i className="fa-brands fa-whatsapp text-3xl"></i> WhatsApp पर मैसेज करें
+                                </a>
+                                <button onClick={()=>setSuccessModal(null)} className="text-slate-500 font-bold text-sm underline hover:text-white">बंद करें</button>
                             </div>
-                            {selected && selected.status === 'pending' && staff && (
-                                <div className="fixed inset-0 z-[80] bg-black/95 flex items-center justify-center p-4">
-                                    <form onSubmit={handleVerify} className="glass-card border-2 border-green-500 p-6 w-full max-w-md">
-                                        <h3 className="text-xl font-black text-green-500 mb-4 text-center">Verify: #{selected.num}</h3>
-                                        <input name="Airtel_1" placeholder="Airtel Discount Account (Optional)" className="w-full bg-slate-900 p-3 rounded mb-3 text-white outline-none border border-slate-700" />
-                                        <input name="Discount" type="number" placeholder="Discount ₹" defaultValue="0" className="w-full bg-slate-900 p-3 rounded mb-3 text-white outline-none border border-slate-700" />
-                                        <input name="Paid" type="number" placeholder="Paid Amount ₹" required className="w-full bg-green-900/50 p-4 rounded mb-4 text-green-400 font-black text-2xl text-center outline-none border-2 border-green-500" />
-                                        <button className="w-full bg-green-600 text-white font-black py-3 rounded text-xl mb-3">SOLD ✅</button>
-                                        <button type="button" onClick={()=>setSelected(null)} className="w-full text-slate-500 font-bold">Cancel</button>
-                                    </form>
-                                </div>
-                            )}
                         </div>
                     )}
                 </div>
