@@ -14,13 +14,11 @@
         body { font-family: 'Poppins', 'Mukta', sans-serif; background: #050505; color: white; overflow-x: hidden; }
         .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 2rem; }
         
-        /* 💎 3D BANNERS IN SINGLE LINE 💎 */
         .banner-row { display: flex; overflow-x: auto; gap: 20px; padding: 15px; scroll-snap-type: x mandatory; }
         .banner-row::-webkit-scrollbar { display: none; }
         .banner-3d { min-width: 300px; flex: 1; transition: 0.4s; transform-style: preserve-3d; scroll-snap-align: center; }
         .banner-3d:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.8); }
 
-        /* 🎴 JUMBO CARDS - BIG & SPACED 🎴 */
         .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 25px; padding: 20px; }
         @media (min-width: 768px) { .card-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 35px; padding: 30px; } }
         
@@ -31,8 +29,11 @@
         .card-Gold { background: linear-gradient(135deg, #d97706, #451a03); }
         .card-Silver { background: linear-gradient(135deg, #cbd5e1, #475569); color: black; }
         
-        /* पेंडिंग कार्ड (पीला और लॉक) */
-        .pending-card { background: #facc15 !important; color: black !important; border: 6px solid #fff; pointer-events: none; animation: pulse 1.5s infinite; }
+        /* 🔴 SOLD कार्ड (डार्क लाल और लॉक) 🔴 */
+        .sold-card { background: linear-gradient(135deg, #7f1d1d, #450a0a) !important; color: #fca5a5 !important; border: 4px solid #450a0a; pointer-events: none; opacity: 0.8; }
+        
+        /* 🟡 PENDING कार्ड (पीला और लॉक) 🟡 */
+        .pending-card { background: #facc15 !important; color: black !important; border: 6px solid #fff; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.95); } }
         
         .custom-scroll::-webkit-scrollbar { width: 8px; }
@@ -51,59 +52,59 @@
         const SLOGAN = "आपकी समस्या हमारा समाधान, उचित मूल्य बेहतरीन सेवा";
         const ADMINS = { "Jorawar@DPS": "Jorawar@6020", "Parkash@DPS": "Parkash@6020", "Rajkumar@DPS": "Rajkumar@6020" };
 
-        // 🎁 51 इनामों की हूबहू लिस्ट 🎁
+        // 🎁 51 इनामों की लिस्ट 🎁
         const PRIZES = [
-            {r:1, n:"₹5000 Cash", d:"किस्मत चमकेगी और जेब भरेगी सीधा ₹5000 कैश के साथ। DPSG का पहला इनाम, जो बनाएगा आपकी हर त्यौहार खास।"},
-            {r:2, n:"LED TV", d:"घर बनेगा सिनेमा हॉल, जब आप जीतेंगे शानदार LED TV। बेहतरीन पिक्चर क्वालिटी और मनोरंजन का नया अनुभव।"},
-            {r:3, n:"Kids Bicycle", d:"बच्चों के चेहरे पर लाएं मुस्कान, जीतें उनके सपनों की साइकिल। सेहत और मस्ती का डबल डोज़।"},
-            {r:4, n:"Ceiling Fan", d:"गर्मी को कहें बाय-बाय, जब घर में आए ब्रांडेड छत का पंखा। ठंडी हवा और सुकून भरी नींद।"},
-            {r:5, n:"Bati Oven", d:"अब घर पर बनाएं राजस्थानी स्वाद, जीतें प्रीमियम बाटी ओवन। रसोई की शान बढ़ाएं।"},
-            {r:6, n:"Keypad Mobile", d:"अपनों से जुड़े रहने का मौका, जीतें एक टिकाऊ कीपैड मोबाइल। मजबूत बैटरी और साफ़ आवाज़।"},
-            {r:7, n:"Smart Watch", d:"अपनी सेहत और समय पर रखें नज़र, स्टाइल वाली स्मार्ट वॉच के साथ। लुक में कूल और फीचर्स में धांसू।"},
-            {r:8, n:"Power Bank", d:"अब मोबाइल की बैटरी कभी नहीं होगी खत्म, साथ रखें ये पावर बैंक। चार्जिंग की टेंशन पुरानी हुई।"},
-            {r:9, n:"Sports Shoes", d:"फिटनेस की ओर बढ़ाएं कदम, पहनें स्टाइलिश और आरामदायक स्पोर्ट्स शूज। हर कदम पर मिले कॉन्फिडेंस।"},
-            {r:10, n:"Riding Helmet", d:"आपकी सुरक्षा हमारी प्राथमिकता, जीतें एक ISI मार्क राइडिंग हेलमेट। सुरक्षित सफर का वादा।"},
-            {r:11, n:"Remote Control Car", d:"बच्चों की पहली पसंद, रिमोट से चलने वाली शानदार रेसिंग कार।"},
-            {r:12, n:"Casserole (Roti Box)", d:"अब रोटियां रहेंगी लम्बे समय तक गर्म और नरम। किचन के लिए उपयोगी।"},
-            {r:13, n:"Bedsheet with Covers", d:"आपके बेडरूम को दें एक नया लुक। प्रीमियम क्वालिटी की बेडशीट।"},
-            {r:14, n:"Neckband", d:"म्यूजिक का असली मज़ा, बिना तारों के उलझन के।"},
-            {r:15, n:"M19 Earbuds", d:"डिजिटल ज़माने का डिजिटल साउंड, हाई-क्वालिटी साउंड और स्मार्ट केस।"},
-            {r:16, n:"Earbuds", d:"संगीत का जादू अब आपके कानों में, छोटे साइज़ में बड़ा धमाका।"},
-            {r:17, n:"Bluetooth Neckband", d:"कॉल हो या म्यूजिक, वायरलेस तरीके से पाएं बेस्ट अनुभव।"},
-            {r:18, n:"Trimmer", d:"अब घर पर ही पाएं सैलून जैसा परफेक्ट लुक। आसान ग्रिप।"},
-            {r:19, n:"Premium Trimmer", d:"प्रोफेशनल शेपिंग के लिए जीतें प्रीमियम ट्रिमर। नया और साफ़ लुक।"},
-            {r:20, n:"Royal Watch", d:"हाथों की शोभा बढ़ाएगी यह रॉयल और क्लासी हाथ की घड़ी।"},
-            {r:21, n:"₹301 Cash", d:"बम्पर इनाम का नकद पुरस्कार, सीधे आपकी जेब में।"},
-            {r:22, n:"₹201 Cash", d:"शगुन का नकद इनाम, DPSG की ओर से आपके लिए।"},
-            {r:23, n:"₹101 Cash", d:"बचत कार्ड के साथ जीतें ₹101 का नकद सरप्राइज।"},
-            {r:24, n:"Photo Frame", d:"राधा कृष्ण की कृपा और यादों को सजाने का सुंदर फ्रेम।"},
-            {r:25, n:"Wall Clock", d:"वक्त बदलेगा जब आपके घर की दीवार पर होगी यह घड़ी।"},
-            {r:26, n:"Tea Cup Set", d:"मेहमानों का करें शानदार स्वागत, सुंदर टी कप सेट के साथ।"},
-            {r:27, n:"Movie Ticket", d:"मनोरंजन का डबल डोज़, जीतें अपनी पसंदीदा फिल्म की टिकट।"},
-            {r:28, n:"Umbrella", d:"बारिश हो या धूप, यह रंगीन और मजबूत छाता रहेगा साथ।"},
-            {r:29, n:"Sunglasses", d:"अपनी आँखों को बचाएं और दिखें सबसे अलग और स्टाइलिश।"},
-            {r:30, n:"Mobile Holder", d:"बाइक चलाते समय मोबाइल का सुरक्षित और आसान उपयोग।"},
-            {r:31, n:"Tool Set", d:"घर के छोटे-मोटे कामों के लिए खुद बनें मैकेनिक।"},
-            {r:32, n:"Extension Board", d:"एक साथ चलाएं कई डिवाइस, जीतें मल्टी-पिन एक्सटेंशन बोर्ड।"},
-            {r:33, n:"LED Bulb", d:"कम बिजली, ज्यादा रोशनी—सालों तक चलने वाला भरोसा।"},
-            {r:34, n:"Immersion Rod", d:"सर्दियों में झटपट गर्म पानी का आनंद लें, सुरक्षित हीटिंग रॉड से।"},
-            {r:35, n:"Premium Perfume", d:"प्रीमियम परफ्यूम सेट, जो आपको रखे दिनभर तरोताजा।"},
-            {r:36, n:"Wireless Speaker", d:"पार्टी का मूड बनाएं, पोर्टेबल स्पीकर के साथ बेस और क्लियर साउंड।"},
-            {r:37, n:"Water Bottle Set", d:"फ्रिज के लिए बेस्ट और स्टाइलिश वॉटर बॉटल सेट।"},
-            {r:38, n:"Lunch Box", d:"ऑफिस या स्कूल के लिए खाना रहेगा फ्रेश और गरम। लीक-प्रूफ।"},
-            {r:39, n:"Leather Belt", d:"मजबूत और टिकाऊ लेदर बेल्ट, आपकी ड्रेसिंग का अहम हिस्सा।"},
-            {r:40, n:"Woman's Purse", d:"महिलाओं के लिए ट्रेंडी और स्टाइलिश हैंड पर्स।"},
-            {r:41, n:"Hair Dryer", d:"बालों को झटपट सुखाएं और मनचाहा हेयरस्टाइल पाएं।"},
-            {r:42, n:"Leather Bag", d:"सामान ले जाने के लिए स्टाइलिश और मजबूत लेदर बैग।"},
-            {r:43, n:"20L Water Bottle", d:"शुद्ध पानी का बड़ा स्टोरेज, घर या ऑफिस के लिए।"},
-            {r:44, n:"Bathing Bucket", d:"क्वालिटी ऐसी जो सालों-साल आपका साथ निभाए।"},
-            {r:45, n:"Mobile Recharge", d:"₹349 का फ्री मोबाइल रिचार्ज, अनलिमिटेड बातों के लिए।"},
-            {r:46, n:"Spice Box", d:"रसोई को रखें व्यवस्थित, इस सुंदर मसाला दानी के साथ।"},
-            {r:47, n:"Veg Chopper", d:"सब्जी काटना अब होगा मिनटों का काम, स्मार्ट किचन का स्मार्ट टूल।"},
-            {r:48, n:"Photo Frame", d:"अपनी खूबसूरत यादों को सहेजने के लिए प्यारा फोटो फ्रेम।"},
-            {r:49, n:"Water Camper", d:"घंटों तक पानी को रखें ठंडा और ताज़ा।"},
-            {r:50, n:"Makeup Kit", d:"खूबसूरती को निखारें, हर महिला की पहली पसंद।"},
-            {r:51, n:"Electric Iron", d:"कपड़ों पर लाएं परफेक्ट चमक, जीतें एक हाई-क्वालिटी प्रेस।"}
+            {r:1, n:"₹5000 Cash", d:"किस्मत चमकेगी और जेब भरेगी सीधा ₹5000 कैश के साथ।"},
+            {r:2, n:"LED TV", d:"घर बनेगा सिनेमा हॉल, जब आप जीतेंगे शानदार LED TV।"},
+            {r:3, n:"Kids Bicycle", d:"बच्चों के चेहरे पर लाएं मुस्कान, जीतें उनके सपनों की साइकिल।"},
+            {r:4, n:"Ceiling Fan", d:"गर्मी को कहें बाय-बाय, जब घर में आए ब्रांडेड छत का पंखा।"},
+            {r:5, n:"Bati Oven", d:"अब घर पर बनाएं राजस्थानी स्वाद, जीतें प्रीमियम बाटी ओवन।"},
+            {r:6, n:"Keypad Mobile", d:"अपनों से जुड़े रहने का मौका, जीतें एक टिकाऊ कीपैड मोबाइल।"},
+            {r:7, n:"Smart Watch", d:"अपनी सेहत और समय पर रखें नज़र, स्टाइल वाली स्मार्ट वॉच के साथ।"},
+            {r:8, n:"Power Bank", d:"अब मोबाइल की बैटरी कभी नहीं होगी खत्म, साथ रखें ये पावर बैंक।"},
+            {r:9, n:"Sports Shoes", d:"फिटनेस की ओर बढ़ाएं कदम, पहनें स्टाइलिश और आरामदायक स्पोर्ट्स शूज।"},
+            {r:10, n:"Riding Helmet", d:"आपकी सुरक्षा हमारी प्राथमिकता, जीतें एक ISI मार्क राइडिंग हेलमेट।"},
+            {r:11, n:"Remote Control Car", d:"बच्चों की पहली पसंद, शानदार रेसिंग कार।"},
+            {r:12, n:"Casserole (Roti Box)", d:"रोटियां रहेंगी लम्बे समय तक गर्म और नरम।"},
+            {r:13, n:"Bedsheet with Covers", d:"आपके बेडरूम को दें एक नया लुक।"},
+            {r:14, n:"Neckband", d:"म्यूजिक का असली मज़ा, बिना तारों के।"},
+            {r:15, n:"M19 Earbuds", d:"डिजिटल ज़माने का डिजिटल साउंड।"},
+            {r:16, n:"Earbuds", d:"संगीत का जादू अब आपके कानों में।"},
+            {r:17, n:"Bluetooth Neckband", d:"वायरलेस तरीके से पाएं बेस्ट अनुभव।"},
+            {r:18, n:"Trimmer", d:"अब घर पर ही पाएं सैलून जैसा परफेक्ट लुक।"},
+            {r:19, n:"Premium Trimmer", d:"प्रोफेशनल शेपिंग के लिए जीतें प्रीमियम ट्रिमर।"},
+            {r:20, n:"Royal Watch", d:"हाथों की शोभा बढ़ाएगी यह रॉयल घड़ी।"},
+            {r:21, n:"₹301 Cash", d:"बम्पर इनाम का नकद पुरस्कार।"},
+            {r:22, n:"₹201 Cash", d:"शगुन का नकद इनाम, DPSG की ओर से।"},
+            {r:23, n:"₹101 Cash", d:"बचत कार्ड के साथ जीतें ₹101 नकद।"},
+            {r:24, n:"Photo Frame", d:"राधा कृष्ण की कृपा का सुंदर फ्रेम।"},
+            {r:25, n:"Wall Clock", d:"समय की कीमत समझें और जीतें घड़ी।"},
+            {r:26, n:"Tea Cup Set", d:"सुंदर टी कप सेट के साथ स्वागत करें।"},
+            {r:27, n:"Movie Ticket", d:"पसंदीदा फिल्म की टिकट।"},
+            {r:28, n:"Umbrella", d:"यह रंगीन और मजबूत छाता रहेगा साथ।"},
+            {r:29, n:"Sunglasses", d:"दिखें सबसे अलग और स्टाइलिश।"},
+            {r:30, n:"Mobile Holder", d:"मोबाइल का सुरक्षित और आसान उपयोग।"},
+            {r:31, n:"Tool Set", d:"खुद बनें मैकेनिक।"},
+            {r:32, n:"Extension Board", d:"जीतें मल्टी-पिन एक्सटेंशन बोर्ड।"},
+            {r:33, n:"LED Bulb", d:"कम बिजली, ज्यादा रोशनी।"},
+            {r:34, n:"Immersion Rod", d:"गर्म पानी का आनंद लें।"},
+            {r:35, n:"Premium Perfume", d:"जो आपको रखे दिनभर तरोताजा।"},
+            {r:36, n:"Wireless Speaker", d:"पोर्टेबल स्पीकर के साथ बेस।"},
+            {r:37, n:"Water Bottle Set", d:"स्टाइलिश वॉटर बॉटल सेट।"},
+            {r:38, n:"Lunch Box", d:"खाना रहेगा फ्रेश और गरम।"},
+            {r:39, n:"Leather Belt", d:"मजबूत और टिकाऊ लेदर बेल्ट।"},
+            {r:40, n:"Woman's Purse", d:"ट्रेंडी और स्टाइलिश हैंड पर्स।"},
+            {r:41, n:"Hair Dryer", d:"मनचाहा हेयरस्टाइल पाएं।"},
+            {r:42, n:"Leather Bag", d:"मजबूत लेदर बैग।"},
+            {r:43, n:"20L Water Bottle", d:"शुद्ध पानी का बड़ा स्टोरेज।"},
+            {r:44, n:"Bathing Bucket", d:"सालों-साल आपका साथ निभाए।"},
+            {r:45, n:"Mobile Recharge", d:"₹349 का फ्री मोबाइल रिचार्ज।"},
+            {r:46, n:"Spice Box", d:"सुंदर मसाला दानी।"},
+            {r:47, n:"Veg Chopper", d:"स्मार्ट किचन का स्मार्ट टूल।"},
+            {r:48, n:"Photo Frame", d:"प्यारा फोटो फ्रेम।"},
+            {r:49, n:"Water Camper", d:"पानी को रखें ठंडा और ताज़ा।"},
+            {r:50, n:"Makeup Kit", d:"हर महिला की पहली पसंद।"},
+            {r:51, n:"Electric Iron", d:"कपड़ों पर लाएं परफेक्ट चमक।"}
         ];
 
         const App = () => {
@@ -115,10 +116,10 @@
             const [loading, setLoading] = useState(true);
             const [localLocks, setLocalLocks] = useState(new Set(JSON.parse(localStorage.getItem('dps_locks') || '[]')));
 
-            // 🌟 नई सुपर-पावर्स के लिए State 🌟
             const [staffUpi, setStaffUpi] = useState("");
             const [discount, setDiscount] = useState(0);
             const [payMode, setPayMode] = useState("");
+            const [workHistory, setWorkHistory] = useState([]);
 
             const loadData = () => {
                 fetch(CSV_URL + "?t=" + Date.now()).then(r => r.text()).then(csv => {
@@ -152,6 +153,7 @@
                 const params = new URLSearchParams(Object.fromEntries(fd));
                 params.append("action", "BOOK"); params.append("S_No", n.toString()); 
                 params.append("Category", selected.cat); params.append("Base_Price", selected.price);
+                params.append("Village", fd.get("Village") + " | Link: " + fd.get("Drive_Link")); // Appending link to Village column safely
                 
                 await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
                 setSuccessModal({ n, name: fd.get("Customer_Name"), mid: selected.mid });
@@ -161,33 +163,37 @@
             const staffUpdate = (status) => {
                 const sName = document.getElementById('s_name').value;
                 const sMob = document.getElementById('s_mob').value;
-                const sPay = document.getElementById('s_pay').value;
-                const fullLog = `Status: ${status} | Changed By: ${staff.id} | Name: ${sName} | Mob: ${sMob}`;
+                const fullLog = `Status: ${status} | By: ${staff.id} | Card: #${selected.n} | Name: ${sName}`;
 
                 const params = new URLSearchParams({
                     action: 'UPDATE', S_No: selected.n, Status: status, staffID: staff.id, staffPass: staff.pass,
                     Customer_Name: sName, Mobile: sMob,
                     Aadhaar: document.getElementById('s_adhar').value, PAN: document.getElementById('s_pan').value,
-                    Payment_Mode: sPay, Payment_Ref: document.getElementById('s_ref').value,
+                    Payment_Mode: document.getElementById('s_pay').value, Payment_Ref: document.getElementById('s_ref').value,
                     Paid: document.getElementById('s_paid').value, LogMsg: fullLog
                 });
+                
                 fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
+                
+                // History Update
+                setWorkHistory(prev => [`[${new Date().toLocaleTimeString()}] Card #${selected.n} marked as ${status}`, ...prev]);
+                
                 if(status === 'Available') setLocalLocks(prev => { const n = new Set(prev); n.delete(selected.n); return n; });
-                setSelected(null); alert("✅ जानकारी सफलतापूर्वक अपडेट हो गई और टेलीग्राम पर भेज दी गई!");
+                setSelected(null); alert(status === 'Available' ? "❌ कार्ड को रिजेक्ट कर दिया गया है। यह अब Available है।" : "✅ कार्ड सफलतापूर्वक कन्फर्म (Sold) हो गया है!");
             };
 
             const renderCard = (c) => {
-                // 🛑 SOLD कार्ड्स स्क्रीन से गायब 🛑
-                if (c.status === 'Sold') return null;
-
                 const isLocked = localLocks.has(c.n) || c.status === 'Pending';
-                const s = isLocked ? 'Pending' : 'Available';
-                const color = s === 'Pending' ? 'pending-card' : `card-${c.cat.split(' ')[0]}`;
+                let s = c.status === 'Sold' ? 'Sold' : isLocked ? 'Pending' : 'Available';
+                
+                // Colors logic
+                const color = s === 'Sold' ? 'sold-card' : s === 'Pending' ? 'pending-card' : `card-${c.cat.split(' ')[0]}`;
                 
                 return (
-                    <div key={c.n} onClick={() => { setSelected(c); setPayMode(c.d.pay || ""); setDiscount(0); }} className={`grid-item ${color}`}>
+                    <div key={c.n} onClick={s !== 'Sold' ? () => { setSelected(c); setPayMode(c.d.pay || ""); setDiscount(0); } : undefined} className={`grid-item ${color}`}>
                         <span className="z-10 relative text-white drop-shadow-md">{c.n}</span>
                         {s === 'Pending' && <i className="fa-solid fa-lock absolute text-black/20 text-5xl md:text-7xl"></i>}
+                        {s === 'Sold' && <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-[25px]"><span className="text-white text-2xl font-black rotate-[-15deg] border-4 border-red-500 px-2 py-1">SOLD</span></div>}
                         {s === 'Available' && <div className="absolute bottom-2 text-xs md:text-sm font-black tracking-widest opacity-80 uppercase">{c.cat.split(' ')[0]}</div>}
                     </div>
                 );
@@ -198,21 +204,29 @@
             return (
                 <div className="max-w-[1600px] mx-auto p-4 py-10">
                     
-                    {/* 🛡️ STAFF ADMIN DASHBOARD 🛡️ */}
+                    {/* 🛡️ STAFF LIVE DASHBOARD 🛡️ */}
                     {staff ? (
                         <div className="mb-12 glass p-8 border-t-[10px] border-indigo-500 shadow-2xl">
                             <div className="flex justify-between items-center mb-6">
                                 <div>
-                                    <h2 className="text-4xl font-black text-indigo-400 uppercase tracking-widest">Live Admin Panel</h2>
-                                    <p className="text-xl text-slate-300 font-bold mt-2">Welcome, {staff.id} | Pending Cards Dashboard</p>
+                                    <h2 className="text-4xl md:text-5xl font-black text-indigo-400 uppercase tracking-widest">{COMPANY}</h2>
+                                    <p className="text-xl text-amber-400 font-bold mt-2">Live Admin Dashboard | User: {staff.id}</p>
                                 </div>
-                                <button onClick={() => setStaff(null)} className="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-xl font-black transition-colors">LOGOUT</button>
+                                <button onClick={() => setStaff(null)} className="bg-red-600 hover:bg-red-500 text-white px-8 py-3 rounded-xl font-black transition-colors text-xl">LOGOUT</button>
                             </div>
                             
-                            <div className="bg-slate-900/80 p-6 rounded-2xl border border-amber-500 flex flex-wrap gap-4 items-center">
-                                <label className="text-amber-400 font-black text-xl"><i className="fa-solid fa-qrcode"></i> आपकी UPI ID:</label>
-                                <input type="text" placeholder="ex: 7229874128@paytm" value={staffUpi} onChange={(e)=>setStaffUpi(e.target.value)} className="bg-black border-2 border-slate-700 text-white p-3 rounded-lg font-bold w-64" />
-                                <span className="text-sm text-slate-400">(QR Code और पेमेंट लिंक बनाने के लिए)</span>
+                            <div className="grid md:grid-cols-2 gap-8">
+                                <div className="bg-slate-900/80 p-6 rounded-2xl border border-amber-500">
+                                    <label className="text-amber-400 font-black text-xl mb-4 block"><i className="fa-solid fa-qrcode"></i> आपकी UPI ID (QR Code के लिए):</label>
+                                    <input type="text" placeholder="ex: 7229874128@paytm" value={staffUpi} onChange={(e)=>setStaffUpi(e.target.value)} className="bg-black border-2 border-slate-700 text-white p-4 rounded-lg font-bold w-full text-xl" />
+                                </div>
+                                
+                                <div className="bg-slate-900/80 p-6 rounded-2xl border border-indigo-500 h-48 overflow-y-auto custom-scroll">
+                                    <label className="text-indigo-400 font-black text-xl mb-2 block"><i className="fa-solid fa-clock-rotate-left"></i> Work History (Today):</label>
+                                    {workHistory.length === 0 ? <p className="text-slate-500 italic">No recent actions...</p> : 
+                                        workHistory.map((h, i) => <p key={i} className="text-sm text-slate-300 font-bold mb-1 border-b border-slate-700 pb-1">{h}</p>)
+                                    }
+                                </div>
                             </div>
                         </div>
                     ) : (
@@ -222,9 +236,9 @@
                             
                             <div className="banner-row mt-10">
                                 {[
-                                    {t:'VIP', p:'500', c:'card-VIP', d:'पूरा परिवार मान्य | 6 महीने | 100% फ्री ई-मित्र सेवा | ₹100 कैशबैक'},
-                                    {t:'GOLD', p:'100', c:'card-Gold', d:'1 व्यक्ति | 3 महीने | 50% ई-मित्र छूट | 100% गारंटीड उपहार'},
-                                    {t:'SILVER', p:'50', c:'card-Silver', d:'1 व्यक्ति | 1 महीना | सीमित सेवा | लकी ड्रा का सुनहरा अवसर'}
+                                    {t:'VIP', p:'500', c:'card-VIP', d:'पूरा परिवार मान्य | 6 महीने | 100% फ्री ई-मित्र सेवा'},
+                                    {t:'GOLD', p:'100', c:'card-Gold', d:'1 व्यक्ति | 3 महीने | 50% ई-मित्र छूट | गारंटीड उपहार'},
+                                    {t:'SILVER', p:'50', c:'card-Silver', d:'1 व्यक्ति | 1 महीना | सीमित सेवा | लकी ड्रा मौका'}
                                 ].map((b, i) => (
                                     <div key={i} className={`banner-3d ${b.c} p-8 rounded-[2rem] shadow-xl border-2 border-white/20 text-left`}>
                                         <h2 className="text-4xl font-black mb-2">{b.t}</h2>
@@ -233,21 +247,17 @@
                                     </div>
                                 ))}
                             </div>
-
-                            <div className="bg-gradient-to-r from-amber-600 to-yellow-400 text-black py-4 px-6 mt-12 font-black text-lg md:text-2xl uppercase rounded-full shadow-lg border-2 border-white animate-pulse">
-                                🔥 आज ही कार्ड बुक करवाइए और जीतिए 51 भारी इनाम, नहीं तो सुविधा तो पक्की है ही! 🔥
-                            </div>
-
-                            <div className="flex flex-wrap gap-4 mt-10 justify-center">
-                                {['ALL', 'VIP Card', 'Gold Card', 'Silver Card'].map(t => (
-                                    <button key={t} onClick={() => setActiveTab(t)} className={`px-8 py-3 rounded-full font-black text-xl uppercase transition-all shadow-lg ${activeTab === t ? 'bg-amber-500 text-black scale-105' : 'bg-slate-800 text-slate-300'}`}>{t.split(' ')[0]}</button>
-                                ))}
-                            </div>
                         </header>
                     )}
 
+                    <div className="flex flex-wrap gap-4 mt-6 mb-10 justify-center">
+                        {['ALL', 'VIP Card', 'Gold Card', 'Silver Card'].map(t => (
+                            <button key={t} onClick={() => setActiveTab(t)} className={`px-8 py-3 rounded-full font-black text-xl uppercase transition-all shadow-lg ${activeTab === t ? 'bg-amber-500 text-black scale-105' : 'bg-slate-800 text-slate-300'}`}>{t.split(' ')[0]}</button>
+                        ))}
+                    </div>
+
                     <div className="grid lg:grid-cols-12 gap-10">
-                        {/* 🎁 51 MEGA PRIZES 🎁 */}
+                        {/* 🎁 51 MEGA PRIZES (Hide for Staff) 🎁 */}
                         {!staff && (
                             <div className="lg:col-span-4 glass p-6 h-[800px] flex flex-col border-t-[8px] border-amber-500">
                                 <h2 className="text-3xl font-black italic text-amber-500 mb-6 text-center underline">51 MEGA PRIZES</h2>
@@ -267,7 +277,7 @@
 
                         {/* 🎴 JUMBO GRID SECTION 🎴 */}
                         <div className={`${staff ? 'lg:col-span-12' : 'lg:col-span-8'} glass p-4 md:p-8 h-[800px] flex flex-col border-t-[8px] border-indigo-500`}>
-                            {staff && <h3 className="text-3xl text-indigo-400 font-black mb-4">Pending & Available Cards (Click to Edit)</h3>}
+                            {staff && <h3 className="text-3xl text-indigo-400 font-black mb-4">Live Cards (Yellow = Pending, Red = Sold)</h3>}
                             <div className="card-grid overflow-y-auto flex-1 custom-scroll">
                                 {cards.filter(c => activeTab === 'ALL' || c.cat === activeTab).map(renderCard)}
                             </div>
@@ -285,7 +295,7 @@
                         </div>
                     )}
 
-                    {/* ✨ STYLISH FORM MODAL (CUSTOMER & STAFF) ✨ */}
+                    {/* ✨ STYLISH FORM MODAL ✨ */}
                     {selected && (
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
                             <div className="glass p-8 md:p-12 w-full max-w-5xl border-2 border-amber-500 rounded-[2rem] shadow-2xl relative mt-20 md:mt-0">
@@ -300,12 +310,14 @@
                                 {staff ? (
                                     <div className="grid md:grid-cols-2 gap-8">
                                         <div className="bg-slate-900/80 p-6 rounded-2xl border border-indigo-500 space-y-4">
-                                            <p className="text-indigo-400 font-black text-xl mb-4">Customer Details (Auto-Filled)</p>
+                                            <p className="text-indigo-400 font-black text-xl mb-4">Customer Live Data (Auto-Filled)</p>
                                             <input id="s_name" defaultValue={selected.d.name?.replace(/'/g,'')} placeholder="Customer Name" className="w-full bg-black p-4 rounded-xl text-lg font-bold border border-slate-700 text-white" />
                                             <input id="s_mob" defaultValue={selected.d.mob?.replace(/'/g,'')} placeholder="Mobile" className="w-full bg-black p-4 rounded-xl text-lg font-bold border border-slate-700 text-white" />
                                             <input id="s_adhar" defaultValue={selected.d.adhar?.replace(/'/g,'')} placeholder="Aadhaar" className="w-full bg-black p-4 rounded-xl text-lg font-bold border border-slate-700 text-white" />
                                             <select id="s_pay" defaultValue={selected.d.pay} className="w-full bg-black p-4 rounded-xl text-lg font-bold border border-slate-700 text-white"><option value="Cash">Cash (Offline)</option><option value="PhonePe/GPay">PhonePe / Google Pay</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select>
-                                            <input id="s_ref" defaultValue={selected.d.ref} placeholder="Txn ID / Ref Number" className="w-full bg-black p-4 rounded-xl text-lg font-bold border border-slate-700 text-amber-400" />
+                                            
+                                            {/* Txn ID Optional */}
+                                            <input id="s_ref" defaultValue={selected.d.ref} placeholder="Txn ID (Optional)" className="w-full bg-black p-4 rounded-xl text-lg font-bold border border-slate-700 text-amber-400" />
                                             <input id="s_pan" defaultValue={selected.d.pan} placeholder="PAN Card (If Airtel)" className="w-full bg-black p-4 rounded-xl text-lg font-bold border border-slate-700 text-white uppercase" />
                                         </div>
                                         
@@ -323,17 +335,17 @@
 
                                                 {/* 🌟 LIVE QR CODE MAGIC 🌟 */}
                                                 {staffUpi && (
-                                                    <div className="text-center p-4 bg-white rounded-2xl mb-6">
+                                                    <div className="text-center p-4 bg-white rounded-2xl mb-6 shadow-lg">
                                                         <p className="text-black font-black mb-2 text-sm">Scan to Pay ₹{selected.price - discount}</p>
-                                                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=${staffUpi}%26pn=DPSG%26am=${selected.price - discount}%26tr=${selected.mid}%26tn=Card_${selected.n}_${selected.mid}`} alt="QR" className="mx-auto" />
-                                                        <p className="text-xs text-slate-500 mt-2">Auto-ID: {selected.mid}</p>
+                                                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=${staffUpi}%26pn=DPSG%26am=${selected.price - discount}%26tr=${selected.mid}%26tn=Card_${selected.n}_${selected.mid}`} alt="QR Code" className="mx-auto border-4 border-slate-200" />
+                                                        <p className="text-xs text-slate-500 mt-2 font-bold">Auto-ID: {selected.mid}</p>
                                                     </div>
                                                 )}
                                             </div>
 
                                             <div className="flex gap-4 mt-auto">
-                                                <button onClick={() => staffUpdate('Sold')} className="flex-1 bg-green-600 font-black py-4 rounded-xl text-xl hover:bg-green-500 transition-colors">VERIFY & SELL ✅</button>
-                                                <button onClick={() => staffUpdate('Available')} className="flex-1 bg-slate-700 font-black py-4 rounded-xl text-xl hover:bg-red-600 transition-colors">REJECT ❌</button>
+                                                <button onClick={() => staffUpdate('Sold')} className="flex-1 bg-green-600 font-black py-4 rounded-xl text-xl hover:bg-green-500 transition-colors shadow-lg">VERIFY & SELL ✅</button>
+                                                <button onClick={() => staffUpdate('Available')} className="flex-1 bg-red-700 font-black py-4 rounded-xl text-xl hover:bg-red-600 transition-colors shadow-lg">REJECT ❌</button>
                                             </div>
                                         </div>
                                     </div>
@@ -349,8 +361,8 @@
                                             <div><label className="text-sm font-bold text-slate-400 ml-2">गाँव / शहर (Village/City)</label><input name="Village" className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg" /></div>
                                         </div>
                                         
-                                        {/* 🌟 AIRTEL STRICT LOGIC 🌟 */}
                                         <div className="grid md:grid-cols-2 gap-6">
+                                            {/* 🌟 AIRTEL STRICT LOGIC 🌟 */}
                                             <div><label className="text-sm font-bold text-slate-400 ml-2">पेमेंट मोड (Payment Mode) *</label>
                                                 <select name="Payment_Mode" required value={payMode} onChange={(e)=>setPayMode(e.target.value)} className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 focus:border-amber-500 outline-none text-white text-lg">
                                                     <option value="" disabled>चुनें (Select)</option>
@@ -361,11 +373,14 @@
                                             </div>
                                             {payMode === 'Airtel Payment Bank' && (
                                                 <div className="animate-pulse">
-                                                    <label className="text-sm font-black text-red-500 ml-2">PAN CARD NUMBER (अनिवार्य) *</label>
-                                                    <input name="PAN" required pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" placeholder="Ex: ABCDE1234F" className="w-full bg-black p-4 rounded-xl font-black border-4 border-red-600 text-white text-lg uppercase" />
+                                                    <label className="text-sm font-black text-red-500 ml-2">PAN CARD (अनिवार्य) *</label>
+                                                    <input name="PAN" required pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" placeholder="Ex: ABCDE1234F" className="w-full bg-black p-4 rounded-xl font-black border-4 border-red-600 text-white text-lg uppercase shadow-[0_0_15px_rgba(220,38,38,0.6)]" />
                                                 </div>
                                             )}
                                         </div>
+
+                                        {/* 📸 फोटो/वीडियो लिंक 📸 */}
+                                        <div><label className="text-sm font-bold text-slate-400 ml-2">फोटो / वीडियो लिंक (Google Drive Link - Optional)</label><input name="Drive_Link" placeholder="यहाँ ड्राइव या फोटो का लिंक पेस्ट करें..." className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 focus:border-amber-500 outline-none text-white text-lg" /></div>
                                         
                                         <button type="submit" className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black py-4 rounded-xl text-2xl uppercase italic shadow-lg hover:scale-[1.02] transition-transform mt-4">CONFIRM BOOKING 🔱</button>
                                     </form>
