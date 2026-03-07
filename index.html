@@ -3,220 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DPSG Master Portal - Nimbahera</title>
+    <title>DPSG Master Portal 2026</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <script>
+        // 🛡️ ANTI-HACKER SECURITY SCRIPT 🛡️
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) || (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+                return false;
+            }
+        };
+        setInterval(() => { console.clear(); console.log("%cSTOP! DPSG SECURED AREA", "color: red; font-size: 40px; font-weight: bold;"); }, 2000);
+    </script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap');
-        body { font-family: 'Poppins', sans-serif; background: #f1f5f9; margin: 0; }
-        .glass-card { background: white; border-radius: 2.5rem; box-shadow: 0 15px 45px rgba(0,0,0,0.1); }
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; max-height: 450px; overflow-y: auto; padding: 15px; background: #fff; border-radius: 1.5rem; border: 2px inset #edf2f7; }
-        .grid-item { padding: 15px 2px; text-align: center; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.2s; font-size: 13px; border: 1px solid #eee; }
-        
-        .grid-item.available { background: white; color: #1e293b; }
-        .grid-item.sold { background: #fee2e2 !important; color: #991b1b !important; cursor: not-allowed !important; text-decoration: line-through; border: 1px solid #fca5a5; }
-        .grid-item.pending { background: #fbbf24 !important; color: #78350f !important; border: 2px solid #d97706; cursor: not-allowed !important; animation: pulse 2s infinite; opacity: 0.9; }
-        .grid-item.selected { border: 3px solid #4f46e5 !important; transform: scale(1.1); box-shadow: 0 0 20px rgba(79,70,229,0.3); }
-        
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-        .prize-card { border-left: 6px solid #f59e0b; background: #fff; margin-bottom: 8px; padding: 10px; border-radius: 0 1rem 1rem 0; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .custom-scroll::-webkit-scrollbar { width: 5px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;900&display=swap');
+        body { font-family: 'Poppins', sans-serif; background: #070b14; color: white; margin: 0; user-select: none; }
+        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); border-radius: 1.5rem; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; max-height: 550px; overflow-y: auto; padding: 15px; background: #0a0f1c; border-radius: 1rem; border: 1px solid #1e293b; }
+        .grid-item { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: 900; cursor: pointer; transition: 0.2s; font-size: 13px; border: 1px solid rgba(255,255,255,0.05); }
+        .available { background: #1e293b; color: #94a3b8; }
+        .available:hover { background: #fbbf24; color: #000; transform: scale(1.05); }
+        .pending { background: #f59e0b; color: #000; border: 2px solid #b45309; animation: pulse 2s infinite; pointer-events: none; }
+        .sold { background: #ef4444; color: #fff; opacity: 0.4; pointer-events: none; }
+        .selected { background: #fbbf24 !important; color: #000 !important; transform: scale(1.1); border: 2px solid #fff; }
+        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 10px; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkZ3dQjKJlFQAyJMtB6RPoAU6lptKZ7J1zFP_Wn2VQ_fAacPIfPjQI5BuFkKXU1ZYOYQ/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzApJwnfryMBhVujtfGJo-HbWWFTiM2guvLQkxX4CoSDbGp1opeKc7SlE9ObvkgrPgrPw/exec";
         const SHEET_CSV = "https://docs.google.com/spreadsheets/d/11UVWUzSUwI2mm9tsBMaNARgUnfwIZ5TKDaHsKb4Cl58/export?format=csv";
-        const STAFF = { "Jorawar@DPS": "Jorawar@6020", "Parkash@DPS": "Parkash@6020", "Rajkumar@DPS": "Rajkumar@6020", "Chanchal@DPS": "Chanchal@6020" };
-
-        const prizeList = [
-            { r: "1", n: "नगद ₹5000 💰", m: "बम्पर धमाका इनाम" }, { r: "2", n: "LED TV 32 इंच 📺", m: "शानदार डिजिटल अनुभव" },
-            { r: "3", n: "किड्स साइकिल 🚲", m: "नन्हे बच्चों की सवारी" }, { r: "4", n: "सीलिंग पंखा 🌀", m: "गर्मियों का सबसे बड़ा तोहफा" },
-            { r: "5", n: "बाटी ओवन 🍳", m: "राजस्थानी रसोई का मान" }, { r: "6", n: "इलेक्ट्रिक प्रेस 👔", m: "कपड़ों की बढ़िया चमक" },
-            { r: "7", n: "दीवार घड़ी ⏰", m: "सटीक समय की पहचान" }, { r: "8", n: "डिनर सेट 🍽️", m: "पारिवारिक सत्कार हेतु" },
-            { r: "9", n: "हॉट पॉट सैट 🍲", m: "गरमा-गरम खाने का आनंद" }, { r: "10", n: "इंडक्शन चूल्हा ⚡", m: "आधुनिक रसोई की शान" }
-        ];
-        for (let i = 11; i <= 51; i++) { prizeList.push({ r: i.toString(), n: `सरप्राइज गिफ्ट ${i} 🎁`, m: "DPSG स्पेशल उपहार" }); }
+        const _S = { "Jorawar@DPS": "Jorawar@6020", "Parkash@DPS": "Parkash@6020", "Rajkumar@DPS": "Rajkumar@6020" };
+        
+        // Compact Prize Logic
+        const P = [{r:1,n:"₹5000 Cash 💰",d:"किस्मत बदलने का असली मौका"},{r:2,n:"LED TV 📺",d:"32 इंच की बड़ी स्क्रीन जीतने का चांस"},{r:3,n:"Kids Bicycle 🚲",d:"बचपन का सबसे प्यारा तोहफा"},{r:4,n:"Ceiling Fan 🌀",d:"तेज़ हवा और सुकून भरी नींद"},{r:5,n:"Bati Oven 🍳",d:"गरमा-गरम बाटी का स्वाद"},{r:6,n:"Keypad Mobile 📱",d:"भरोसेमंद मोबाइल"},{r:7,n:"Smart Watch ⌚",d:"स्मार्ट लुक"},{r:8,n:"Power Bank 🔋",d:"फुल चार्ज"},{r:9,n:"Sports Shoes 👟",d:"रफ़्तार का मेल"},{r:10,n:"Riding Helmet 🪖",d:"सुरक्षा और स्टाइल"}];
+        for(let i=11;i<=51;i++) P.push({r:i,n:`धमाका इनाम #${i} 🎁`,d:"DPSG स्पेशल उपहार"}); P.push({r:52,n:"🎁 निश्चित उपहार",d:"DPSG में कोई नहीं हारता!"});
 
         const App = () => {
             const [cards, setCards] = useState([]);
+            const [filter, setFilter] = useState('ALL');
             const [selected, setSelected] = useState(null);
-            const [view, setView] = useState("user");
+            const [staff, setStaff] = useState(null);
             const [loading, setLoading] = useState(true);
-            const [staffID, setStaffID] = useState("");
-            const [checkModal, setCheckModal] = useState(false);
-            const [searchQuery, setSearchQuery] = useState("");
-            const [foundCard, setFoundCard] = useState(null);
+            const [successBooking, setSuccessBooking] = useState(null);
 
             const loadData = () => {
                 fetch(SHEET_CSV + "?t=" + Date.now()).then(r => r.text()).then(csv => {
-                    const rows = Papa.parse(csv).data;
+                    const rows = csv.split('\n').map(row => row.split(','));
                     let parsed = [];
-                    // स्मार्ट मेमोरी: जो अभी-अभी बुक हुआ है उसे याद रखो
-                    let localMemory = JSON.parse(localStorage.getItem('dpsg_memory') || "{}");
-                    
                     for(let i=1; i<=1000; i++) {
-                        let row = rows[i] || [];
-                        let stat = (row[4] || "").trim().toLowerCase();
-                        let currentStatus = "available";
-                        
-                        if(stat === "sold" || stat === "सॉल्ड") currentStatus = "sold";
-                        else if(stat === "pending" || stat === "पेंडिंग") currentStatus = "pending";
-                        
-                        // अगर गूगल शीट पीछे चल रही है, तो लोकल मेमोरी से तुरंत लॉक कर दो
-                        if(currentStatus === "available" && localMemory[i]) {
-                            currentStatus = localMemory[i];
-                        }
-                        
-                        parsed.push({ num: i, id: `DPSG-26-113-${String(i).padStart(4,'0')}`, status: currentStatus, data: { name: row[6], mob: row[7], vill: row[9] } });
+                        let stat = (rows[i] && rows[i][4]) ? rows[i][4].trim().toLowerCase() : "";
+                        parsed.push({ num: i, id: `DPSG-26-${String(i).padStart(4,'0')}`, status: (stat==="sold"||stat==="सॉल्ड")?"sold":(stat==="pending"||stat==="पेंडिंग"?"pending":"available"), data: { name: rows[i]?.[6]||"", mob: rows[i]?.[7]||"", aadhar: rows[i]?.[10]||"" } });
                     }
                     setCards(parsed); setLoading(false);
                 });
             };
 
-            useEffect(() => { loadData(); const interval = setInterval(loadData, 10000); return () => clearInterval(interval); }, []);
+            useEffect(() => { loadData(); const itvl = setInterval(loadData, 10000); return () => clearInterval(itvl); }, []);
 
-            const handleAction = async (e, act) => {
+            const filteredCards = filter === 'ALL' ? cards : cards.filter(c => c.status === filter.toLowerCase());
+
+            const handleBooking = async (e) => {
                 e.preventDefault();
                 const fd = new FormData(e.target);
                 const params = new URLSearchParams(fd);
-                params.append("membershipId", selected.id);
-                params.append("action", act);
-                if(staffID) params.append("staffID", staffID);
-                
-                // 1. तुरंत लोकल मेमोरी में लॉक सेव करें
-                let localMemory = JSON.parse(localStorage.getItem('dpsg_memory') || "{}");
-                localMemory[selected.num] = act === "BOOK" ? "pending" : "sold";
-                localStorage.setItem('dpsg_memory', JSON.stringify(localMemory));
-                
-                // 2. बिना पेज रिफ्रेश किये तुरंत रंग पीला कर दें
-                setCards(prev => prev.map(c => c.num === selected.num ? { ...c, status: localMemory[selected.num] } : c));
-                const successMsg = act === "BOOK" ? "सफल हुकुम! आपका नंबर लॉक कर दिया गया है।" : "कार्ड SOLD कर दिया गया है!";
-                
-                try {
-                    await fetch(SCRIPT_URL, { method: 'POST', body: params, mode: 'no-cors' });
-                    alert(successMsg);
-                    setSelected(null);
-                } catch(error) { 
-                    alert(successMsg);
-                    setSelected(null); 
-                }
+                params.append("action", "BOOK");
+                params.append("S_No", selected.num.toString());
+                const cName = fd.get("Customer_Name");
+
+                setCards(prev => prev.map(c => c.num === selected.num ? { ...c, status: "pending" } : c));
+                setSuccessBooking({ num: selected.num, name: cName });
+                setSelected(null);
+                try { await fetch(SCRIPT_URL, { method: 'POST', body: params, mode: 'no-cors' }); } catch(err) {}
             };
 
-            if (loading) return <div className="h-screen flex items-center justify-center bg-slate-900 text-white font-black text-3xl italic animate-pulse">DPSG NIMBAHERA...</div>;
+            const handleVerify = async (e) => {
+                e.preventDefault();
+                const fd = new FormData(e.target);
+                const params = new URLSearchParams(fd);
+                params.append("action", "VERIFY"); params.append("S_No", selected.num.toString());
+                params.append("staffID", staff.id); params.append("staffPass", staff.pass);
+                setCards(prev => prev.map(c => c.num === selected.num ? { ...c, status: "sold" } : c));
+                setSelected(null); alert("✅ कार्ड SOLD!");
+                try { await fetch(SCRIPT_URL, { method: 'POST', body: params, mode: 'no-cors' }); } catch(err) {}
+            };
+
+            if (loading) return <div className="h-screen flex items-center justify-center bg-[#070b14] text-amber-500 font-black text-2xl tracking-widest animate-pulse">DPSG PRO INITIALIZING...</div>;
 
             return (
-                <div className="max-w-md mx-auto pb-20">
-                    <header className="bg-slate-900 text-white p-10 rounded-b-[4rem] text-center shadow-2xl border-b-[10px] border-amber-500 relative">
-                        <button onClick={()=>setCheckModal(true)} className="absolute top-4 right-4 bg-amber-500 text-slate-900 px-4 py-1 rounded-full font-black text-[10px]">🔍 STATUS</button>
-                        <h1 className="text-5xl font-black italic tracking-tighter text-white">DPSG</h1>
-                        <p className="text-amber-400 text-[10px] font-bold uppercase mt-1 italic tracking-widest">Digital Seva Nimbahera</p>
+                <div className="max-w-6xl mx-auto px-4 py-8">
+                    <header className="glass-card p-6 text-center mb-6 border-b-2 border-amber-500 shadow-[0_10px_30px_rgba(245,158,11,0.1)]">
+                        <h1 className="text-4xl md:text-5xl font-black italic text-white tracking-tighter">DPSG <span className="text-amber-500">PRO</span> 2026</h1>
+                        <marquee className="mt-4 bg-amber-500 text-black py-1 font-black text-sm uppercase">🔥 मात्र ₹100 में ₹5000 नकद और 51 महा-इनाम जीतने का मौका! अभी लकी नंबर चुनें 🔥</marquee>
                     </header>
 
-                    <div className="px-4 mt-8 space-y-6">
-                        {view === "user" ? (
-                            <>
-                                <div className="glass-card p-6 border-t-[12px] border-amber-500 shadow-xl text-center">
-                                    <h2 className="font-black text-sm underline mb-4 uppercase text-amber-700 italic text-center">🏆 पूरे 51 धमाकेदार इनाम 🏆</h2>
-                                    <div className="max-h-52 overflow-y-auto pr-2 custom-scroll grid grid-cols-1 gap-2 text-left">
-                                        {prizeList.map(p => (
-                                            <div key={p.r} className="prize-card">
-                                                <p className="text-[12px] font-black italic text-indigo-900">इनाम #{p.r}: {p.n}</p>
-                                                <p className="text-[10px] text-slate-500 font-bold">{p.m}</p>
-                                            </div>
-                                        ))}
+                    <div className="grid lg:grid-cols-12 gap-6">
+                        <div className="lg:col-span-4 glass-card p-5 h-[650px] flex flex-col">
+                            <h2 className="text-xl font-black italic text-amber-500 mb-4 border-b border-amber-500/30 pb-2">🏆 51 महा-इनाम लिस्ट</h2>
+                            <div className="overflow-y-auto pr-2 flex-1 space-y-2">
+                                {P.map((p, i) => (
+                                    <div key={p.r} className={`p-3 rounded-lg flex items-center gap-3 ${i===51?'bg-green-900/40 border-l-4 border-green-500':'bg-slate-800/50 border-l-4 border-amber-500'}`}>
+                                        <div className={`w-8 h-8 flex items-center justify-center font-black rounded-md ${i===51?'bg-green-500':'bg-amber-500 text-black'}`}>{i===51?'🎁':p.r}</div>
+                                        <div><h4 className="font-black text-sm">{p.n}</h4><p className="text-[9px] text-slate-400">{p.d}</p></div>
                                     </div>
-                                </div>
-                                <div className="glass-card p-6">
-                                    <h2 className="font-black mb-4 border-l-8 border-indigo-600 pl-3 text-sm italic underline uppercase text-indigo-900 text-left">अपना नंबर चुनें (1-1000):</h2>
-                                    <div className="card-grid custom-scroll">
-                                        {cards.map(c => (
-                                            /* जादू यहाँ है: अगर खाली नहीं है, तो क्लिक इवेंट ही काम नहीं करेगा */
-                                            <div 
-                                                key={c.num} 
-                                                onClick={c.status === "available" ? () => setSelected(c) : undefined} 
-                                                className={`grid-item ${c.status} ${selected?.num === c.num ? 'selected' : ''}`}
-                                            >
-                                                {c.num}
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="mt-4 flex justify-around text-[10px] font-bold">
-                                        <div className="flex items-center gap-1"><span className="w-3 h-3 bg-white border border-gray-300 rounded-sm"></span> खाली</div>
-                                        <div className="flex items-center gap-1"><span className="w-3 h-3 bg-yellow-400 rounded-sm"></span> पेंडिंग</div>
-                                        <div className="flex items-center gap-1"><span className="w-3 h-3 bg-red-400 rounded-sm"></span> बुक</div>
-                                    </div>
-                                </div>
-                                {selected && selected.status === "available" && (
-                                    <div className="glass-card p-8 border-[6px] border-indigo-600 animate-in slide-in-from-bottom duration-500 shadow-2xl">
-                                        <div className="flex justify-between items-center mb-6"><h3 className="font-black text-indigo-900 italic underline text-xl tracking-tighter uppercase text-left">ID: {selected.id}</h3><button onClick={()=>setSelected(null)} className="text-red-500 font-black text-2xl">X</button></div>
-                                        <form onSubmit={(e) => handleAction(e, "BOOK")} className="space-y-4">
-                                            <input name="name" placeholder="शुभ नाम" required className="w-full p-4 border-4 rounded-3xl font-black bg-slate-50 outline-none text-lg border-indigo-50 focus:border-indigo-600 shadow-inner" />
-                                            <input name="mobile" placeholder="मोबाइल" required pattern="[0-9]{10}" className="w-full p-4 border-4 rounded-3xl font-black bg-slate-50 outline-none text-lg border-indigo-50 focus:border-indigo-600 shadow-inner" />
-                                            <input name="village" placeholder="गाँव/शहर" required className="w-full p-4 border-4 rounded-3xl font-black bg-slate-50 outline-none text-lg border-indigo-50 focus:border-indigo-600 shadow-inner" />
-                                            <button className="w-full bg-slate-900 text-white font-black py-6 rounded-[2.5rem] text-2xl shadow-2xl hover:bg-green-600 transition-all uppercase italic">कंफर्म बुकिंग ✅</button>
-                                        </form>
-                                    </div>
-                                )}
-                            </>
-                        ) : (
-                            <div className="space-y-6">
-                                <div className="bg-indigo-950 text-white p-8 rounded-[2.5rem] flex justify-between items-center border-b-[8px] border-indigo-500"><h2 className="font-black italic text-lg uppercase tracking-tighter">नमस्ते: {staffID}</h2><button onClick={()=>setView("user")} className="bg-red-500 px-6 py-2 rounded-full text-xs font-black uppercase shadow-lg text-white">Exit</button></div>
-                                <div className="glass-card p-6">
-                                    <h2 className="font-black underline italic mb-6 uppercase text-sm tracking-widest text-indigo-900 text-center">पेंडिंग बुकिंग्स:</h2>
-                                    <div className="space-y-3 text-left">
-                                        {cards.filter(c => c.status === "pending").map(c => (
-                                            <div key={c.id} className="p-5 border-4 border-amber-300 rounded-3xl flex justify-between items-center bg-amber-50 shadow-md">
-                                                <div className="text-[12px] font-black italic text-indigo-900"><p className="text-lg underline tracking-tighter">{c.id}</p><p className="text-slate-600 mt-1 uppercase">{c.data.name}</p></div>
-                                                <button onClick={()=>setSelected(c)} className="bg-green-600 text-white px-6 py-3 rounded-2xl font-black shadow-xl uppercase italic tracking-tighter">Verify</button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                {selected && (
-                                    <div className="glass-card p-8 border-[8px] border-green-500 shadow-2xl animate-bounce-short"><h3 className="font-black mb-6 italic underline text-center text-green-700 text-xl uppercase tracking-tighter">पेमेंट रसीद: {selected.id}</h3>
-                                        <form onSubmit={(e) => handleAction(e, "VERIFY")} className="space-y-4">
-                                            <input name="finalAmount" placeholder="राशि ₹" required className="w-full p-6 border-[6px] border-green-100 rounded-[2.5rem] font-black text-center text-4xl text-green-800" />
-                                            <button className="w-full bg-green-600 text-white font-black py-7 rounded-[3rem] text-3xl shadow-2xl uppercase italic tracking-tighter">SOLD ✅</button>
-                                        </form>
-                                    </div>
-                                )}
+                                ))}
                             </div>
-                        )}
+                        </div>
+
+                        <div className="lg:col-span-8 glass-card p-5 h-[650px] flex flex-col">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-black italic text-indigo-400">लकी कार्ड ग्रिड</h2>
+                                <div className="flex gap-2 text-[10px] font-black uppercase">
+                                    <button onClick={()=>setFilter('ALL')} className={`px-3 py-1 rounded ${filter==='ALL'?'bg-indigo-600':'bg-slate-800'}`}>कुल ({cards.length})</button>
+                                    <button onClick={()=>setFilter('AVAILABLE')} className={`px-3 py-1 rounded ${filter==='AVAILABLE'?'bg-slate-600':'bg-slate-800'}`}>खाली</button>
+                                    <button onClick={()=>setFilter('PENDING')} className={`px-3 py-1 rounded ${filter==='PENDING'?'bg-amber-500 text-black':'bg-slate-800'}`}>पेंडिंग</button>
+                                </div>
+                            </div>
+                            <div className="card-grid flex-1">
+                                {filteredCards.map(c => <div key={c.num} onClick={c.status==='available'?()=>setSelected(c):undefined} className={`grid-item ${c.status} ${selected?.num===c.num?'selected':''}`}>{c.num}</div>)}
+                            </div>
+                        </div>
                     </div>
-                    <div className="text-center mt-20 opacity-5"><button onClick={() => { const u = prompt("ID:"); const p = prompt("PASS:"); if(STAFF[u] === p) { setStaffID(u); setView("staff"); } else { alert("गलत!"); } }} className="text-[12px] font-black uppercase tracking-[0.5em]">🔱 STAFF LOGIN 🔱</button></div>
-                    {checkModal && (
-                        <div className="fixed inset-0 z-50 bg-slate-900/95 flex items-center justify-center p-4">
-                            <div className="bg-white rounded-[3.5rem] p-10 w-full max-w-sm relative shadow-2xl border-4 border-indigo-100 text-center">
-                                <button onClick={()=>{setCheckModal(false); setFoundCard(null); setSearchQuery("");}} className="absolute top-8 right-8 text-red-500 font-black text-3xl">X</button>
-                                <h3 className="font-black text-center mb-8 underline italic text-xl uppercase tracking-tighter">डिजिटल कार्ड स्टेटस</h3>
-                                <div className="flex gap-2 mb-8 text-left">
-                                    <input placeholder="ID या मोबाइल..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} className="w-full p-5 border-4 rounded-3xl font-black outline-none border-slate-100 focus:border-indigo-600 text-lg shadow-inner" />
-                                    <button onClick={() => setFoundCard(cards.find(c => c.id.toLowerCase() === searchQuery.toLowerCase() || c.data.mob === searchQuery) || "NOT_FOUND")} className="bg-indigo-600 text-white px-6 rounded-3xl font-black shadow-xl">🔍</button>
+
+                    {/* Booking Modal */}
+                    {selected && selected.status === 'available' && (
+                        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
+                            <div className="glass-card border border-amber-500 p-6 w-full max-w-md">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-2xl font-black text-white italic">बुक कार्ड: #{selected.num}</h3>
+                                    <button onClick={()=>setSelected(null)} className="text-2xl font-black text-slate-500">&times;</button>
                                 </div>
-                                {foundCard && foundCard !== "NOT_FOUND" && (
-                                    foundCard.status === 'sold' ? (
-                                        <div id="digital-card" className="p-8 rounded-[3rem] text-white shadow-2xl bg-gradient-to-br from-slate-900 to-black border-[6px] border-amber-500 text-left">
-                                            <p className="font-black text-[10px] uppercase tracking-widest opacity-60 mb-3 text-amber-400">DPSG Membership Card</p>
-                                            <h4 className="text-3xl font-black mb-8 tracking-tighter text-white italic underline">{foundCard.id}</h4>
-                                            <div className="space-y-3 font-black italic"><p className="text-2xl text-amber-100 uppercase">{foundCard.data.name}</p><p className="text-lg opacity-90">📱 {foundCard.data.mob}</p><p className="text-lg opacity-90 uppercase tracking-widest text-indigo-300">📍 {foundCard.data.vill}</p></div>
-                                            <div className="mt-10 no-print"><button onClick={()=>window.print()} className="w-full bg-white text-slate-900 font-black py-5 rounded-[2rem] text-sm uppercase shadow-2xl">🖨️ कार्ड प्रिंट</button></div>
-                                        </div>
-                                    ) : (
-                                        <div className="p-10 bg-amber-50 border-4 border-amber-300 rounded-[3rem]">
-                                            <p className="text-amber-700 font-black text-2xl animate-pulse italic uppercase tracking-widest underline">PENDING...</p>
-                                            <p className="text-slate-500 text-[10px] mt-4 font-bold uppercase tracking-tighter">हुकुम, यह मेम्बरशिप अभी पेंडिंग है। वेरिफिकेशन के बाद ही कार्ड खुलेगा।</p>
-                                        </div>
-                                    )
-                                )}
+                                <form onSubmit={handleBooking} className="space-y-4">
+                                    <select name="Category" required className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl font-bold text-white outline-none focus:border-amber-500">
+                                        <option value="" disabled selected>कार्ड प्रकार (Normal/VIP/Digital)</option>
+                                        <option value="Normal">Normal Card</option>
+                                        <option value="VIP">VIP Card</option>
+                                        <option value="Digital">Digital Card</option>
+                                    </select>
+                                    <input name="Customer_Name" placeholder="पूरा नाम (आधार अनुसार)" required className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl font-bold text-white outline-none focus:border-amber-500" />
+                                    <input name="Mobile" type="tel" pattern="[0-9]{10}" placeholder="मोबाइल (10 अंक)" required className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl font-bold text-white outline-none focus:border-amber-500" />
+                                    <input name="Aadhaar" type="tel" pattern="[0-9]{12}" placeholder="आधार नंबर" required className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl font-bold text-white outline-none focus:border-amber-500" />
+                                    <input name="Village" placeholder="गाँव/शहर" required className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl font-bold text-white outline-none focus:border-amber-500" />
+                                    <input type="hidden" name="Base_Price" value="100" />
+                                    <button className="w-full bg-amber-500 text-black font-black py-4 rounded-xl text-xl hover:bg-white transition-all uppercase italic mt-2">कन्फर्म बुकिंग 🔱</button>
+                                </form>
                             </div>
+                        </div>
+                    )}
+
+                    {/* WhatsApp Success Notification Modal */}
+                    {successBooking && (
+                        <div className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4">
+                            <div className="glass-card border-2 border-green-500 p-8 w-full max-w-md text-center">
+                                <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <i className="fa-solid fa-check text-4xl text-white"></i>
+                                </div>
+                                <h3 className="text-2xl font-black text-white italic mb-2">बुकिंग पेंडिंग में गई!</h3>
+                                <p className="text-slate-400 font-bold mb-8">कार्ड #{successBooking.num} सुरक्षित कर लिया गया है। स्टाफ द्वारा पेमेंट वेरीफाई होने पर यह पक्का हो जाएगा।</p>
+                                
+                                <a href={`https://wa.me/917229874128?text=${encodeURIComponent(`जय माता दी! हुकुम, मैंने DPSG-PRO-2026 पर कार्ड #${successBooking.num} बुक किया है। मेरा नाम ${successBooking.name} है। कृपया पेमेंट लेकर इसे वेरिफाई करें।`)}`} target="_blank" onClick={()=>setSuccessBooking(null)} className="flex items-center justify-center gap-3 w-full bg-[#25D366] text-white font-black py-4 rounded-xl text-lg hover:opacity-90 transition-opacity mb-4 shadow-[0_0_20px_rgba(37,211,102,0.4)]">
+                                    <i className="fa-brands fa-whatsapp text-2xl"></i> WhatsApp पर हमें सूचित करें
+                                </a>
+                                <button onClick={()=>setSuccessBooking(null)} className="text-slate-500 font-bold underline text-sm">नहीं, धन्यवाद</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Staff Trigger & Panel */}
+                    <div className="text-center mt-10 opacity-5 hover:opacity-100">
+                        <button onClick={() => { const u=prompt("Admin ID:"); const p=prompt("Pass:"); if(_S[u]===p) setStaff({id:u, pass:p}); }} className="text-[10px] font-black tracking-[1em] uppercase">🔱 Admin Access 🔱</button>
+                    </div>
+                    {staff && (
+                        <div className="fixed inset-0 z-[70] bg-slate-900 p-6 overflow-y-auto">
+                            <div className="flex justify-between items-center mb-6"><h2 className="text-3xl font-black text-amber-500 italic">Welcome, {staff.id}</h2><button onClick={()=>setStaff(null)} className="bg-red-500 text-white px-4 py-2 rounded font-black text-xs">LOGOUT</button></div>
+                            <div className="grid md:grid-cols-3 gap-4">
+                                {cards.filter(c=>c.status==='pending').map(c => (
+                                    <div key={c.id} className="glass-card p-5 border-l-4 border-amber-500">
+                                        <h3 className="text-2xl font-black text-white">#{c.num}</h3>
+                                        <p className="text-sm font-bold text-slate-400 my-2">{c.data.name} | {c.data.mob}</p>
+                                        <button onClick={()=>setSelected(c)} className="w-full bg-green-600 text-white py-2 rounded font-black mt-2">VERIFY PAYMENT</button>
+                                    </div>
+                                ))}
+                            </div>
+                            {selected && selected.status === 'pending' && staff && (
+                                <div className="fixed inset-0 z-[80] bg-black/95 flex items-center justify-center p-4">
+                                    <form onSubmit={handleVerify} className="glass-card border-2 border-green-500 p-6 w-full max-w-md">
+                                        <h3 className="text-xl font-black text-green-500 mb-4 text-center">Verify: #{selected.num}</h3>
+                                        <input name="Airtel_1" placeholder="Airtel Discount Account (Optional)" className="w-full bg-slate-900 p-3 rounded mb-3 text-white outline-none border border-slate-700" />
+                                        <input name="Discount" type="number" placeholder="Discount ₹" defaultValue="0" className="w-full bg-slate-900 p-3 rounded mb-3 text-white outline-none border border-slate-700" />
+                                        <input name="Paid" type="number" placeholder="Paid Amount ₹" required className="w-full bg-green-900/50 p-4 rounded mb-4 text-green-400 font-black text-2xl text-center outline-none border-2 border-green-500" />
+                                        <button className="w-full bg-green-600 text-white font-black py-3 rounded text-xl mb-3">SOLD ✅</button>
+                                        <button type="button" onClick={()=>setSelected(null)} className="w-full text-slate-500 font-bold">Cancel</button>
+                                    </form>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
