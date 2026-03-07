@@ -98,7 +98,7 @@
             {r:42, n:"Leather Bag", d:"मजबूत लेदर बैग।"},
             {r:43, n:"20L Water Bottle", d:"शुद्ध पानी का बड़ा स्टोरेज।"},
             {r:44, n:"Bathing Bucket", d:"सालों-साल आपका साथ निभाए।"},
-            {r:45, n:"Mobile Recharge", d:"₹349 का फ्री मोबाइल रिचार्ज।"},
+            {r:45, n:"Mobile Recharge", d:"₹349 का फ्री মোবাইল रिचार्ज।"},
             {r:46, n:"Spice Box", d:"सुंदर मसाला दानी।"},
             {r:47, n:"Veg Chopper", d:"स्मार्ट किचन का स्मार्ट टूल।"},
             {r:48, n:"Photo Frame", d:"प्यारा फोटो फ्रेम।"},
@@ -106,6 +106,28 @@
             {r:50, n:"Makeup Kit", d:"हर महिला की पहली पसंद।"},
             {r:51, n:"Electric Iron", d:"कपड़ों पर लाएं परफेक्ट चमक।"}
         ];
+
+        // ⚠️ यह है वो मास्टर फ़िल्टर जो कोमा (,) वाली बीमारी को जड़ से ख़त्म करेगा ⚠️
+        const parseCSV = (csvText) => {
+            let rows = []; let row = []; let cur = ''; let inQuote = false;
+            for (let i = 0; i < csvText.length; i++) {
+                let char = csvText[i];
+                if (inQuote) {
+                    if (char === '"') {
+                        if (i + 1 < csvText.length && csvText[i + 1] === '"') { cur += '"'; i++; } 
+                        else { inQuote = false; }
+                    } else { cur += char; }
+                } else {
+                    if (char === '"') { inQuote = true; } 
+                    else if (char === ',') { row.push(cur); cur = ''; } 
+                    else if (char === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; } 
+                    else if (char !== '\r') { cur += char; }
+                }
+            }
+            if (cur !== '' || csvText.endsWith(',')) row.push(cur);
+            if (row.length > 0) rows.push(row);
+            return rows;
+        };
 
         const App = () => {
             const [cards, setCards] = useState([]);
@@ -121,17 +143,18 @@
             const [payMode, setPayMode] = useState("");
             const [isUploading, setIsUploading] = useState(false);
 
-            // ⚠️ फूल-प्रूफ डेटा लोडिंग (Sold/सॉल्ड की बीमारी का इलाज) ⚠️
+            // ⚠️ ऑटो-फिल और Sold को लाल करने वाला फुल-प्रूफ डेटा लोडिंग ⚠️
             const loadData = () => {
                 fetch(CSV_URL + "?t=" + Date.now()).then(r => r.text()).then(csv => {
-                    const rows = csv.split('\n').map(r => r.split(','));
+                    const rows = parseCSV(csv); // नया मास्टर फ़िल्टर
                     let temp = [];
                     for(let i=1; i<=1000; i++) {
-                        let rD = rows.find(r => r[0] == i) || [];
+                        // S_No को सही से नंबर में बदलकर मैच करना
+                        let rD = rows.find(r => parseInt(r[0]) === i) || [];
                         let rawStatus = (rD[4] || 'Available').trim().toLowerCase();
                         let s = 'Available';
                         
-                        // एकदम पक्का फ़िल्टर
+                        // एकदम पक्का सॉल्ड फ़िल्टर
                         if(rawStatus === "सॉल्ड" || rawStatus === "sold" || rawStatus === "सॉल्ड " || rawStatus.includes("sold")) {
                             s = "Sold";
                         } else if(rawStatus === "पेंडिंग" || rawStatus === "pending" || rawStatus.includes("pending")) {
@@ -142,7 +165,10 @@
                         temp.push({ 
                             n: i, status: s, cat, price: rD[16] || (i<=100?500:i<=600?100:50),
                             mid: rD[3] || `DPSG-26-113-${i.toString().padStart(4,'0')}`,
-                            d: { name: rD[6]||"", mob: rD[7]||"", dob: rD[8]||"", vill: rD[9]||"", adhar: rD[10]||"", pan: rD[11]||"", pay: rD[12]||"", ref: rD[13]||"" } 
+                            d: { 
+                                name: rD[6]||"", mob: rD[7]||"", dob: rD[8]||"", vill: rD[9]||"", 
+                                adhar: rD[10]||"", pan: rD[11]||"", pay: rD[12]||"", ref: rD[13]||"", link: rD[14]||"" 
+                            } 
                         });
                     }
                     setCards(temp); setLoading(false);
@@ -164,14 +190,14 @@
                 params.append("action", "BOOK"); params.append("S_No", n.toString()); 
                 params.append("Category", selected.cat); params.append("Base_Price", selected.price);
                 
-                // 📸 गैलरी से फोटो को Base64 में बदलने का असली कोड 📸
+                // 📸 असली गैलरी से फोटो को Base64 में बदलने का कोड 📸
                 const fileInput = document.getElementById('file_upload_gallery');
                 if (fileInput && fileInput.files.length > 0) {
                     const file = fileInput.files[0];
                     const reader = new FileReader();
                     reader.onloadend = async () => {
                         const base64String = reader.result.replace("data:", "").replace(/^.+,/, "");
-                        params.append("File_Data", base64String); // फोटो का असली डेटा
+                        params.append("File_Data", base64String); 
                         params.append("File_Name", file.name);
                         
                         await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
@@ -220,24 +246,21 @@
                 
                 setSelected(null); 
                 alert(status === 'Available' ? "❌ रिजेक्ट: कार्ड वापस Available (खाली) हो गया।" : "✅ कन्फर्म: कार्ड Sold (लाल) हो गया!");
-                loadData(); // तुरंत शीट रिफ्रेश करें
+                loadData(); 
             };
 
             // ⚠️ कार्ड क्लिक करने का सख्त (Strict) नियम ⚠️
             const handleCardClick = (c, s) => {
-                // नियम 1: अगर कार्ड Sold है, तो कोई क्लिक नहीं कर सकता (न ग्राहक, न स्टाफ)
+                // नियम 1: अगर कार्ड Sold है, तो कोई क्लिक नहीं कर सकता
                 if(s === 'Sold') return;
                 
                 if(staff) {
-                    // नियम 2: अगर स्टाफ है, तो वह Pending या Available दोनों को क्लिक (Edit) कर सकता है
+                    // नियम 2: अगर स्टाफ है, तो वह Pending या Available दोनों को क्लिक कर सकता है
                     setSelected(c); 
                     setPayMode(c.d.pay || "");
                 } else {
-                    // नियम 3: अगर ग्राहक है, तो वह 'Pending' कार्ड को बिल्कुल क्लिक नहीं कर सकता।
-                    if(s === 'Pending') {
-                        return; // यहाँ क्लिक डेड (Dead) हो जाएगा
-                    }
-                    // सिर्फ Available कार्ड ही खुलेंगे
+                    // नियम 3: ग्राहक 'Pending' कार्ड को बिल्कुल क्लिक नहीं कर सकता
+                    if(s === 'Pending') return;
                     setSelected(c); 
                     setPayMode("");
                 }
@@ -289,7 +312,6 @@
                                             <p className="text-lg text-slate-300 font-bold"><i className="fa-solid fa-phone text-sm"></i> {c.d.mob || "N/A"} | ID: {c.mid}</p>
                                         </div>
                                         <div className="flex flex-wrap gap-3 w-full md:w-auto">
-                                            {/* बाहर ही एक्शन बटन */}
                                             <button onClick={() => masterUpdate(c, 'Sold', false)} className="bg-green-600 hover:bg-green-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">✅ Verify</button>
                                             <button onClick={() => masterUpdate(c, 'Available', false)} className="bg-red-700 hover:bg-red-600 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">❌ Reject</button>
                                             <button onClick={() => {if(!staffUpi){alert("पहले ऊपर अपनी UPI ID डालें!");return;} setQuickQrCard(c);}} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">📲 Pay QR</button>
@@ -372,7 +394,6 @@
                                 <button onClick={() => setQuickQrCard(null)} className="absolute top-4 right-6 text-4xl text-black hover:text-red-500">&times;</button>
                                 <h3 className="text-2xl font-black text-black mb-2">Pay ₹{quickQrCard.price}</h3>
                                 <p className="text-sm font-bold text-slate-600 mb-6">{COMPANY}</p>
-                                {/* प्रोफेशनल QR नोट (tn=Digital Problem Solution Group ID) */}
                                 <img src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=${staffUpi}%26pn=Digital%20Problem%20Solution%20Group%26am=${quickQrCard.price}%26tr=${quickQrCard.mid}%26tn=Digital_Problem_Solution_Group_ID_${quickQrCard.mid}`} alt="Live QR" className="mx-auto border-8 border-slate-100 rounded-xl" />
                                 <p className="text-sm font-black text-slate-700 mt-6 bg-slate-100 py-2 rounded-lg">Auto-ID: {quickQrCard.mid}</p>
                             </div>
@@ -381,7 +402,7 @@
 
                     {/* ✨ STYLISH FORM MODAL (CUSTOMER & STAFF EDIT) ✨ */}
                     {selected && (
-                        /* ⚠️ key={selected.n} यही है ऑटो-फिल का मास्टर लॉक ⚠️ */
+                        /* ⚠️ key={selected.n} ऑटो-फिल मास्टर लॉक ⚠️ */
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <div className="glass p-8 md:p-12 w-full max-w-5xl border-2 border-amber-500 rounded-[2rem] shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
                                 <button onClick={() => setSelected(null)} className="absolute top-6 right-8 text-5xl text-slate-400 hover:text-white">&times;</button>
@@ -423,7 +444,6 @@
                                         </div>
                                         
                                         <div className="grid md:grid-cols-2 gap-6">
-                                            {/* 🌟 AIRTEL STRICT LOGIC 🌟 */}
                                             <div><label className="text-sm font-bold text-slate-400 ml-2">पेमेंट मोड (Payment Mode) *</label>
                                                 <select name="Payment_Mode" required value={payMode} onChange={(e)=>setPayMode(e.target.value)} className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 focus:border-amber-500 outline-none text-white text-lg">
                                                     <option value="" disabled>चुनें (Select)</option>
