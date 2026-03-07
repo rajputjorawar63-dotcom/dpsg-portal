@@ -29,10 +29,10 @@
         .card-Gold { background: linear-gradient(135deg, #d97706, #451a03); }
         .card-Silver { background: linear-gradient(135deg, #cbd5e1, #475569); color: black; }
         
-        /* 🔴 SOLD कार्ड (डार्क लाल) 🔴 */
+        /* 🔴 SOLD कार्ड (डार्क लाल और 100% लॉक) 🔴 */
         .sold-card { background: linear-gradient(135deg, #7f1d1d, #450a0a) !important; color: #fca5a5 !important; border: 4px solid #450a0a; pointer-events: none; opacity: 0.9; }
         
-        /* 🟡 PENDING कार्ड (पीला और लॉक) 🟡 */
+        /* 🟡 PENDING कार्ड (पीला) 🟡 */
         .pending-card { background: #facc15 !important; color: black !important; border: 6px solid #fff; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.95); } }
         
@@ -117,25 +117,32 @@
             const [localLocks, setLocalLocks] = useState(new Set(JSON.parse(localStorage.getItem('dps_locks') || '[]')));
 
             const [staffUpi, setStaffUpi] = useState("");
-            const [quickQrCard, setQuickQrCard] = useState(null); // बाहर वाले QR के लिए
+            const [quickQrCard, setQuickQrCard] = useState(null); 
             const [payMode, setPayMode] = useState("");
+            const [isUploading, setIsUploading] = useState(false);
 
+            // ⚠️ फूल-प्रूफ डेटा लोडिंग (Sold/सॉल्ड की बीमारी का इलाज) ⚠️
             const loadData = () => {
                 fetch(CSV_URL + "?t=" + Date.now()).then(r => r.text()).then(csv => {
                     const rows = csv.split('\n').map(r => r.split(','));
                     let temp = [];
                     for(let i=1; i<=1000; i++) {
                         let rD = rows.find(r => r[0] == i) || [];
-                        let s = rD[4]?.trim() || 'Available';
-                        // फिक्स: Sold को सख्ती से लाल (Sold) करना है
-                        if(s === "सॉल्ड" || s.toLowerCase() === "sold") s = "Sold"; 
-                        if(s === "पेंडिंग" || s.toLowerCase() === "pending") s = "Pending";
+                        let rawStatus = (rD[4] || 'Available').trim().toLowerCase();
+                        let s = 'Available';
+                        
+                        // एकदम पक्का फ़िल्टर
+                        if(rawStatus === "सॉल्ड" || rawStatus === "sold" || rawStatus === "सॉल्ड " || rawStatus.includes("sold")) {
+                            s = "Sold";
+                        } else if(rawStatus === "पेंडिंग" || rawStatus === "pending" || rawStatus.includes("pending")) {
+                            s = "Pending";
+                        }
                         
                         let cat = i <= 100 ? "VIP Card" : i <= 600 ? "Gold Card" : "Silver Card";
                         temp.push({ 
                             n: i, status: s, cat, price: rD[16] || (i<=100?500:i<=600?100:50),
                             mid: rD[3] || `DPSG-26-113-${i.toString().padStart(4,'0')}`,
-                            d: { name: rD[6]||"", mob: rD[7]||"", vill: rD[9]||"", adhar: rD[10]||"", pan: rD[11]||"", pay: rD[12]||"", ref: rD[13]||"", dob: rD[8]||"", link: rD[14]||"" } 
+                            d: { name: rD[6]||"", mob: rD[7]||"", dob: rD[8]||"", vill: rD[9]||"", adhar: rD[10]||"", pan: rD[11]||"", pay: rD[12]||"", ref: rD[13]||"" } 
                         });
                     }
                     setCards(temp); setLoading(false);
@@ -146,6 +153,7 @@
 
             const bookCard = async (e) => {
                 e.preventDefault();
+                setIsUploading(true);
                 const fd = new FormData(e.target);
                 const n = selected.n;
                 const newLocks = new Set(localLocks).add(n);
@@ -155,14 +163,33 @@
                 const params = new URLSearchParams(Object.fromEntries(fd));
                 params.append("action", "BOOK"); params.append("S_No", n.toString()); 
                 params.append("Category", selected.cat); params.append("Base_Price", selected.price);
-                params.append("Drive_Link", fd.get("Drive_Link") || ""); // फोटो/वीडियो लिंक
                 
-                await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
-                setSuccessModal({ n, name: fd.get("Customer_Name"), mid: selected.mid });
-                setSelected(null); setPayMode("");
+                // 📸 गैलरी से फोटो को Base64 में बदलने का असली कोड 📸
+                const fileInput = document.getElementById('file_upload_gallery');
+                if (fileInput && fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const reader = new FileReader();
+                    reader.onloadend = async () => {
+                        const base64String = reader.result.replace("data:", "").replace(/^.+,/, "");
+                        params.append("File_Data", base64String); // फोटो का असली डेटा
+                        params.append("File_Name", file.name);
+                        
+                        await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
+                        finishBooking(fd, n);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
+                    finishBooking(fd, n);
+                }
             };
 
-            // 🌟 शॉर्टकट और अंदर वाले फॉर्म दोनों के लिए मास्टर अपडेट फंक्शन 🌟
+            const finishBooking = (fd, n) => {
+                setSuccessModal({ n, name: fd.get("Customer_Name"), mid: selected.mid });
+                setSelected(null); setPayMode(""); setIsUploading(false);
+            };
+
+            // 🌟 मास्टर अपडेट: स्टाफ के लिए 'Available' (Reject) और 'Sold' (Verify) 🌟
             const masterUpdate = (c, status, isInsideForm = false) => {
                 let sName = c.d.name; let sMob = c.d.mob; let sAdhar = c.d.adhar; 
                 let sPan = c.d.pan; let sPay = c.d.pay; let sRef = c.d.ref; let sPaid = c.price;
@@ -185,9 +212,35 @@
                 
                 fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
                 
-                if(status === 'Available') setLocalLocks(prev => { const n = new Set(prev); n.delete(c.n); return n; });
+                // रिजेक्ट होने पर तुरंत लोक हटा दें (Available)
+                if(status === 'Available') {
+                    setLocalLocks(prev => { const nSet = new Set(prev); nSet.delete(c.n); return nSet; });
+                    localStorage.setItem('dps_locks', JSON.stringify([...localLocks].filter(x => x !== c.n)));
+                }
+                
                 setSelected(null); 
-                alert(status === 'Available' ? "❌ रिजेक्ट: कार्ड वापस Available हो गया।" : "✅ कन्फर्म: कार्ड Sold (लाल) हो गया!");
+                alert(status === 'Available' ? "❌ रिजेक्ट: कार्ड वापस Available (खाली) हो गया।" : "✅ कन्फर्म: कार्ड Sold (लाल) हो गया!");
+                loadData(); // तुरंत शीट रिफ्रेश करें
+            };
+
+            // ⚠️ कार्ड क्लिक करने का सख्त (Strict) नियम ⚠️
+            const handleCardClick = (c, s) => {
+                // नियम 1: अगर कार्ड Sold है, तो कोई क्लिक नहीं कर सकता (न ग्राहक, न स्टाफ)
+                if(s === 'Sold') return;
+                
+                if(staff) {
+                    // नियम 2: अगर स्टाफ है, तो वह Pending या Available दोनों को क्लिक (Edit) कर सकता है
+                    setSelected(c); 
+                    setPayMode(c.d.pay || "");
+                } else {
+                    // नियम 3: अगर ग्राहक है, तो वह 'Pending' कार्ड को बिल्कुल क्लिक नहीं कर सकता।
+                    if(s === 'Pending') {
+                        return; // यहाँ क्लिक डेड (Dead) हो जाएगा
+                    }
+                    // सिर्फ Available कार्ड ही खुलेंगे
+                    setSelected(c); 
+                    setPayMode("");
+                }
             };
 
             const renderCard = (c) => {
@@ -197,7 +250,7 @@
                 const color = s === 'Sold' ? 'sold-card' : s === 'Pending' ? 'pending-card' : `card-${c.cat.split(' ')[0]}`;
                 
                 return (
-                    <div key={c.n} onClick={!staff && s !== 'Sold' ? () => { setSelected(c); setPayMode(""); } : undefined} className={`grid-item ${color}`}>
+                    <div key={c.n} onClick={() => handleCardClick(c, s)} className={`grid-item ${color}`}>
                         <span className="z-10 relative text-white drop-shadow-md">{c.n}</span>
                         {s === 'Pending' && <i className="fa-solid fa-lock absolute text-black/20 text-5xl md:text-7xl"></i>}
                         {s === 'Sold' && <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-[25px]"><span className="text-red-400 text-2xl font-black rotate-[-15deg] border-4 border-red-500 px-2 py-1">SOLD</span></div>}
@@ -240,7 +293,7 @@
                                             <button onClick={() => masterUpdate(c, 'Sold', false)} className="bg-green-600 hover:bg-green-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">✅ Verify</button>
                                             <button onClick={() => masterUpdate(c, 'Available', false)} className="bg-red-700 hover:bg-red-600 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">❌ Reject</button>
                                             <button onClick={() => {if(!staffUpi){alert("पहले ऊपर अपनी UPI ID डालें!");return;} setQuickQrCard(c);}} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">📲 Pay QR</button>
-                                            <button onClick={() => setSelected(c)} className="bg-slate-600 hover:bg-slate-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">✏️ Edit Inside</button>
+                                            <button onClick={() => { setSelected(c); setPayMode(c.d.pay || ""); }} className="bg-slate-600 hover:bg-slate-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">✏️ Edit Inside</button>
                                         </div>
                                     </div>
                                 ))}
@@ -321,13 +374,14 @@
                                 <p className="text-sm font-bold text-slate-600 mb-6">{COMPANY}</p>
                                 {/* प्रोफेशनल QR नोट (tn=Digital Problem Solution Group ID) */}
                                 <img src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=${staffUpi}%26pn=Digital%20Problem%20Solution%20Group%26am=${quickQrCard.price}%26tr=${quickQrCard.mid}%26tn=Digital_Problem_Solution_Group_ID_${quickQrCard.mid}`} alt="Live QR" className="mx-auto border-8 border-slate-100 rounded-xl" />
-                                <p className="text-sm font-black text-slate-700 mt-6 bg-slate-100 py-2 rounded-lg">ID: {quickQrCard.mid}</p>
+                                <p className="text-sm font-black text-slate-700 mt-6 bg-slate-100 py-2 rounded-lg">Auto-ID: {quickQrCard.mid}</p>
                             </div>
                         </div>
                     )}
 
                     {/* ✨ STYLISH FORM MODAL (CUSTOMER & STAFF EDIT) ✨ */}
                     {selected && (
+                        /* ⚠️ key={selected.n} यही है ऑटो-फिल का मास्टर लॉक ⚠️ */
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <div className="glass p-8 md:p-12 w-full max-w-5xl border-2 border-amber-500 rounded-[2rem] shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
                                 <button onClick={() => setSelected(null)} className="absolute top-6 right-8 text-5xl text-slate-400 hover:text-white">&times;</button>
@@ -339,7 +393,7 @@
 
                                 {staff ? (
                                     <div className="space-y-6">
-                                        <p className="text-indigo-400 font-black text-2xl border-b border-indigo-500 pb-2">✏️ Full Edit Mode (Auto-Filled Data)</p>
+                                        <p className="text-indigo-400 font-black text-2xl border-b border-indigo-500 pb-2">✏️ Full Edit Mode (Live Auto-Filled Data)</p>
                                         <div className="grid md:grid-cols-2 gap-6">
                                             <div><label className="text-sm text-slate-400 font-bold ml-1">Customer Name</label><input id="s_name" defaultValue={selected.d.name?.replace(/'/g,'')} className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 text-white focus:border-indigo-500 outline-none" /></div>
                                             <div><label className="text-sm text-slate-400 font-bold ml-1">Mobile</label><input id="s_mob" defaultValue={selected.d.mob?.replace(/'/g,'')} className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 text-white focus:border-indigo-500 outline-none" /></div>
@@ -348,7 +402,6 @@
                                             <div><label className="text-sm text-slate-400 font-bold ml-1">PAN Card (If Airtel)</label><input id="s_pan" defaultValue={selected.d.pan} className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 text-white uppercase focus:border-indigo-500 outline-none" /></div>
                                             <div><label className="text-sm text-slate-400 font-bold ml-1">Txn ID / Ref (Optional)</label><input id="s_ref" defaultValue={selected.d.ref} className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 text-amber-400 focus:border-indigo-500 outline-none" /></div>
                                             
-                                            {/* Final Paid Amount for inside edit */}
                                             <div className="md:col-span-2"><label className="text-sm text-green-400 font-bold ml-1">Final Amount Paid (₹)</label><input id="s_paid" type="number" defaultValue={selected.price} className="w-full bg-green-900/40 p-4 rounded-xl text-3xl font-black border-2 border-green-500 text-green-400 focus:outline-none" /></div>
                                         </div>
                                         
@@ -370,6 +423,7 @@
                                         </div>
                                         
                                         <div className="grid md:grid-cols-2 gap-6">
+                                            {/* 🌟 AIRTEL STRICT LOGIC 🌟 */}
                                             <div><label className="text-sm font-bold text-slate-400 ml-2">पेमेंट मोड (Payment Mode) *</label>
                                                 <select name="Payment_Mode" required value={payMode} onChange={(e)=>setPayMode(e.target.value)} className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 focus:border-amber-500 outline-none text-white text-lg">
                                                     <option value="" disabled>चुनें (Select)</option>
@@ -386,13 +440,15 @@
                                             )}
                                         </div>
 
-                                        {/* 📸 फोटो/वीडियो ड्राइव लिंक (कस्टमर फॉर्म में) 📸 */}
+                                        {/* 📸 गैलरी से असली फोटो/वीडियो अपलोड बटन 📸 */}
                                         <div>
-                                            <label className="text-sm font-bold text-amber-400 ml-2"><i className="fa-solid fa-link"></i> फोटो / वीडियो ड्राइव लिंक (Optional)</label>
-                                            <input name="Drive_Link" placeholder="यहाँ Google Drive या फोटो का लिंक पेस्ट करें..." className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 focus:border-amber-500 outline-none text-white text-lg" />
+                                            <label className="text-sm font-bold text-amber-400 ml-2"><i className="fa-solid fa-camera"></i> फोटो / स्क्रीनशॉट अपलोड करें (Optional)</label>
+                                            <input type="file" id="file_upload_gallery" accept="image/*,video/*" className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 focus:border-amber-500 outline-none text-white text-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-amber-500 file:text-black hover:file:bg-amber-400 cursor-pointer" />
                                         </div>
                                         
-                                        <button type="submit" className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black py-4 rounded-xl text-2xl uppercase italic shadow-lg hover:scale-[1.02] transition-transform mt-4">CONFIRM BOOKING 🔱</button>
+                                        <button type="submit" disabled={isUploading} className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black py-4 rounded-xl text-2xl uppercase italic shadow-lg hover:scale-[1.02] transition-transform mt-4 disabled:opacity-50">
+                                            {isUploading ? "UPLOADING & BOOKING... ⏳" : "CONFIRM BOOKING 🔱"}
+                                        </button>
                                     </form>
                                 )}
                             </div>
