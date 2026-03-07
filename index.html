@@ -52,7 +52,6 @@
         const SLOGAN = "आपकी समस्या हमारा समाधान, उचित मूल्य बेहतरीन सेवा";
         const ADMINS = { "Jorawar@DPS": "Jorawar@6020", "Parkash@DPS": "Parkash@6020", "Rajkumar@DPS": "Rajkumar@6020" };
 
-        // 🎁 51 इनामों की हूबहू लिस्ट 🎁
         const PRIZES = [
             {r:1, n:"₹5000 Cash", d:"किस्मत चमकेगी और जेब भरेगी सीधा ₹5000 कैश के साथ।"},
             {r:2, n:"LED TV", d:"घर बनेगा सिनेमा हॉल, जब आप जीतेंगे शानदार LED TV।"},
@@ -122,30 +121,43 @@
             const [isUploading, setIsUploading] = useState(false);
             const [discount, setDiscount] = useState(0);
 
-            // ⚠️ 100% पक्का ओरिजिनल लोडिंग इंजन (नंबर पकड़ने वाली मशीन के साथ) ⚠️
+            // ⚠️ एकदम सीधा और 100% पक्का डेटा रीडर (No Fancy Regex) ⚠️
             const loadData = () => {
                 fetch(CSV_URL + "?t=" + Date.now()).then(r => r.text()).then(csv => {
-                    // पुराना वाला एकदम सही डिज़ाइन
-                    const rows = csv.split('\n').map(r => r.split(','));
+                    // कोमा को सही तरीके से काटने वाला कोड
+                    const rows = csv.split('\n').map(row => {
+                        const cols = [];
+                        let cur = '';
+                        let inQuote = false;
+                        for (let i = 0; i < row.length; i++) {
+                            if (row[i] === '"') inQuote = !inQuote;
+                            else if (row[i] === ',' && !inQuote) { cols.push(cur.trim()); cur = ''; }
+                            else cur += row[i];
+                        }
+                        cols.push(cur.trim());
+                        return cols;
+                    });
+
                     let temp = [];
                     for(let i=1; i<=1000; i++) {
-                        // ⚠️ बीमारी का इलाज: r[0] में से फालतू कोमा या स्पेस हटाकर सिर्फ नंबर पढ़ना
-                        let rD = rows.find(r => r[0] && parseInt(r[0].replace(/[^0-9]/g, '')) === i) || [];
+                        // सीधा नंबर मैच करेगा (जैसे '1' == 1)
+                        let rD = rows.find(r => r[0] && r[0] == i) || [];
                         
-                        let rawStatus = (rD[4] || 'Available').trim().toLowerCase();
+                        let rawStatus = (rD[4] || '').trim().toLowerCase();
                         let s = 'Available';
                         
-                        // एकदम पक्का सॉल्ड फ़िल्टर
-                        if(rawStatus === "सॉल्ड" || rawStatus === "sold" || rawStatus.includes("sold")) {
-                            s = "Sold";
-                        } else if(rawStatus === "पेंडिंग" || rawStatus === "pending" || rawStatus.includes("pending")) {
-                            s = "Pending";
+                        // Solid Status Filter
+                        if(rawStatus === 'सॉल्ड' || rawStatus === 'sold' || rawStatus.includes('sold')) {
+                            s = 'Sold';
+                        } else if(rawStatus === 'पेंडिंग' || rawStatus === 'pending' || rawStatus.includes('pending')) {
+                            s = 'Pending';
                         }
                         
                         let cat = i <= 100 ? "VIP Card" : i <= 600 ? "Gold Card" : "Silver Card";
                         temp.push({ 
-                            n: i, status: s, cat, price: parseInt(rD[16] || (i<=100?500:i<=600?100:50)),
-                            mid: rD[3] || `DPSG-26-113-${i.toString().padStart(4,'0')}`,
+                            n: i, status: s, cat, 
+                            price: rD[16] ? parseInt(rD[16]) : (i<=100?500:i<=600?100:50),
+                            mid: rD[3] ? rD[3] : `DPSG-26-113-${i.toString().padStart(4,'0')}`,
                             d: { 
                                 name: rD[6]||"", mob: rD[7]||"", dob: rD[8]||"", vill: rD[9]||"", 
                                 adhar: rD[10]||"", pan: rD[11]||"", pay: rD[12]||"", ref: rD[13]||"", 
@@ -154,6 +166,9 @@
                         });
                     }
                     setCards(temp); setLoading(false);
+                }).catch(err => {
+                    console.error("Data Load Error:", err);
+                    setLoading(false);
                 });
             };
 
@@ -172,7 +187,6 @@
                 params.append("action", "BOOK"); params.append("S_No", n.toString()); 
                 params.append("Category", selected.cat); params.append("Base_Price", selected.price);
                 
-                // 📸 गैलरी से फोटो अपलोड का इंजन 📸
                 const fileInput = document.getElementById('file_upload_gallery');
                 if (fileInput && fileInput.files.length > 0) {
                     const file = fileInput.files[0];
@@ -195,9 +209,9 @@
             const finishBooking = (fd, n) => {
                 setSuccessModal({ n, name: fd.get("Customer_Name"), mid: selected.mid });
                 setSelected(null); setPayMode(""); setIsUploading(false);
+                setTimeout(loadData, 1500);
             };
 
-            // 🌟 मास्टर अपडेट (स्टाफ के लिए) 🌟
             const masterUpdate = (c, status, isInsideForm = false) => {
                 let sName = c.d.name; let sMob = c.d.mob; let sAdhar = c.d.adhar; 
                 let sPan = c.d.pan; let sPay = c.d.pay; let sRef = c.d.ref; 
@@ -233,14 +247,14 @@
             };
 
             const handleCardClick = (c, s) => {
-                if(s === 'Sold') return; // Sold पर क्लिक 100% बंद
+                if(s === 'Sold') return;
                 
                 if(staff) {
                     setSelected(c); 
                     setPayMode(c.d.pay || "");
                     setDiscount(parseInt(c.d.discount || 0));
                 } else {
-                    if(s === 'Pending') return; // ग्राहक Pending को नहीं खोल सकता
+                    if(s === 'Pending') return;
                     setSelected(c); 
                     setPayMode("");
                     setDiscount(0);
@@ -270,7 +284,7 @@
             return (
                 <div className="max-w-[1600px] mx-auto p-4 py-10">
                     
-                    {/* 🛡️ STAFF LIVE DASHBOARD 🛡️ */}
+                    {/* 🛡️ STAFF DASHBOARD 🛡️ */}
                     {staff ? (
                         <div className="mb-12 glass p-8 border-t-[10px] border-indigo-500 shadow-2xl relative">
                             <button onClick={() => setStaff(null)} className="absolute top-8 right-8 bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-xl font-black transition-colors text-lg shadow-lg">LOGOUT</button>
@@ -280,7 +294,7 @@
 
                             <div className="grid md:grid-cols-2 gap-8 mb-8">
                                 <div className="bg-slate-900/80 p-6 rounded-2xl border border-amber-500">
-                                    <label className="text-amber-400 font-black text-lg md:text-xl mb-4 block"><i className="fa-solid fa-qrcode"></i> आपकी UPI ID (Live QR के लिए):</label>
+                                    <label className="text-amber-400 font-black text-lg md:text-xl mb-4 block"><i className="fa-solid fa-qrcode"></i> आपकी UPI ID:</label>
                                     <input type="text" placeholder="ex: 7229874128@paytm" value={staffUpi} onChange={(e)=>setStaffUpi(e.target.value)} className="bg-black border-2 border-slate-700 text-white p-4 rounded-lg font-bold w-full text-xl" />
                                 </div>
                                 
@@ -390,7 +404,7 @@
                         </div>
                     )}
 
-                    {/* ✨ STYLISH FORM MODAL ✨ */}
+                    {/* ✨ FORM MODAL ✨ */}
                     {selected && (
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <div className="glass p-8 md:p-12 w-full max-w-5xl border-2 border-amber-500 rounded-[2rem] shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
@@ -471,7 +485,7 @@
                         </div>
                     )}
 
-                    {/* ✅ HINDI-ENGLISH WHATSAPP RECEIPT ✅ */}
+                    {/* ✅ WHATSAPP RECEIPT ✅ */}
                     {successModal && (
                         <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4">
                             <div className="glass p-10 max-w-2xl text-center border-t-[10px] border-green-500 rounded-[2rem] shadow-2xl">
