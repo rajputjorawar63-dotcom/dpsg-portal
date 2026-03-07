@@ -1,40 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Problem Solution - DPSG 2026</title>
+    <title>DPSG - Digital Problem Solution Group 2026</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;900&family=Rajdhani:wght@700&display=swap');
-        body { font-family: 'Poppins', sans-serif; background: #010409; color: white; overflow-x: hidden; }
-        .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); border-radius: 3rem; }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;900&family=Rajdhani:wght@700&family=Mukta:wght@400;800&display=swap');
+        body { font-family: 'Poppins', 'Mukta', sans-serif; background: #010409; color: white; overflow-x: hidden; }
+        .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.1); border-radius: 4rem; }
         
-        /* 💎 3D PREMIUM BANNERS 💎 */
-        .banner-3d { transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; }
-        .banner-3d:hover { transform: translateY(-20px) rotateX(10deg); box-shadow: 0 50px 100px rgba(0,0,0,0.9); }
+        /* 💎 3D BANNERS IN SINGLE LINE 💎 */
+        .banner-row { display: flex; overflow-x: auto; gap: 40px; padding: 30px; scroll-snap-type: x mandatory; -ms-overflow-style: none; scrollbar-width: none; }
+        .banner-row::-webkit-scrollbar { display: none; }
+        .banner-3d { min-width: 350px; flex: 1; transition: 0.6s; transform-style: preserve-3d; scroll-snap-align: center; }
+        .banner-3d:hover { transform: translateY(-20px) rotateY(10deg); box-shadow: 0 50px 100px rgba(0,0,0,0.9); }
 
-        /* 🎴 JUMBO GRID CARDS 🎴 */
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 40px; padding: 40px; }
-        .grid-item { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 45px; font-weight: 900; cursor: pointer; border: 5px solid rgba(255,255,255,0.1); transition: 0.4s; font-size: 85px; position: relative; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.7); }
-        .grid-item:hover { transform: scale(1.1); border-color: #fbbf24; z-index: 10; box-shadow: 0 0 60px rgba(251,191,36,0.5); }
+        /* 🎴 JUMBO CARDS - NO STICKING 🎴 */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 60px; padding: 60px; }
+        .grid-item { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 60px; font-weight: 900; cursor: pointer; border: 8px solid rgba(255,255,255,0.1); transition: 0.4s; font-size: 110px; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.8); }
+        .grid-item:hover { transform: scale(1.15); border-color: #fbbf24; z-index: 20; box-shadow: 0 0 80px rgba(251,191,36,0.6); }
         
         .card-VIP { background: linear-gradient(135deg, #4f46e5, #1e1b4b); }
         .card-Gold { background: linear-gradient(135deg, #d97706, #451a03); }
         .card-Silver { background: linear-gradient(135deg, #cbd5e1, #475569); color: black; }
-        
-        .pending-card { background: #facc15 !important; color: black !important; border: 10px solid #fff; animation: pulse 1.5s infinite; } 
-        .sold-card { background: #ef4444 !important; opacity: 0.5; pointer-events: none; border: 8px solid #7f1d1d; } 
+        .pending-card { background: #facc15 !important; color: black !important; border: 15px solid #fff; animation: pulse 1.5s infinite; }
+        .sold-card { background: #ef4444 !important; opacity: 0.4; pointer-events: none; border: 12px solid #7f1d1d; }
 
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.95); } }
-        .prize-glow { animation: glow 2s infinite; border: 2px solid #fbbf24; }
-        @keyframes glow { 0%, 100% { box-shadow: 0 0 10px #fbbf24; } 50% { box-shadow: 0 0 30px #fbbf24; } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.9); } }
         
-        .custom-scroll::-webkit-scrollbar { width: 10px; }
+        /* 🎁 PRIZE GLOW EFFECT (लपक-झपक) 🎁 */
+        .prize-glow { border: 4px solid #fbbf24; animation: flash-glow 1.5s infinite; }
+        @keyframes flash-glow { 0%, 100% { box-shadow: 0 0 10px #fbbf24; background: rgba(30, 41, 59, 0.8); } 50% { box-shadow: 0 0 40px #fbbf24; background: rgba(251, 191, 36, 0.2); } }
+        
+        .custom-scroll::-webkit-scrollbar { width: 14px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 10px; }
     </style>
 </head>
@@ -43,28 +46,27 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
         
-        // ⚠️ NO CHANGE IN APPS SCRIPT LINK ⚠️
         const APP_URL = "https://script.google.com/macros/s/AKfycbwOQfdebHIIv6ud5M6arLov7a5MTnurlBaB-sGvrKOkspn2FC4ouoK_yDRpVpEqhjlAFw/exec";
         const CSV_URL = "https://docs.google.com/spreadsheets/d/11UVWUzSUwI2mm9tsBMaNARgUnfwIZ5TKDaHsKb4Cl58/export?format=csv";
-        
-        const COMPANY = "Digital Problem Solution";
+        const COMPANY = "Digital Problem Solution Group";
         const SLOGAN = "आपकी समस्या हमारा समाधान, उचित मूल्य बेहतरीन सेवा";
         const ADMINS = { "Jorawar@DPS": "Jorawar@6020", "Parkash@DPS": "Parkash@6020", "Rajkumar@DPS": "Rajkumar@6020" };
 
         const PRIZES = [
-            {r:1, n:"₹5000 Cash 💰", d:"किस्मत का ताला खोलें, सीधा बैंक में कैश पाएं!"},
-            {r:2, n:"32' LED Smart TV 📺", d:"घर को सिनेमा हॉल बनाएं, परिवार के साथ मजे करें।"},
-            {r:3, n:"Sports Bicycle 🚲", d:"सेहत और स्टाइल का राजा, बच्चों का सपना सच होगा।"},
-            {r:4, n:"Ceiling Fan 🌀", d:"तूफानी हवा का आनंद, बिजली की बचत के साथ।"},
-            {r:5, n:"Bati Oven 🍳", d:"स्वाद का जादू, अब घर पर बनाएं बेहतरीन बाटी।"},
-            {r:6, n:"4G Mobile Phone 📱", d:"अपनों से जुड़े रहें, शानदार बैटरी और नेटवर्क के साथ।"},
-            {r:7, n:"Smart Watch ⌚", d:"हर पल पर नज़र, स्टाइल और फिटनेस का असली संगम।"},
-            {r:8, n:"Power Bank 🔋", d:"मोबाइल रहेगा हमेशा फुल, सफर का पक्का साथी।"},
-            {r:9, n:"Sports Shoes 👟", d:"रफ्तार में नंबर 1, आराम और मजबूती का बेजोड़ मेल।"},
-            {r:10, n:"ISI Mark Helmet 🪖", d:"सड़क पर सुरक्षा, स्टाइल और मजबूती के साथ।"}
+            {r:1, n:"₹5000 Cash 💰", m1:"किस्मत चमकेगी और जेब भरेगी सीधा ₹5000 कैश के साथ।", m2:"DPSG का पहला इनाम, जो बनाएगा आपकी दिवाली खास।"},
+            {r:2, n:"LED TV 📺", m1:"घर बनेगा सिनेमा हॉल, जब आप जीतेंगे शानदार LED TV।", m2:"बेहतरीन पिक्चर क्वालिटी और मनोरंजन का नया अनुभव।"},
+            {r:3, n:"Kids Bicycle 🚲", m1:"बच्चों के चेहरे पर लाएं मुस्कान, जीतें उनके सपनों की साइकिल।", m2:"सेहत और मस्ती का डबल डोज़, बच्चों के लिए बेस्ट गिफ्ट।"},
+            {r:4, n:"Ceiling Fan 🌀", m1:"गर्मी को कहें बाय-बाय, जब घर में आए ब्रांडेड छत का पंखा।", m2:"ठंडी हवा और सुकून भरी नींद, DPSG का शानदार उपहार।"},
+            {r:5, n:"Bati Oven 🍳", m1:"अब घर पर बनाएं राजस्थानी स्वाद, जीतें प्रीमियम बाटी ओवन।", m2:"रसोई की शान बढ़ाएं और स्वादिष्ट खाने का आनंद लें।"},
+            {r:6, n:"Keypad Mobile 📱", m1:"अपनों से जुड़े रहने का मौका, जीतें एक टिकाऊ कीपैड मोबाइल।", m2:"मजबूत बैटरी और साफ़ आवाज़, हर उम्र के लिए बेहतरीन।"},
+            {r:7, n:"Smart Watch ⌚", m1:"अपनी सेहत और समय पर रखें नज़र, स्टाइल वाली स्मार्ट वॉच के साथ।", m2:"लुक में कूल और फीचर्स में धांसू, आज ही अपना कार्ड बुक करें।"},
+            {r:8, n:"Power Bank 🔋", m1:"अब मोबाइल की बैटरी कभी नहीं होगी खत्म, साथ रखें ये पावर बैंक।", m2:"सफर में हो या घर पर, चार्जिंग की टेंशन अब हुई पुरानी।"},
+            {r:9, n:"Sports Shoes 👟", m1:"फिटनेस की ओर बढ़ाएं कदम, पहनें स्टाइलिश स्पोर्ट्स शूज।", m2:"मजबूती ऐसी कि हर कदम पर मिले कॉन्फिडेंस और आराम।"},
+            {r:10, n:"Riding Helmet 🪖", m1:"आपकी सुरक्षा हमारी प्राथमिकता, जीतें ISI मार्क हेलमेट।", m2:"स्टाइल भी और सुरक्षा भी, सुरक्षित सफर का वादा।"}
         ];
-        for(let i=11; i<=51; i++) PRIZES.push({r:i, n:`Lucky Surprise Gift #${i} 🎁`, d:"शानदार प्रीमियम ईनाम जो आपके घर की शोभा बढ़ाएगा।"});
-        PRIZES.push({r:52, n:"Assured Gift For All 🎁", d:"हर कार्ड पर एक प्यार भरा तोहफा - DPS का वादा।"});
+        
+        const otherPrizes = ["Remote Car", "Roti Box", "Bedsheet", "Neckband", "Earbuds", "Trimmer", "Watch", "Cash ₹301", "Cash ₹201", "Wall Clock", "Tea Set", "Movie Ticket", "Umbrella", "Sunglasses", "Tool Set", "LED Bulb", "Perfume", "Speaker", "Lunch Box", "Belt", "Purse", "Hair Dryer", "Iron Box"];
+        otherPrizes.forEach((p, i) => PRIZES.push({r:i+11, n:p + " 🎁", m1:"DPSG का धमाकेदार उपहार!", m2:"किस्मत आजमाएं और आज ही अपना कार्ड बुक करें।"}));
 
         const App = () => {
             const [cards, setCards] = useState([]);
@@ -73,7 +75,6 @@
             const [staff, setStaff] = useState(null);
             const [successModal, setSuccessModal] = useState(null);
             const [loading, setLoading] = useState(true);
-            const [paymentMode, setPaymentMode] = useState("");
             const [localLocks, setLocalLocks] = useState(new Set(JSON.parse(localStorage.getItem('dps_locks') || '[]')));
 
             const loadData = () => {
@@ -88,14 +89,14 @@
                         temp.push({ 
                             n: i, status: s, cat, price: rD[16] || (i<=100?500:i<=600?100:50),
                             mid: rD[3] || `DPSG-26-113-${i.toString().padStart(4,'0')}`,
-                            d: { name: rD[6], mob: rD[7], vill: rD[9], adhar: rD[10], pan: rD[11], pay: rD[12], ref: rD[13] } 
+                            d: { name: rD[6], mob: rD[7], vill: rD[9], adhar: rD[10], pan: rD[11], pay: rD[12], ref: rD[13], dob: rD[8] } 
                         });
                     }
                     setCards(temp); setLoading(false);
                 });
             };
 
-            useEffect(() => { loadData(); const itvl = setInterval(loadData, 10000); return () => clearInterval(itvl); }, []);
+            useEffect(() => { loadData(); setInterval(loadData, 10000); }, []);
 
             const bookCard = async (e) => {
                 e.preventDefault();
@@ -104,184 +105,156 @@
                 const newLocks = new Set(localLocks).add(n);
                 setLocalLocks(newLocks);
                 localStorage.setItem('dps_locks', JSON.stringify([...newLocks]));
-                
                 const params = new URLSearchParams(Object.fromEntries(fd));
                 params.append("action", "BOOK"); params.append("S_No", n.toString()); 
                 params.append("Category", selected.cat); params.append("Base_Price", selected.price);
-                params.append("Payment_Mode", paymentMode);
-                
                 await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
                 setSuccessModal({ n, name: fd.get("Customer_Name"), mid: selected.mid });
-                setSelected(null); setPaymentMode("");
+                setSelected(null);
             };
 
-            const staffAction = (status) => {
+            const staffUpdate = (status) => {
                 const params = new URLSearchParams({
                     action: 'UPDATE', S_No: selected.n, Status: status, staffID: staff.id, staffPass: staff.pass,
-                    Customer_Name: document.getElementById('e_name').value, Mobile: document.getElementById('e_mob').value,
-                    Aadhaar: document.getElementById('e_adhar').value, PAN: document.getElementById('e_pan').value,
-                    Payment_Mode: document.getElementById('e_pay').value, Payment_Ref: document.getElementById('e_ref').value,
-                    Paid: document.getElementById('e_paid').value, LogMsg: status === 'Sold' ? 'Verified & Sold' : 'Rejected'
+                    Customer_Name: document.getElementById('s_name').value, Mobile: document.getElementById('s_mob').value,
+                    Aadhaar: document.getElementById('s_adhar').value, PAN: document.getElementById('s_pan').value,
+                    Payment_Mode: document.getElementById('s_pay').value, Payment_Ref: document.getElementById('s_ref').value,
+                    Paid: document.getElementById('s_paid').value, LogMsg: `Verified as ${status} by ${staff.id}`
                 });
                 fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
                 if(status === 'Available') setLocalLocks(prev => { const n = new Set(prev); n.delete(selected.n); return n; });
-                setSelected(null);
-                alert(`Hukum, Card #${selected.n} is updated to ${status}. Message sent to Telegram.`);
+                setSelected(null); alert("Data Synchronized Successfully!");
             };
 
-            const renderCard = (c) => {
-                const isLocked = localLocks.has(c.n) || c.status === 'Pending';
-                const s = c.status === 'Sold' ? 'Sold' : isLocked ? 'Pending' : 'Available';
-                const color = s === 'Sold' ? 'sold-card' : s === 'Pending' ? 'pending-card' : `card-${c.cat.split(' ')[0]}`;
-                return (
-                    <div key={c.n} onClick={() => setSelected(c)} className={`grid-item ${color}`}>
-                        <span className="z-10 relative">{c.n}</span>
-                        {s === 'Pending' && <i className="fa-solid fa-clock absolute text-white/40 text-8xl"></i>}
-                        {s === 'Sold' && <i className="fa-solid fa-lock absolute text-white/40 text-8xl"></i>}
-                    </div>
-                );
-            };
-
-            if(loading) return <div className="h-screen flex flex-col items-center justify-center font-black text-amber-500 italic"><h1 className="text-9xl animate-pulse">{COMPANY}</h1><p className="text-3xl mt-10 tracking-[1em]">LOADING SECURE ENGINE...</p></div>;
+            if(loading) return <div className="h-screen flex items-center justify-center font-black text-amber-500 text-[12rem] animate-pulse italic">DPSG</div>;
 
             return (
-                <div className="max-w-[1900px] mx-auto p-4 py-16">
-                    <header className="text-center mb-24">
-                        <h1 className="text-8xl md:text-[11rem] font-black italic text-white rajdhani tracking-tighter drop-shadow-2xl">{COMPANY}</h1>
-                        <p className="text-amber-500 text-4xl font-bold uppercase tracking-[0.4em] mt-6 italic">{SLOGAN}</p>
+                <div className="max-w-[1950px] mx-auto p-4 py-20">
+                    <header className="text-center mb-32">
+                        <h1 className="text-[12rem] font-black italic text-white rajdhani tracking-tighter drop-shadow-2xl leading-none">{COMPANY}</h1>
+                        <p className="text-amber-500 text-5xl font-bold uppercase tracking-[0.4em] mt-10 italic">{SLOGAN}</p>
                         
-                        <div className="grid md:grid-cols-3 gap-12 mt-20 px-10">
-                            <div className="banner-3d card-VIP p-14 rounded-[4rem] shadow-2xl border-4 border-indigo-400 text-left">
-                                <h2 className="text-6xl font-black mb-6 uppercase tracking-tighter">VIP CLASS</h2>
-                                <p className="text-2xl font-bold opacity-90 mb-8 italic">Cards 1-100: The Royal Experience. Full family coverage and priority services.</p>
-                                <div className="text-7xl font-black text-amber-400">₹500</div>
-                            </div>
-                            <div className="banner-3d card-Gold p-14 rounded-[4rem] shadow-2xl border-4 border-yellow-500 text-left">
-                                <h2 className="text-6xl font-black mb-6 uppercase tracking-tighter">GOLD PRO</h2>
-                                <p className="text-2xl font-bold opacity-90 mb-8 italic">Cards 101-600: Most Popular Choice. Huge discounts on all digital works.</p>
-                                <div className="text-7xl font-black text-yellow-300">₹100</div>
-                            </div>
-                            <div className="banner-3d card-Silver p-14 rounded-[4rem] shadow-2xl border-4 border-slate-400 text-left">
-                                <h2 className="text-6xl font-black mb-6 uppercase tracking-tighter">SILVER</h2>
-                                <p className="text-2xl font-bold opacity-90 mb-8 italic">Cards 601-1000: Best Value. Affordable entry into the mega lucky draw.</p>
-                                <div className="text-7xl font-black text-slate-800">₹50</div>
-                            </div>
+                        <div className="banner-row mt-24">
+                            {[
+                                {t:'VIP CARD', p:'500', c:'card-VIP', d:'पूरे परिवार के लिए मान्य | 6 महीने वैधता'},
+                                {t:'GOLD CARD', p:'100', c:'card-Gold', d:'100% गारंटीड उपहार | 3 महीने वैधता'},
+                                {t:'SILVER CARD', p:'50', c:'card-Silver', d:'लकी ड्रा का सुनहरा मौका | 1 महीना वैधता'}
+                            ].map((b, i) => (
+                                <div key={i} className={`banner-3d ${b.c} p-16 rounded-[5rem] shadow-2xl border-4 border-white/20 text-left`}>
+                                    <h2 className="text-8xl font-black mb-6">{b.t}</h2>
+                                    <p className="text-3xl font-bold opacity-90 mb-10 italic leading-relaxed">{b.d}</p>
+                                    <div className="text-9xl font-black text-white italic">₹{b.p}</div>
+                                </div>
+                            ))}
                         </div>
 
-                        <div className="flex flex-wrap gap-10 mt-24 justify-center">
+                        <div className="bg-amber-500 text-black py-8 mt-24 font-black text-5xl uppercase italic rounded-[3rem] shadow-2xl animate-bounce">
+                            🔥 आज ही कार्ड बुक करवाइए और जीतिए ये इनाम, नहीं तो बेहतरीन डिजिटल सेवा तो है ही! 🔥
+                        </div>
+
+                        <div className="flex flex-wrap gap-12 mt-20 justify-center">
                             {['ALL', 'VIP Card', 'Gold Card', 'Silver Card'].map(t => (
-                                <button key={t} onClick={() => setActiveTab(t)} className={`px-20 py-10 rounded-[3.5rem] font-black text-5xl uppercase transition-all shadow-2xl ${activeTab === t ? 'bg-amber-500 text-black scale-110' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>{t.split(' ')[0]}</button>
+                                <button key={t} onClick={() => setActiveTab(t)} className={`px-24 py-12 rounded-[4rem] font-black text-6xl uppercase transition-all shadow-2xl ${activeTab === t ? 'bg-amber-500 text-black scale-110' : 'bg-slate-800 text-slate-400'}`}>{t.split(' ')[0]}</button>
                             ))}
                         </div>
                     </header>
 
                     <div className="grid lg:grid-cols-12 gap-16">
-                        {/* 🎁 THE ATTRACTIVE PRIZE PANEL 🎁 */}
-                        <div className="lg:col-span-4 glass p-12 h-[1300px] flex flex-col border-t-[12px] border-amber-500 shadow-2xl">
-                            <h2 className="text-7xl font-black italic text-amber-500 mb-16 text-center underline decoration-8 tracking-tighter">51 MEGA PRIZES</h2>
-                            <div className="overflow-y-auto pr-6 space-y-10 flex-1 custom-scroll">
-                                {PRIZES.map((p, i) => (
-                                    <div key={p.r} className={`p-10 rounded-[3.5rem] border-l-[20px] shadow-2xl transition-transform hover:scale-105 ${i===51 ? 'bg-green-900/60 border-green-500' : 'bg-slate-800/80 border-amber-500 prize-glow'}`}>
-                                        <div className="flex items-center gap-10">
-                                            <div className={`w-24 h-24 flex items-center justify-center font-black text-5xl rounded-[2rem] ${i===51 ? 'bg-green-500 text-white' : 'bg-amber-500 text-black'}`}>{i===51 ? '🎁' : p.r}</div>
-                                            <div className="flex-1">
-                                                <h4 className="font-black text-4xl text-white tracking-tight leading-none mb-3">{p.n}</h4>
-                                                <p className="text-2xl text-slate-300 italic font-bold">{p.d}</p>
-                                            </div>
+                        {/* 🎁 लपक-झपक इनाम पैनल 🎁 */}
+                        <div className="lg:col-span-4 glass p-12 h-[1400px] flex flex-col border-t-[20px] border-amber-500 shadow-2xl">
+                            <h2 className="text-[6rem] font-black italic text-amber-500 mb-16 text-center underline decoration-8 tracking-tighter uppercase">51 MEGA PRIZES</h2>
+                            <div className="overflow-y-auto pr-6 space-y-12 flex-1 custom-scroll">
+                                {PRIZES.map((p) => (
+                                    <div key={p.r} className="p-12 rounded-[4.5rem] bg-slate-800/80 border-l-[30px] border-amber-500 prize-glow transition-all hover:scale-105">
+                                        <div className="flex items-center gap-12 mb-8">
+                                            <div className="w-28 h-28 flex items-center justify-center font-black text-6xl rounded-[3rem] bg-amber-500 text-black">{p.r}</div>
+                                            <h4 className="font-black text-6xl text-white tracking-tighter leading-none">{p.n}</h4>
                                         </div>
+                                        <p className="text-3xl text-amber-400 font-black mb-4 italic">"{p.m1}"</p>
+                                        <p className="text-2xl text-slate-300 font-bold leading-relaxed">{p.m2}</p>
                                     </div>
                                 ))}
+                                <div className="p-10 bg-green-900/60 border-l-[20px] border-green-500 rounded-[3rem] text-4xl font-black text-center">
+                                    + उपहार और कैशबैक धमाका! 🎁💰
+                                </div>
                             </div>
                         </div>
 
-                        {/* 🎴 JUMBO GRID SECTION 🎴 */}
-                        <div className="lg:col-span-8 glass p-8 h-[1300px] flex flex-col border-t-[12px] border-indigo-500 shadow-2xl">
+                        {/* 🎴 जंबो कार्ड ग्रिड 🎴 */}
+                        <div className="lg:col-span-8 glass p-10 h-[1400px] flex flex-col border-t-[20px] border-indigo-600 shadow-2xl">
                             <div className="card-grid overflow-y-auto flex-1 custom-scroll">
                                 {cards.filter(c => activeTab === 'ALL' || c.cat === activeTab).map(renderCard)}
                             </div>
                         </div>
                     </div>
 
-                    {/* DYNAMIC MODAL (CUSTOMER & STAFF EDITING) */}
+                    {/* स्टायलिश बुकिंग & स्टाफ फॉर्म */}
                     {selected && (
-                        <div className="fixed inset-0 z-[100] bg-black/98 flex items-center justify-center p-6 backdrop-blur-3xl overflow-y-auto">
-                            <div className="glass p-20 w-full max-w-7xl border-4 border-amber-500 rounded-[6rem] shadow-2xl">
+                        <div className="fixed inset-0 z-[150] bg-black/99 flex items-center justify-center p-10 backdrop-blur-3xl overflow-y-auto">
+                            <div className="glass p-20 w-full max-w-[1300px] border-4 border-amber-500 rounded-[8rem] shadow-2xl">
                                 <div className="flex justify-between items-center mb-16 border-b-8 border-slate-700 pb-12">
-                                    <h3 className="text-[10rem] font-black text-amber-500 italic leading-none">#{selected.n}</h3>
+                                    <h3 className="text-[12rem] font-black text-amber-500 italic leading-none">#{selected.n}</h3>
                                     <div className="text-right">
-                                        <span className="bg-amber-500 text-black px-12 py-5 rounded-full text-5xl font-black uppercase italic shadow-xl">{selected.cat}</span>
-                                        <p className="text-3xl font-bold mt-4 text-slate-400 tracking-widest">{selected.mid}</p>
+                                        <span className="bg-amber-500 text-black px-16 py-6 rounded-full text-5xl font-black uppercase shadow-2xl">{selected.cat}</span>
+                                        <p className="text-4xl font-bold mt-8 text-slate-400 tracking-widest">{selected.mid}</p>
                                     </div>
-                                    <button onClick={() => setSelected(null)} className="text-[10rem] text-slate-600 hover:text-white transition-colors">&times;</button>
+                                    <button onClick={() => setSelected(null)} className="text-[14rem] text-slate-700 hover:text-white">&times;</button>
                                 </div>
 
                                 {staff ? (
                                     <div className="space-y-16">
-                                        <div className="grid md:grid-cols-2 gap-12 bg-slate-900/60 p-16 rounded-[4rem] border-4 border-indigo-500">
-                                            <div className="space-y-4"><label className="text-2xl font-black ml-6 text-indigo-400">CUSTOMER NAME</label><input id="e_name" defaultValue={selected.d.name} className="w-full bg-black p-10 rounded-[2.5rem] text-5xl font-black border-4 border-slate-700 text-white" /></div>
-                                            <div className="space-y-4"><label className="text-2xl font-black ml-6 text-indigo-400">MOBILE NUMBER</label><input id="e_mob" defaultValue={selected.d.mob?.replace(/'/g,'')} className="w-full bg-black p-10 rounded-[2.5rem] text-5xl font-black border-4 border-slate-700 text-white" /></div>
-                                            <div className="space-y-4"><label className="text-2xl font-black ml-6 text-indigo-400">AADHAAR CARD</label><input id="e_adhar" defaultValue={selected.d.adhar?.replace(/'/g,'')} className="w-full bg-black p-10 rounded-[2.5rem] text-5xl font-black border-4 border-slate-700 text-white" /></div>
-                                            <div className="space-y-4"><label className="text-2xl font-black ml-6 text-indigo-400">PAN CARD</label><input id="e_pan" defaultValue={selected.d.pan} className="w-full bg-black p-10 rounded-[2.5rem] text-5xl font-black border-4 border-slate-700 text-white uppercase" /></div>
-                                            <div className="space-y-4"><label className="text-2xl font-black ml-6 text-indigo-400">PAYMENT MODE</label><select id="e_pay" defaultValue={selected.d.pay} className="w-full bg-black p-10 rounded-[2.5rem] text-5xl font-black border-4 border-slate-700"><option value="Cash">Cash</option><option value="PhonePe/GPay">PhonePe/GPay</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select></div>
-                                            <div className="space-y-4"><label className="text-2xl font-black ml-6 text-indigo-400">TXN / REF ID</label><input id="e_ref" defaultValue={selected.d.ref} className="w-full bg-black p-10 rounded-[2.5rem] text-5xl font-black border-4 border-slate-700 text-amber-400" /></div>
-                                            <div className="space-y-4"><label className="text-2xl font-black ml-6 text-indigo-400">FINAL PAID ₹</label><input id="e_paid" type="number" defaultValue={selected.price} className="w-full bg-green-900/40 p-10 rounded-[2.5rem] text-7xl font-black border-8 border-green-500 text-green-400" /></div>
+                                        <h4 className="text-5xl font-black text-indigo-400 text-center uppercase tracking-widest">Staff Edit Mode: {staff.id}</h4>
+                                        <div className="grid md:grid-cols-2 gap-14 bg-slate-900/60 p-16 rounded-[5rem] border-4 border-indigo-500">
+                                            <div className="space-y-4"><label className="text-3xl font-black ml-8 text-indigo-400">नाम (Name)</label><input id="s_name" defaultValue={selected.d.name} className="w-full bg-black p-12 rounded-[3rem] text-5xl font-black border-4 border-slate-700" /></div>
+                                            <div className="space-y-4"><label className="text-3xl font-black ml-8 text-indigo-400">मोबाइल (Mobile)</label><input id="s_mob" defaultValue={selected.d.mob?.replace(/'/g,'')} className="w-full bg-black p-12 rounded-[3rem] text-5xl font-black border-4 border-slate-700" /></div>
+                                            <div className="space-y-4"><label className="text-3xl font-black ml-8 text-indigo-400">आधार (Aadhaar)</label><input id="s_adhar" defaultValue={selected.d.adhar?.replace(/'/g,'')} className="w-full bg-black p-12 rounded-[3rem] text-5xl font-black border-4 border-slate-700" /></div>
+                                            <div className="space-y-4"><label className="text-3xl font-black ml-8 text-indigo-400">पेमेंट मोड (Payment)</label><select id="s_pay" defaultValue={selected.d.pay} className="w-full bg-black p-12 rounded-[3rem] text-5xl font-black border-4 border-slate-700"><option value="Cash">Cash</option><option value="Online">Online</option><option value="Airtel">Airtel</option></select></div>
+                                            <div className="space-y-4"><label className="text-3xl font-black ml-8 text-indigo-400">रसीद नंबर (Ref ID)</label><input id="s_ref" defaultValue={selected.d.ref} className="w-full bg-black p-12 rounded-[3rem] text-5xl font-black border-4 border-slate-700 text-amber-400" /></div>
+                                            <div className="space-y-4"><label className="text-3xl font-black ml-8 text-indigo-400">प्राप्त राशि (Paid ₹)</label><input id="s_paid" type="number" defaultValue={selected.price} className="w-full bg-green-900/40 p-12 rounded-[3rem] text-8xl font-black border-8 border-green-500 text-green-400" /></div>
+                                            <input type="hidden" id="s_pan" defaultValue={selected.d.pan} />
                                         </div>
-                                        <div className="flex gap-12">
-                                            <button onClick={() => staffAction('Sold')} className="flex-1 bg-green-600 font-black py-14 rounded-[4rem] text-6xl uppercase italic shadow-2xl hover:bg-white hover:text-black transition-all">VERIFY & SELL ✅</button>
-                                            <button onClick={() => staffAction('Available')} className="flex-1 bg-slate-700 font-black py-14 rounded-[4rem] text-6xl uppercase hover:bg-red-600 transition-all">REJECT & RESET ❌</button>
+                                        <div className="flex gap-14">
+                                            <button onClick={() => staffUpdate('Sold')} className="flex-1 bg-green-600 font-black py-16 rounded-[5rem] text-7xl uppercase italic shadow-2xl hover:bg-white hover:text-black transition-all">VERIFY & SELL ✅</button>
+                                            <button onClick={() => staffUpdate('Available')} className="flex-1 bg-slate-700 font-black py-16 rounded-[5rem] text-7xl uppercase hover:bg-red-600 transition-all">REJECT & RESET ❌</button>
                                         </div>
                                     </div>
-                                ) : selected.status === 'Available' && !localLocks.has(selected.n) ? (
-                                    <form onSubmit={bookCard} className="space-y-14">
-                                        <div className="space-y-4"><label className="text-3xl font-black ml-10 text-slate-400 uppercase tracking-widest">Full Customer Name *</label><input name="Customer_Name" required className="w-full bg-slate-900 p-12 rounded-[3rem] font-black border-8 border-slate-700 focus:border-amber-500 outline-none text-6xl text-white" /></div>
-                                        <div className="grid md:grid-cols-2 gap-14">
-                                            <div className="space-y-4"><label className="text-3xl font-black ml-10 text-slate-400 uppercase tracking-widest">Mobile *</label><input name="Mobile" type="tel" pattern="[0-9]{10}" required className="w-full bg-slate-900 p-12 rounded-[3rem] font-black border-8 border-slate-700 focus:border-amber-500 outline-none text-6xl text-white" /></div>
-                                            <div className="space-y-4"><label className="text-3xl font-black ml-10 text-slate-400 uppercase tracking-widest">Aadhaar No *</label><input name="Aadhaar" type="tel" pattern="[0-9]{12}" required className="w-full bg-slate-900 p-12 rounded-[3rem] font-black border-8 border-slate-700 focus:border-amber-500 outline-none text-6xl text-white" /></div>
+                                ) : (
+                                    <form onSubmit={bookCard} className="space-y-16">
+                                        <div className="space-y-6"><label className="text-4xl font-black ml-12 text-slate-400 uppercase tracking-widest">ग्राहक का पूरा नाम *</label><input name="Customer_Name" required placeholder="अपना नाम लिखें" className="w-full bg-slate-900 p-14 rounded-[4rem] font-black border-[12px] border-slate-800 focus:border-amber-500 outline-none text-[5rem] text-white" /></div>
+                                        <div className="grid md:grid-cols-2 gap-16">
+                                            <div className="space-y-6"><label className="text-4xl font-black ml-12 text-slate-400 uppercase tracking-widest">मोबाइल नंबर *</label><input name="Mobile" type="tel" pattern="[0-9]{10}" required className="w-full bg-slate-900 p-14 rounded-[4rem] font-black border-[12px] border-slate-800 focus:border-amber-500 outline-none text-[5rem] text-white" /></div>
+                                            <div className="space-y-6"><label className="text-4xl font-black ml-12 text-slate-400 uppercase tracking-widest">आधार कार्ड नंबर *</label><input name="Aadhaar" type="tel" pattern="[0-9]{12}" required className="w-full bg-slate-900 p-14 rounded-[4rem] font-black border-[12px] border-slate-800 focus:border-amber-500 outline-none text-[5rem] text-white" /></div>
                                         </div>
-                                        <div className="grid md:grid-cols-2 gap-14">
-                                            <div className="space-y-4"><label className="text-3xl font-black ml-10 text-slate-400 uppercase tracking-widest">Payment Mode *</label><select required value={paymentMode} onChange={(e) => setPaymentMode(e.target.value)} className="w-full bg-slate-900 p-12 rounded-[3rem] font-black border-8 border-slate-700 text-6xl text-white outline-none"><option value="" disabled>CHOOSE MODE</option><option value="Cash">Cash (Offline)</option><option value="PhonePe/GPay">PhonePe/GPay</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select></div>
-                                            {paymentMode === 'Airtel Payment Bank' ? (
-                                                <div className="space-y-4"><label className="text-3xl font-black ml-10 text-red-500 uppercase tracking-widest animate-pulse">PAN REQUIRED *</label><input name="PAN" required className="w-full bg-black p-12 rounded-[3rem] font-black border-[12px] border-red-600 text-6xl text-white text-center uppercase" /></div>
-                                            ) : (
-                                                <div className="space-y-4"><label className="text-3xl font-black ml-10 text-slate-400 uppercase tracking-widest">Village/City</label><input name="Village" className="w-full bg-slate-900 p-12 rounded-[3rem] font-black border-8 border-slate-700 text-6xl text-white" /></div>
-                                            )}
+                                        <div className="grid md:grid-cols-2 gap-16">
+                                            <div className="space-y-6"><label className="text-4xl font-black ml-12 text-slate-400 uppercase tracking-widest">जन्मतिथि (DOB)</label><input name="DOB" type="date" className="w-full bg-slate-900 p-14 rounded-[4rem] font-black border-[12px] border-slate-800 text-6xl text-white" /></div>
+                                            <div className="space-y-6"><label className="text-4xl font-black ml-12 text-slate-400 uppercase tracking-widest">गाँव / शहर का नाम</label><input name="Village" className="w-full bg-slate-900 p-14 rounded-[4rem] font-black border-[12px] border-slate-800 text-6xl text-white" /></div>
                                         </div>
-                                        <div className="flex gap-14 pt-10">
-                                            <button type="submit" className="flex-1 bg-amber-500 text-black font-black py-14 rounded-[4.5rem] text-7xl uppercase italic shadow-2xl hover:bg-white transition-all">CONFIRM BOOKING 🔱</button>
-                                            <button type="button" onClick={() => setSelected(null)} className="bg-slate-700 text-white font-black px-24 py-14 rounded-[4.5rem] text-5xl">CANCEL</button>
+                                        <div className="flex gap-16 pt-12">
+                                            <button type="submit" className="flex-1 bg-amber-500 text-black font-black py-16 rounded-[6rem] text-[7rem] uppercase italic shadow-2xl hover:bg-white transition-all">CONFIRM BOOKING 🔱</button>
+                                            <button type="button" onClick={() => setSelected(null)} className="bg-slate-700 text-white font-black px-24 py-16 rounded-[6rem] text-6xl">CANCEL</button>
                                         </div>
                                     </form>
-                                ) : (
-                                    <div className="text-center py-32">
-                                        <i className="fa-solid fa-user-lock text-[15rem] text-slate-700 mb-16"></i>
-                                        <h4 className="text-8xl font-black text-white uppercase italic">Card Secured</h4>
-                                        <p className="text-4xl text-slate-500 mt-10">This card is already Pending or Sold. Staff login required for any edits.</p>
-                                        <button onClick={() => {
-                                            const id = prompt("Staff ID:"); const ps = prompt("Password:");
-                                            if(ADMINS[id] === ps) setStaff({id, pass: ps}); else alert("Access Denied!");
-                                        }} className="mt-12 bg-indigo-600 text-white font-black px-16 py-8 rounded-[3rem] text-4xl uppercase">Staff Login</button>
-                                    </div>
                                 )}
                             </div>
                         </div>
                     )}
 
-                    {/* ✅ SUCCESS & WHATSAPP REPORT ✅ */}
+                    {/* ✅ सफलता & हिंग्लिश व्हाट्सएप रिपोर्ट ✅ */}
                     {successModal && (
-                        <div className="fixed inset-0 z-[110] bg-black/98 flex items-center justify-center p-6">
-                            <div className="glass p-24 max-w-6xl text-center border-t-[25px] border-green-500 rounded-[6rem] shadow-2xl">
-                                <i className="fa-regular fa-circle-check text-[18rem] text-green-500 mb-16 animate-bounce"></i>
-                                <h3 className="text-8xl font-black mb-12 text-white italic uppercase tracking-tighter">SUCCESSFULLY SECURED!</h3>
-                                <p className="text-slate-300 text-5xl mb-24 font-bold leading-tight italic tracking-tight">Hukum, Card #{successModal.n} is now Pending. Notify the team on WhatsApp immediately with your Membership ID: {successModal.mid}</p>
-                                <a href={`https://wa.me/917229874128?text=${encodeURIComponent(`🔱 *${COMPANY}* 🔱\n_"${SLOGAN}"_\n━━━━━━━━━━━━━━━━━━━━━━\n🚩 Jai Mata Di! Hukum,\n\nI have successfully booked a Lucky Card.\n\n🔖 *DETAILS*:\n• Name: ${successModal.name}\n• Card No: #${successModal.n}\n• ID: ${successModal.mid}\n\nPlease verify and confirm my entry. \n\nThank you, Digital Problem Solution! 🔱🚩`)}`} target="_blank" onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-12 w-full bg-[#25D366] text-white font-black py-16 rounded-[5rem] text-7xl shadow-2xl hover:scale-105 transition-transform">
-                                    <i className="fa-brands fa-whatsapp text-[12rem]"></i> SEND REPORT
+                        <div className="fixed inset-0 z-[200] bg-black/99 flex items-center justify-center p-10">
+                            <div className="glass p-28 max-w-[1400px] text-center border-t-[35px] border-green-500 rounded-[8rem] shadow-2xl">
+                                <i className="fa-regular fa-circle-check text-[25rem] text-green-500 mb-20 animate-bounce"></i>
+                                <h3 className="text-[9rem] font-black mb-12 text-white italic uppercase tracking-tighter leading-none">SUCCESSFUL!</h3>
+                                <p className="text-slate-300 text-6xl mb-24 font-bold italic tracking-tight">हुकुम, आपका कार्ड #{successModal.n} पेंडिंग है। व्हाट्सएप पर रिपोर्ट भेजें!</p>
+                                <a href={`https://wa.me/917229874128?text=${encodeURIComponent(`🔱 *${COMPANY}* 🔱\n_"${SLOGAN}"_\n━━━━━━━━━━━━━━━━━━━━━━\n🚩 जय माता दी! हुकुम,\n\n🔖 *बुकिंग विवरण (DETAILS)*:\n• नाम: ${successModal.name}\n• कार्ड नंबर: #${successModal.n}\n• आईडी (ID): ${successModal.mid}\n\n✅ *Status*: पेंडिंग (वेरिफिकेशन के लिए सूचित किया गया)\n\nइनाम जीतने का मौका और डिजिटल सेवा का आनंद लें। \nThank you, DPSG! 🔱🚩`)}`} target="_blank" onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-16 w-full bg-[#25D366] text-white font-black py-20 rounded-[7rem] text-[9rem] shadow-2xl hover:scale-105 transition-transform">
+                                    <i className="fa-brands fa-whatsapp text-[18rem]"></i> SEND REPORT
                                 </a>
                             </div>
                         </div>
                     )}
 
-                    <div className="mt-80 mb-24 text-center">
-                        <button onClick={()=>{let u=prompt("Staff ID:");let p=prompt("Pass:");if(ADMINS[u]===p)setStaff({id:u,pass:p});else alert("Fail");}} className="bg-indigo-600/30 hover:bg-indigo-600 text-indigo-400 hover:text-white px-24 py-12 rounded-[4rem] text-5xl font-black uppercase border-8 border-indigo-600 transition-all shadow-2xl tracking-[0.3em] italic">
+                    <div className="mt-[500px] mb-40 text-center">
+                        <button onClick={()=>{let u=prompt("Staff ID:");let p=prompt("Pass:");if(ADMINS[u]===p)setStaff({id:u,pass:p});else alert("Fail");}} className="bg-indigo-600/30 hover:bg-indigo-600 text-indigo-400 hover:text-white px-40 py-20 rounded-[6rem] text-7xl font-black uppercase border-[15px] border-indigo-600 transition-all shadow-2xl tracking-[0.5em] italic">
                             🔱 STAFF CONTROL CENTER 🔱
                         </button>
                     </div>
