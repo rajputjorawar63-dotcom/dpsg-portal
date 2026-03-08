@@ -29,7 +29,7 @@
         .card-Gold { background: linear-gradient(135deg, #d97706, #451a03); }
         .card-Silver { background: linear-gradient(135deg, #cbd5e1, #475569); color: black; }
         
-        .sold-card { background: linear-gradient(135deg, #7f1d1d, #450a0a) !important; color: #fca5a5 !important; border: 4px solid #450a0a; pointer-events: none; opacity: 0.9; }
+        .sold-card { background: linear-gradient(135deg, #7f1d1d, #450a0a) !important; color: #fca5a5 !important; border: 4px solid #450a0a; pointer-events: none; opacity: 0.9; cursor: not-allowed; }
         .pending-card { background: #facc15 !important; color: black !important; border: 6px solid #fff; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.95); } }
         
@@ -42,13 +42,13 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
         
-        // ⚠️ आपकी पक्की लिंक, आपको कुछ पेस्ट नहीं करना है ⚠️
+        // ⚠️ आपकी पक्की लिंक ⚠️
         const APP_URL = "https://script.google.com/macros/s/AKfycbzcuzFBuc1iNyzZ8J65ZzO1PleOoNybvaVV6T1EgYGQUrubQ0zivGiYNXdQnHqpjLKKCw/exec";
         const COMPANY = "Digital Problem Solution Group";
         const SLOGAN = "समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा";
         const ADMINS = { "Jorawar@DPS": "Jorawar@6020", "Parkash@DPS": "Parkash@6020", "Rajkumar@DPS": "Rajkumar@6020" };
 
-        // 🎁 पूरे 51 इनाम (कोई शॉर्टकट नहीं) 🎁
+        // 🎁 पूरे 51 इनाम 🎁
         const PRIZES = [
             {r:1, n:"₹5000 Cash", d:"किस्मत चमकेगी और जेब भरेगी सीधा ₹5000 कैश के साथ।"},
             {r:2, n:"LED TV", d:"घर बनेगा सिनेमा हॉल, जब आप जीतेंगे शानदार LED TV।"},
@@ -118,7 +118,7 @@
             const [isUploading, setIsUploading] = useState(false);
             const [discount, setDiscount] = useState(0);
 
-            // ⚠️ लाइव डेटा लोडिंग (कोई CSV नहीं, हमेशा पक्का) ⚠️
+            // ⚠️ लाइव डेटा लोडिंग ⚠️
             const loadData = () => {
                 fetch(APP_URL + "?action=GET_DATA")
                 .then(r => r.json())
@@ -187,7 +187,17 @@
             };
 
             const finishBooking = (fd, n) => {
-                setSuccessModal({ n, name: fd.get("Customer_Name"), mid: selected.mid });
+                // व्हाट्सएप मैसेज के लिए पूरी डिटेल सेव करना
+                setSuccessModal({ 
+                    n, 
+                    name: fd.get("Customer_Name"), 
+                    mid: selected.mid,
+                    mob: fd.get("Mobile"),
+                    adhar: fd.get("Aadhaar"),
+                    pay: fd.get("Payment_Mode"),
+                    pan: fd.get("PAN") || "N/A",
+                    vill: fd.get("Village") || "N/A"
+                });
                 setSelected(null); setPayMode(""); setIsUploading(false);
                 setTimeout(loadData, 1500);
             };
@@ -227,7 +237,9 @@
             };
 
             const handleCardClick = (c, s) => {
+                // 🛑 SOLD कार्ड पर परमानेंट लॉक: कोई भी एडिट नहीं कर सकता 🛑
                 if(s === 'Sold') return; 
+                
                 if(staff) {
                     setSelected(c); 
                     setPayMode(c.d.pay || "");
@@ -257,7 +269,8 @@
 
             if(loading) return <div className="h-screen flex items-center justify-center font-black text-amber-500 text-6xl animate-pulse">DPSG Loading...</div>;
 
-            const pendingCards = cards.filter(c => localLocks.has(c.n) || c.status === 'Pending');
+            // 🛑 पेंडिंग लिस्ट में से SOLD कार्ड हमेशा के लिए गायब (Hide) 🛑
+            const pendingCards = cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold');
             const staffHistory = staff ? cards.filter(c => c.status === 'Sold' && c.d.verifiedBy === staff.id) : [];
 
             return (
@@ -290,7 +303,7 @@
                                     <div key={c.n} className="bg-slate-800 p-5 rounded-xl flex flex-col md:flex-row justify-between items-center border-l-8 border-yellow-500 shadow-lg">
                                         <div className="mb-4 md:mb-0 w-full md:w-auto">
                                             <p className="text-2xl font-black text-white">#{c.n} - <span className="text-amber-400">{c.d.name || "नाम दर्ज़ नहीं"}</span></p>
-                                            <p className="text-lg text-slate-300 font-bold"><i className="fa-solid fa-phone text-sm"></i> {c.d.mob || "N/A"} | Mode: {c.d.pay || "N/A"}</p>
+                                            <p className="text-lg text-slate-300 font-bold"><i className="fa-solid fa-phone text-sm"></i> {c.d.mob || "N/A"} | Mode: {c.d.pay || "N/A"} | PAN: {c.d.pan || "N/A"}</p>
                                             {c.d.link && <a href={c.d.link} target="_blank" className="text-blue-400 text-sm font-bold underline mt-1 inline-block"><i className="fa-solid fa-camera"></i> ग्राहक की फोटो/स्क्रीनशॉट देखें</a>}
                                         </div>
                                         <div className="flex flex-wrap gap-3 w-full md:w-auto">
@@ -406,7 +419,6 @@
                                         <div><label className="text-sm text-slate-400 font-bold ml-1">Mobile</label><input id="s_mob" defaultValue={selected.d.mob?.replace(/'/g,'')} className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 text-white focus:border-indigo-500 outline-none" /></div>
                                         <div><label className="text-sm text-slate-400 font-bold ml-1">Aadhaar</label><input id="s_adhar" defaultValue={selected.d.adhar?.replace(/'/g,'')} className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 text-white focus:border-indigo-500 outline-none" /></div>
                                         
-                                        {/* पेमेंट मोड पहले से चुना हुआ */}
                                         <div><label className="text-sm text-slate-400 font-bold ml-1">Payment Mode</label>
                                             <select id="s_pay" defaultValue={selected.d.pay || "Cash"} className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 text-white focus:border-indigo-500 outline-none">
                                                 <option value="Cash">Cash (Offline)</option>
@@ -418,7 +430,6 @@
                                         <div><label className="text-sm text-slate-400 font-bold ml-1">PAN Card (If Airtel)</label><input id="s_pan" defaultValue={selected.d.pan} className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 text-white uppercase focus:border-indigo-500 outline-none" /></div>
                                         <div><label className="text-sm text-slate-400 font-bold ml-1">Txn ID / Ref (Optional)</label><input id="s_ref" defaultValue={selected.d.ref} className="w-full bg-slate-900 p-4 rounded-xl text-lg font-bold border border-slate-700 text-amber-400 focus:border-indigo-500 outline-none" /></div>
                                         
-                                        {/* ऑटो डिस्काउंट सिस्टम */}
                                         <div><label className="text-sm text-red-400 font-bold ml-1">Discount (₹) कम करें</label><input type="number" value={discount} onChange={(e)=>setDiscount(parseInt(e.target.value) || 0)} className="w-full bg-slate-900 p-4 rounded-xl text-xl font-bold border border-slate-700 text-red-400 focus:border-red-500 outline-none" /></div>
                                         <div><label className="text-sm text-green-400 font-bold ml-1">Final Amount Paid (₹)</label><input id="s_paid" type="number" value={selected.price - discount} readOnly className="w-full bg-green-900/40 p-4 rounded-xl text-3xl font-black border-2 border-green-500 text-green-400 focus:outline-none" /></div>
                                     </div>
@@ -484,7 +495,7 @@
                         </div>
                     )}
 
-                    {/* ✅ PROFESSIONAL DIRECT APP WHATSAPP RECEIPT ✅ */}
+                    {/* ✅ 100% FULL DETAIL DIRECT WHATSAPP RECEIPT ✅ */}
                     {successModal && (
                         <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4">
                             <div className="glass p-10 max-w-2xl text-center border-t-[10px] border-green-500 rounded-[2rem] shadow-2xl">
@@ -492,8 +503,28 @@
                                 <h3 className="text-4xl font-black mb-4 text-white uppercase">बुकिंग सफल! (SUCCESS)</h3>
                                 <p className="text-slate-300 text-lg mb-8 font-bold">हुकुम, आपका डेटा सुरक्षित कर लिया गया है। एक्टिवेशन के लिए व्हाट्सएप भेजें।</p>
                                 
-                                {/* ⚠️ डायरेक्ट व्हाट्सएप ऐप खोलने वाला लिंक (No Browser) ⚠️ */}
-                                <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *Digital Problem Solution Group* 🔱\n_"${SLOGAN}"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी! हुकुम जोरावर बना* 🚩\n\nमैंने अभी DPSG की सदस्यता के लिए आवेदन किया है। कृपया मेरे विवरणों की जाँच करें और मेरा कार्ड एक्टिवेट (Activate) करने की कृपा करें।\n\n🔖 *आवेदन का विवरण (Booking Details):*\n• *नाम:* ${successModal.name}\n• *कार्ड नंबर:* #${successModal.n}\n• *बुकिंग आईडी:* ${successModal.mid}\n\n✅ *मेरा पूरा डेटा सही है। आपके कन्फर्मेशन का इंतज़ार रहेगा।*\n━━━━━━━━━━━━━━━━━━━━━━\n📞 कस्टमर केयर: +91 7229874128\n🙏 *DPSG - हमेशा आपके साथ!*`)}`} onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-4 w-full bg-[#25D366] text-white font-black py-4 rounded-xl text-2xl shadow-lg hover:scale-105 transition-transform">
+                                {/* ⚠️ डायरेक्ट ऐप लिंक + फुल डिटेल (No Browser) ⚠️ */}
+                                <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *Digital Problem Solution Group* 🔱
+_"${SLOGAN}"_
+━━━━━━━━━━━━━━━━━━━━━━
+🙏 *जय माता दी! हुकुम जोरावर बना* 🚩
+
+मैंने अभी DPSG की सदस्यता के लिए आवेदन किया है। कृपया मेरे विवरणों की जाँच करें और मेरा कार्ड एक्टिवेट (Activate) करने की कृपा करें।
+
+🔖 *आवेदन का पूरा विवरण (Full Details):*
+• *नाम:* ${successModal.name}
+• *कार्ड नंबर:* #${successModal.n}
+• *बुकिंग आईडी:* ${successModal.mid}
+• *मोबाइल:* ${successModal.mob}
+• *आधार नंबर:* ${successModal.adhar}
+• *पैन कार्ड:* ${successModal.pan}
+• *पेमेंट मोड:* ${successModal.pay}
+• *गाँव/शहर:* ${successModal.vill}
+
+✅ *मेरा पूरा डेटा सही है। आपके कन्फर्मेशन का इंतज़ार रहेगा।*
+━━━━━━━━━━━━━━━━━━━━━━
+📞 कस्टमर केयर: +91 7229874128
+🙏 *DPSG - हमेशा आपके साथ!*`)}`} onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-4 w-full bg-[#25D366] text-white font-black py-4 rounded-xl text-2xl shadow-lg hover:scale-105 transition-transform">
                                     <i className="fa-brands fa-whatsapp text-4xl"></i> DIRECT SEND (APP)
                                 </a>
                             </div>
