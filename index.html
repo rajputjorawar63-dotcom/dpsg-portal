@@ -35,7 +35,6 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
         
-        // ⚠️ आपकी पक्की लिंक ⚠️
         const APP_URL = "https://script.google.com/macros/s/AKfycbxCrWZTToA5UxG2uUmgiYfwpih_qzLmiWBjdgnY5pwiXdVEYPUsBvWcDazqkqX25xte5w/exec";
         const COMPANY = "Digital Problem Solution Group";
         const SLOGAN = "समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा";
@@ -99,15 +98,11 @@
             const [cards, setCards] = useState([]);
             const [activeTab, setActiveTab] = useState('ALL'); 
             const [selected, setSelected] = useState(null);
-            
-            // 🔐 सत्र (Session) लॉगिन 🔐
             const [staff, setStaff] = useState(JSON.parse(localStorage.getItem('dps_session')) || null);
-            
             const [successModal, setSuccessModal] = useState(null);
             const [loading, setLoading] = useState(true);
             const [localLocks, setLocalLocks] = useState(new Set(JSON.parse(localStorage.getItem('dps_locks') || '[]')));
             const [staffUpi, setStaffUpi] = useState("");
-            const [payMode, setPayMode] = useState("");
             const [isUploading, setIsUploading] = useState(false);
             const [discount, setDiscount] = useState(0);
             const [payVerified, setPayVerified] = useState(false);
@@ -119,21 +114,30 @@
                 fetch(APP_URL + "?action=GET_DATA")
                 .then(r => r.json())
                 .then(rows => {
-                    if(!Array.isArray(rows)) return;
                     let temp = [];
                     for(let i=1; i<=1000; i++) {
-                        let rD = rows.find(r => r[0] && parseInt(r[0]) === i) || [];
-                        let rawS = (rD[4] || 'Available').toString().trim().toLowerCase();
-                        let s = rawS.includes("sold") ? "Sold" : rawS.includes("pending") ? "Pending" : "Available";
+                        let rD = (rows && Array.isArray(rows)) ? rows.find(r => r[0] && parseInt(r[0]) === i) : null;
+                        let s = 'Available';
+                        if(rD) {
+                           let rawS = (rD[4] || 'Available').toString().trim().toLowerCase();
+                           if(rawS.includes("sold")) s = "Sold";
+                           else if(rawS.includes("pending")) s = "Pending";
+                        }
                         temp.push({ 
                             n: i, status: s, cat: i<=100?"VIP Card":i<=600?"Gold Card":"Silver Card",
-                            price: parseInt(rD[16] || (i<=100?500:i<=600?100:50)), mid: rD[3] || `DPSG-26-113-${i.toString().padStart(4,'0')}`,
-                            token: rD[25] || `DPSG-TK-${i.toString().padStart(3,'0')}`,
-                            d: { name: rD[6]||"", mob: rD[7]||"", dob: rD[8]||"", vill: rD[9]||"", adhar: rD[10]||"", pan: rD[11]||"", pay: rD[12]||"", dp: rD[26]||"", verifiedBy: rD[22]||"" }
+                            price: rD ? parseInt(rD[16] || (i<=100?500:i<=600?100:50)) : (i<=100?500:i<=600?100:50),
+                            mid: (rD && rD[3]) || `DPSG-26-113-${i.toString().padStart(4,'0')}`,
+                            token: (rD && rD[25]) || `DPSG-TK-${i.toString().padStart(3,'0')}`,
+                            d: { name: (rD && rD[6])||"", mob: (rD && rD[7])||"", adhar: (rD && rD[10])||"", pan: (rD && rD[11])||"", pay: (rD && rD[12])||"", dp: (rD && rD[26])||"" }
                         });
                     }
                     setCards(temp); setLoading(false);
-                }).catch(() => setLoading(false));
+                }).catch(() => {
+                    // Fallback to empty 1000 cards if fetch fails
+                    let temp = [];
+                    for(let i=1; i<=1000; i++) temp.push({ n: i, status: 'Available', cat: i<=100?"VIP Card":i<=600?"Gold Card":"Silver Card", price: (i<=100?500:i<=600?100:50), mid: `DPSG-26-113-${i.toString().padStart(4,'0')}` });
+                    setCards(temp); setLoading(false);
+                });
             };
 
             useEffect(() => { loadData(); const itvl = setInterval(loadData, 10000); return () => clearInterval(itvl); }, []);
@@ -193,13 +197,12 @@
                 <div className="max-w-[1600px] mx-auto p-4 py-10">
                     {staff ? (
                         <div className="mb-12 glass p-8 border-t-[10px] border-indigo-500 shadow-2xl relative">
-                            <button onClick={() => {localStorage.removeItem('dps_session'); setStaff(null);}} className="absolute top-8 right-8 bg-red-600 text-white px-6 py-2 rounded-xl font-black shadow-lg">LOGOUT</button>
+                            <button onClick={() => {localStorage.removeItem('dps_session'); setStaff(null);}} className="absolute top-8 right-8 bg-red-600 text-white px-6 py-2 rounded-xl font-black">LOGOUT</button>
                             <h2 className="text-4xl font-black text-indigo-400 uppercase tracking-widest mb-2">{COMPANY}</h2>
-                            <input type="text" placeholder="UPI ID (Live QR)" value={staffUpi} onChange={(e)=>setStaffUpi(e.target.value)} className="bg-black border-2 border-slate-700 text-white p-4 rounded-lg w-full mb-8 font-bold text-xl" />
-                            <h3 className="text-2xl font-black text-yellow-400 mb-4 border-b border-slate-700 pb-2">लाइव पेंडिंग रिक्वेस्ट:</h3>
+                            <input type="text" placeholder="UPI ID for Live QR" value={staffUpi} onChange={(e)=>setStaffUpi(e.target.value)} className="bg-black border-2 border-slate-700 text-white p-4 rounded-lg w-full mb-8 font-bold text-xl" />
                             <div className="space-y-4 max-h-[400px] overflow-y-auto custom-scroll pr-2">
                                 {cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold').map(c => (
-                                    <div key={c.n} className="bg-slate-800 p-5 rounded-xl flex flex-col md:flex-row justify-between items-center border-l-8 border-yellow-500 shadow-lg">
+                                    <div key={c.n} className="bg-slate-800 p-5 rounded-xl flex justify-between items-center border-l-8 border-yellow-500 shadow-lg">
                                         <div className="flex items-center gap-6">
                                             {c.d.dp ? <img src={c.d.dp} className="dp-circle" /> : <div className="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center text-xs">NO DP</div>}
                                             <div><p className="text-2xl font-black text-white">#{c.n} - {c.d.name}</p><p className="text-lg text-slate-300 font-bold">Token: {c.token}</p></div>
@@ -215,9 +218,9 @@
                             <p className="text-amber-500 text-xl md:text-2xl font-bold mt-4 italic">" {SLOGAN} "</p>
                             <div className="banner-row mt-10">
                                 {[
-                                    {t:'VIP', p:'500', c:'card-VIP', d:'पूरा परिवार | 6 महीने'},
-                                    {t:'GOLD', p:'100', c:'card-Gold', d:'1 व्यक्ति | 3 महीने'},
-                                    {t:'SILVER', p:'50', c:'card-Silver', d:'1 व्यक्ति | 1 महीना'}
+                                    {t:'VIP', p:'500', c:'card-VIP', d:'पूरा परिवार मान्य | 6 महीने | 100% फ्री ई-मित्र सेवा'},
+                                    {t:'GOLD', p:'100', c:'card-Gold', d:'1 व्यक्ति | 3 महीने | 50% ई-मित्र छूट | गारंटीड उपहार'},
+                                    {t:'SILVER', p:'50', c:'card-Silver', d:'1 व्यक्ति | 1 महीना | सीमित सेवा | लकी ड्रा मौका'}
                                 ].map((b, i) => (
                                     <div key={i} className={`banner-3d ${b.c} p-8 rounded-[2rem] shadow-xl border-2 border-white/20 text-left`}><h2 className="text-4xl font-black mb-2">{b.t}</h2><p className="text-sm font-bold opacity-90 mb-6">{b.d}</p><div className="text-5xl font-black text-white">₹{b.p}</div></div>
                                 ))}
@@ -227,7 +230,7 @@
 
                     <div className="flex flex-wrap gap-4 mt-6 mb-10 justify-center">
                         {['ALL', 'VIP Card', 'Gold Card', 'Silver Card'].map(t => (
-                            <button key={t} onClick={() => setActiveTab(t)} className={`px-8 py-3 rounded-full font-black text-xl uppercase transition-all shadow-lg ${activeTab === t ? 'bg-amber-500 text-black' : 'bg-slate-800 text-slate-300'}`}>{t.split(' ')[0]}</button>
+                            <button key={t} onClick={() => setActiveTab(t)} className={`px-8 py-3 rounded-full font-black text-xl uppercase transition-all shadow-lg ${activeTab === t ? 'bg-amber-500 text-black scale-105' : 'bg-slate-800 text-slate-300'}`}>{t.split(' ')[0]}</button>
                         ))}
                     </div>
 
@@ -252,28 +255,21 @@
                     </div>
 
                     {selected && !staff && (
-                        <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
-                            <form onSubmit={bookCard} className="glass p-8 md:p-12 w-full max-w-3xl border-2 border-amber-500 rounded-[2rem] shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
+                        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
+                            <form onSubmit={bookCard} className="glass p-8 md:p-12 w-full max-w-3xl border-2 border-amber-500 rounded-[2rem] shadow-2xl relative bg-[#0a0a0a]">
                                 <button type="button" onClick={() => setSelected(null)} className="absolute top-6 right-8 text-5xl text-slate-400">&times;</button>
                                 <div className="text-center mb-8"><h3 className="text-5xl font-black text-amber-500 mb-2">CARD #{selected.n} BOOKING</h3></div>
                                 <div className="space-y-6">
                                     <div className="bg-slate-900/50 p-6 rounded-2xl border-2 border-dashed border-amber-500 text-center">
-                                        <h4 className="text-amber-400 font-black mb-4"><i className="fa-solid fa-camera"></i> अपनी लाइव फोटो लें (Live DP)</h4>
-                                        {showCamera ? (
-                                            <div className="relative"><video ref={videoRef} autoPlay className="w-full rounded-xl" /><button type="button" onClick={capture} className="mt-4 bg-amber-500 text-black p-4 rounded-full font-black">CLICK 📸</button></div>
-                                        ) : capturedImg ? (
-                                            <div className="relative"><img src={capturedImg} className="mx-auto rounded-full w-40 h-40 border-4 border-amber-500 object-cover" /><button type="button" onClick={startCamera} className="absolute -top-2 -right-2 bg-red-600 p-2 rounded-full text-xs">Retake</button></div>
-                                        ) : (
-                                            <button type="button" onClick={startCamera} className="bg-indigo-600 px-8 py-3 rounded-xl font-black text-white">START CAMERA 🤳</button>
-                                        )}
+                                        {showCamera ? <div className="relative"><video ref={videoRef} autoPlay className="w-full rounded-xl" /><button type="button" onClick={capture} className="mt-4 bg-amber-500 text-black p-4 rounded-full font-black">CLICK 📸</button></div> : 
+                                        capturedImg ? <img src={capturedImg} className="mx-auto rounded-full w-40 h-40 border-4 border-amber-500 object-cover" /> : 
+                                        <button type="button" onClick={startCamera} className="bg-indigo-600 px-8 py-3 rounded-xl font-black text-white">START CAMERA 🤳</button>}
                                     </div>
                                     <input name="Customer_Name" placeholder="Full Name *" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white" />
-                                    <div className="grid md:grid-cols-2 gap-6">
-                                        <input name="Mobile" type="tel" pattern="[0-9]{10}" placeholder="Mobile *" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white" />
-                                        <input name="Aadhaar" type="tel" pattern="[0-9]{12}" placeholder="Aadhaar *" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white" />
-                                    </div>
+                                    <input name="Mobile" type="tel" pattern="[0-9]{10}" placeholder="Mobile *" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white" />
+                                    <input name="Aadhaar" type="tel" pattern="[0-9]{12}" placeholder="Aadhaar *" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white" />
                                     <select name="Payment_Mode" required onChange={(e)=>setPayMode(e.target.value)} className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white"><option value="">Payment Mode *</option><option value="Cash">Cash</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select>
-                                    {payMode === 'Airtel Payment Bank' && <input name="PAN" required placeholder="PAN CARD *" className="w-full bg-black p-4 rounded-xl font-black border-4 border-red-600 text-white uppercase shadow-lg" />}
+                                    {payMode === 'Airtel Payment Bank' && <input name="PAN" required placeholder="PAN CARD *" className="w-full bg-black p-4 rounded-xl border-4 border-red-600 text-white font-black" />}
                                     <button type="submit" disabled={isUploading} className="w-full bg-amber-500 text-black font-black py-4 rounded-xl text-2xl uppercase shadow-lg">{isUploading ? "BOOKING... ⏳" : "CONFIRM BOOKING 🔱"}</button>
                                 </div>
                             </form>
@@ -281,26 +277,21 @@
                     )}
 
                     {selected && staff && (
-                        <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
+                        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 overflow-y-auto">
                             <div className="glass p-8 md:p-12 w-full max-w-5xl border-2 border-amber-500 rounded-[2rem] bg-[#0a0a0a] shadow-2xl relative">
-                                <button onClick={() => setSelected(null)} className="absolute top-6 right-8 text-5xl text-slate-400 hover:text-white">&times;</button>
-                                <div className="text-center mb-8"><h3 className="text-6xl font-black text-amber-500 italic mb-2">#{selected.n}</h3><span className="bg-amber-500 text-black px-6 py-2 rounded-full text-xl font-black">{selected.cat} | ₹{selected.price}</span></div>
+                                <button onClick={() => setSelected(null)} className="absolute top-6 right-8 text-5xl text-slate-400">&times;</button>
+                                <div className="text-center mb-8"><h3 className="text-6xl font-black text-amber-500 italic mb-2">#{selected.n}</h3></div>
                                 <div className="grid md:grid-cols-2 gap-8">
-                                    <div className="flex flex-col items-center justify-center bg-slate-900/50 p-6 rounded-2xl border border-slate-700 shadow-xl">
-                                        {selected.d.dp ? <img src={selected.d.dp} className="w-64 h-64 rounded-full border-8 border-amber-500 object-cover shadow-2xl mb-4" /> : <div className="w-48 h-48 bg-slate-800 rounded-full flex items-center justify-center text-slate-500 font-black">NO LIVE PHOTO</div>}
-                                        <p className="text-amber-400 font-black text-xl italic mt-2">Customer Live Selfie</p>
+                                    <div className="flex flex-col items-center">
+                                        {selected.d.dp ? <img src={selected.d.dp} className="w-64 h-64 rounded-full border-8 border-amber-500 object-cover shadow-2xl mb-4" /> : <div className="w-48 h-48 bg-slate-800 rounded-full flex items-center justify-center">NO DP</div>}
                                     </div>
                                     <div className="space-y-4">
-                                        <p className="text-indigo-400 font-black text-2xl border-b border-indigo-500 pb-2">✏️ Full Edit Mode</p>
-                                        <input id="s_name" defaultValue={selected.d.name} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white font-bold" placeholder="Name" />
-                                        <input id="s_mob" defaultValue={selected.d.mob} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white font-bold" placeholder="Mobile" />
-                                        <input id="s_adhar" defaultValue={selected.d.adhar} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white font-bold" placeholder="Aadhaar" />
-                                        <input id="s_pan" defaultValue={selected.d.pan} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white uppercase font-bold" placeholder="PAN" />
-                                        <select id="s_pay" defaultValue={selected.d.pay} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white font-bold"><option value="Cash">Cash</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select>
+                                        <input id="s_name" defaultValue={selected.d.name} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white" placeholder="Name" />
+                                        <input id="s_mob" defaultValue={selected.d.mob} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white" placeholder="Mobile" />
                                         <div className="bg-red-900/40 p-5 rounded-2xl border-2 border-red-500 shadow-lg"><label className="flex items-center gap-4 cursor-pointer"><input type="checkbox" checked={payVerified} onChange={(e)=>setPayVerified(e.target.checked)} className="w-8 h-8 accent-red-500" /><span className="text-white font-black text-xl">मैंने पेमेंट ले लिया है (Pay Verified)</span></label></div>
                                         <div className="flex gap-4 mt-6">
-                                            <button onClick={()=>masterUpdate(selected, 'Sold', true)} disabled={!payVerified || isUploading} className={`flex-1 font-black py-4 rounded-xl text-2xl shadow-lg transition-transform ${payVerified ? 'bg-green-600 hover:scale-105 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed opacity-50'}`}>{isUploading ? "Wait..." : "VERIFY ✅"}</button>
-                                            <button onClick={()=>masterUpdate(selected, 'Available', true)} className="flex-1 bg-red-700 text-white font-black py-4 rounded-xl text-2xl hover:scale-105 shadow-lg">REJECT ❌</button>
+                                            <button onClick={()=>masterUpdate(selected, 'Sold', true)} disabled={!payVerified || isUploading} className={`flex-1 font-black py-4 rounded-xl text-2xl shadow-lg ${payVerified ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed opacity-50'}`}>VERIFY ✅</button>
+                                            <button onClick={()=>masterUpdate(selected, 'Available', true)} className="flex-1 bg-red-700 text-white font-black py-4 rounded-xl text-2xl">REJECT ❌</button>
                                         </div>
                                     </div>
                                 </div>
@@ -311,14 +302,14 @@
                     {successModal && (
                         <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4">
                             <div className="glass p-10 max-w-2xl text-center border-t-[10px] border-green-500 rounded-[2rem] shadow-2xl">
-                                <i className="fa-regular fa-circle-check text-8xl text-green-500 mb-6 animate-bounce"></i>
+                                <i className="fa-regular fa-circle-check text-8xl text-green-500 mb-6"></i>
                                 <h3 className="text-4xl font-black mb-4 text-white uppercase">बुकिंग सफल!</h3>
                                 <div className="bg-green-600/20 p-4 rounded-xl border border-green-500 mb-6 font-black text-3xl text-green-400">TOKEN: {successModal.token}</div>
-                                <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *Digital Problem Solution Group* 🔱\n_"${SLOGAN}"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी! हुकुम जोरावर बना* 🚩\n\n🔖 *सदस्यता आवेदन सफल (Details):*\n• *टोकन नंबर:* ${successModal.token}\n• *नाम:* ${successModal.Customer_Name || successModal.name}\n• *कार्ड नंबर:* #${successModal.n}\n• *मोबाइल:* ${successModal.Mobile || successModal.mob}\n• *आधार:* ${successModal.Aadhaar || successModal.adhar}\n• *पेमेंट:* ${successModal.Payment_Mode || successModal.pay}\n\n⭐⭐ *Verified by DPSG Secure Server* ⭐⭐\n━━━━━━━━━━━━━━━━━━━━━━\n📞 +91 7229874128`)}`} onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-4 w-full bg-[#25D366] text-white font-black py-4 rounded-xl text-2xl shadow-lg hover:scale-105 transition-transform"><i className="fa-brands fa-whatsapp text-4xl"></i> SEND TO WHATSAPP</a>
+                                <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *Digital Problem Solution Group* 🔱\n_"${SLOGAN}"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी! हुकुम जोरावर बना* 🚩\n\n🔖 *सदस्यता आवेदन सफल (Details):*\n• *टोकन नंबर:* ${successModal.token}\n• *नाम:* ${successModal.Customer_Name || successModal.name}\n• *कार्ड नंबर:* #${successModal.n}\n• *मोबाइल:* ${successModal.Mobile || successModal.mob}\n• *आधार:* ${successModal.Aadhaar || successModal.adhar}\n• *पेमेंट:* ${successModal.Payment_Mode || successModal.pay}\n\n⭐⭐ *Verified by DPSG Secure Server* ⭐⭐\n━━━━━━━━━━━━━━━━━━━━━━\n📞 +91 7229874128`)}`} onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-4 w-full bg-[#25D366] text-white font-black py-4 rounded-xl text-2xl shadow-lg"><i className="fa-brands fa-whatsapp text-4xl"></i> SEND TO WHATSAPP</a>
                             </div>
                         </div>
                     )}
-                    {!staff && <div className="mt-20 text-center"><button onClick={()=>{let u=prompt("Staff ID:");let p=prompt("Pass:");if(ADMINS[u]===p){const sess={id:u,pass:p};localStorage.setItem('dps_session',JSON.stringify(sess));setStaff(sess);}else alert("Denied");}} className="text-slate-700 font-black tracking-widest text-xs uppercase hover:text-indigo-400 transition-colors">🔱 STAFF CONTROL 🔱</button></div>}
+                    {!staff && <div className="mt-20 text-center"><button onClick={()=>{let u=prompt("Staff ID:");let p=prompt("Pass:");if(ADMINS[u]===p){const sess={id:u,pass:p};localStorage.setItem('dps_session',JSON.stringify(sess));setStaff(sess);}else alert("Denied");}} className="text-slate-700 font-black tracking-widest text-xs uppercase">🔱 STAFF CONTROL 🔱</button></div>}
                 </div>
             );
         };
