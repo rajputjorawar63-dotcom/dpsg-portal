@@ -1,1 +1,345 @@
-h
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPSG - Digital Problem Solution Group</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&family=Rajdhani:wght@700&family=Mukta:wght@400;700;800&display=swap');
+        body { font-family: 'Poppins', 'Mukta', sans-serif; background: #050505; color: white; overflow-x: hidden; }
+        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 2rem; }
+        .banner-row { display: flex; overflow-x: auto; gap: 20px; padding: 15px; scroll-snap-type: x mandatory; }
+        .banner-row::-webkit-scrollbar { display: none; }
+        .banner-3d { min-width: 300px; flex: 1; transition: 0.4s; transform-style: preserve-3d; scroll-snap-align: center; }
+        .banner-3d:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.8); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 25px; padding: 20px; }
+        @media (min-width: 768px) { .card-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 35px; padding: 30px; } }
+        .grid-item { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 30px; font-weight: 900; cursor: pointer; border: 4px solid rgba(255,255,255,0.1); transition: 0.3s; font-size: 3rem; position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .grid-item:hover { transform: scale(1.08); border-color: #fbbf24; z-index: 10; box-shadow: 0 0 30px rgba(251,191,36,0.4); }
+        .card-VIP { background: linear-gradient(135deg, #4f46e5, #1e1b4b); }
+        .card-Gold { background: linear-gradient(135deg, #d97706, #451a03); }
+        .card-Silver { background: linear-gradient(135deg, #cbd5e1, #475569); color: black; }
+        .sold-card { background: linear-gradient(135deg, #7f1d1d, #450a0a) !important; color: #fca5a5 !important; border: 4px solid #450a0a; pointer-events: none; opacity: 0.9; cursor: not-allowed; }
+        .pending-card { background: #facc15 !important; color: black !important; border: 6px solid #fff; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.95); } }
+        .custom-scroll::-webkit-scrollbar { width: 8px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 10px; }
+        .dp-circle { width: 100px; height: 100px; border-radius: 50%; border: 4px solid #fbbf24; object-fit: cover; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        
+        const APP_URL = "https://script.google.com/macros/s/AKfycbxCrWZTToA5UxG2uUmgiYfwpih_qzLmiWBjdgnY5pwiXdVEYPUsBvWcDazqkqX25xte5w/exec";
+        const COMPANY = "Digital Problem Solution Group";
+        const SLOGAN = "समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा";
+        const ADMINS = { "Jorawar@DPS": "Jorawar@6020", "Parkash@DPS": "Parkash@6020", "Rajkumar@DPS": "Rajkumar@6020" };
+
+        const PRIZES = [
+            {r:1, n:"₹5000 Cash", d:"किस्मत चमकेगी और जेब भरेगी सीधा ₹5000 कैश के साथ।"},
+            {r:2, n:"LED TV", d:"घर बनेगा सिनेमा हॉल, जब आप जीतेंगे शानदार LED TV।"},
+            {r:3, n:"Kids Bicycle", d:"बच्चों के चेहरे पर लाएं मुस्कान, जीतें उनके सपनों की साइकिल।"},
+            {r:4, n:"Ceiling Fan", d:"गर्मी को कहें बाय-बाय, जब घर में आए ब्रांडेड छत का पंखा।"},
+            {r:5, n:"Bati Oven", d:"अब घर पर बनाएं राजस्थानी स्वाद, जीतें प्रीमियम बाटी ओवन।"},
+            {r:6, n:"Keypad Mobile", d:"अपनों से जुड़े रहने का मौका, जीतें एक टिकाऊ कीपैड मोबाइल।"},
+            {r:7, n:"Smart Watch", d:"अपनी सेहत और समय पर रखें नज़र, स्टाइल वाली स्मार्ट वॉच के साथ।"},
+            {r:8, n:"Power Bank", d:"अब मोबाइल की बैटरी कभी नहीं होगी खत्म, साथ रखें ये पावर बैंक।"},
+            {r:9, n:"Sports Shoes", d:"फिटनेस की ओर बढ़ाएं कदम, पहनें स्टाइलिश और आरामदायक स्पोर्ट्स शूज।"},
+            {r:10, n:"Riding Helmet", d:"आपकी सुरक्षा हमारी प्राथमिकता, जीतें एक ISI मार्क राइडिंग हेलमेट।"},
+            {r:11, n:"Remote Control Car", d:"बच्चों की पहली पसंद, शानदार रेसिंग कार।"},
+            {r:12, n:"Casserole (Roti Box)", d:"रोटियां रहेंगी लम्बे समय तक गर्म और नरम।"},
+            {r:13, n:"Bedsheet with Covers", d:"आपके बेडरूम को दें एक नया लुक।"},
+            {r:14, n:"Neckband", d:"म्यूजिक का असली मज़ा, बिना तारों के।"},
+            {r:15, n:"M19 Earbuds", d:"डिजिटल ज़माने का डिजिटल साउंड।"},
+            {r:16, n:"Earbuds", d:"संगीत का जादू अब आपके कानों में।"},
+            {r:17, n:"Bluetooth Neckband", d:"वायरलेस तरीके से पाएं बेस्ट अनुभव।"},
+            {r:18, n:"Trimmer", d:"अब घर पर ही पाएं सैलून जैसा परफेक्ट लुक।"},
+            {r:19, n:"Premium Trimmer", d:"प्रोफेशनल शेपिंग के लिए जीतें प्रीमियम ट्रिमर।"},
+            {r:20, n:"Royal Watch", d:"हाथों की शोभा बढ़ाएगी यह रॉयल घड़ी।"},
+            {r:21, n:"₹301 Cash", d:"बम्पर इनाम का नकद पुरस्कार।"},
+            {r:22, n:"₹201 Cash", d:"शगुन का नकद इनाम, DPSG की ओर से।"},
+            {r:23, n:"₹101 Cash", d:"बचत कार्ड के साथ जीतें ₹101 नकद।"},
+            {r:24, n:"Photo Frame", d:"राधा कृष्ण की कृपा का सुंदर फ्रेम।"},
+            {r:25, n:"Wall Clock", d:"समय की कीमत समझें और जीतें घड़ी।"},
+            {r:26, n:"Tea Cup Set", d:"सुंदर टी कप सेट के साथ स्वागत करें।"},
+            {r:27, n:"Movie Ticket", d:"पसंदीदा फिल्म की टिकट।"},
+            {r:28, n:"Umbrella", d:"यह रंगीन और मजबूत छाता रहेगा साथ।"},
+            {r:29, n:"Sunglasses", d:"दिखें सबसे अलग और स्टाइलिश।"},
+            {r:30, n:"Mobile Holder", d:"मोबाइल का सुरक्षित और आसान उपयोग।"},
+            {r:31, n:"Tool Set", d:"खुद बनें मैकेनिक।"},
+            {r:32, n:"Extension Board", d:"जीतें मल्टी-पिन एक्सटेंशन बोर्ड।"},
+            {r:33, n:"LED Bulb", d:"कम बिजली, ज्यादा रोशनी।"},
+            {r:34, n:"Immersion Rod", d:"गर्म पानी का आनंद लें।"},
+            {r:35, n:"Premium Perfume", d:"जो आपको रखे दिनभर तरोताजा।"},
+            {r:36, n:"Wireless Speaker", d:"पोर्टेबल स्पीकर के साथ बेस।"},
+            {r:37, n:"Water Bottle Set", d:"स्टाइलिश वॉटर बॉटल सेट।"},
+            {r:38, n:"Lunch Box", d:"खाना रहेगा फ्रेश और गरम।"},
+            {r:39, n:"Leather Belt", d:"मजबूत और टिकाऊ लेदर बेल्ट।"},
+            {r:40, n:"Woman's Purse", d:"ट्रेंडी और स्टाइलिश हैंड पर्स।"},
+            {r:41, n:"Hair Dryer", d:"मनचाहा हेयरस्टाइल पाएं।"},
+            {r:42, n:"Leather Bag", d:"मजबूत लेदर बैग।"},
+            {r:43, n:"20L Water Bottle", d:"शुद्ध पानी का बड़ा स्टोरेज।"},
+            {r:44, n:"Bathing Bucket", d:"सालों-साल आपका साथ निभाए।"},
+            {r:45, n:"Mobile Recharge", d:"₹349 का फ्री मोबाइल रिचार्ज।"},
+            {r:46, n:"Spice Box", d:"सुंदर मसाला दानी।"},
+            {r:47, n:"Veg Chopper", d:"स्मार्ट किचन का स्मार्ट टूल।"},
+            {r:48, n:"Photo Frame", d:"प्यारा फोटो फ्रेम।"},
+            {r:49, n:"Water Camper", d:"पानी को रखें ठंडा और ताज़ा।"},
+            {r:50, n:"Makeup Kit", d:"हर महिला की पहली पसंद।"},
+            {r:51, n:"Electric Iron", d:"कपड़ों पर लाएं परफेक्ट चमक।"}
+        ];
+
+        const App = () => {
+            const [cards, setCards] = useState([]);
+            const [activeTab, setActiveTab] = useState('ALL'); 
+            const [selected, setSelected] = useState(null);
+            const [staff, setStaff] = useState(null);
+            const [successModal, setSuccessModal] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [localLocks, setLocalLocks] = useState(new Set(JSON.parse(localStorage.getItem('dps_locks') || '[]')));
+            const [staffUpi, setStaffUpi] = useState("");
+            const [payMode, setPayMode] = useState("");
+            const [isUploading, setIsUploading] = useState(false);
+            const [discount, setDiscount] = useState(0);
+            const [payVerified, setPayVerified] = useState(false);
+            const [capturedImg, setCapturedImg] = useState(null);
+            const [showCamera, setShowCamera] = useState(false);
+            const videoRef = useRef(null);
+
+            const loadData = () => {
+                fetch(APP_URL + "?action=GET_DATA")
+                .then(r => r.json())
+                .then(rows => {
+                    let temp = [];
+                    for(let i=1; i<=1000; i++) {
+                        let rD = rows.find(r => r[0] && parseInt(r[0]) === i) || [];
+                        let rawS = (rD[4] || 'Available').toString().trim().toLowerCase();
+                        let s = rawS.includes("sold") ? "Sold" : rawS.includes("pending") ? "Pending" : "Available";
+                        temp.push({ 
+                            n: i, status: s, cat: i<=100?"VIP Card":i<=600?"Gold Card":"Silver Card",
+                            price: parseInt(rD[16] || (i<=100?500:i<=600?100:50)), mid: rD[3] || `DPSG-26-113-${i.toString().padStart(4,'0')}`,
+                            token: rD[25] || `DPSG-TK-${i.toString().padStart(3,'0')}`,
+                            d: { name: rD[6]||"", mob: rD[7]||"", dob: rD[8]||"", vill: rD[9]||"", adhar: rD[10]||"", pan: rD[11]||"", pay: rD[12]||"", dp: rD[26]||"", verifiedBy: rD[22]||"" }
+                        });
+                    }
+                    setCards(temp); setLoading(false);
+                }).catch(() => setLoading(false));
+            };
+
+            useEffect(() => { loadData(); const itvl = setInterval(loadData, 10000); return () => clearInterval(itvl); }, []);
+
+            const startCamera = async () => { setShowCamera(true); const s = await navigator.mediaDevices.getUserMedia({video:true}); videoRef.current.srcObject = s; };
+            const capture = () => {
+                const c = document.createElement("canvas"); c.width = videoRef.current.videoWidth; c.height = videoRef.current.videoHeight;
+                c.getContext("2d").drawImage(videoRef.current, 0,0); setCapturedImg(c.toDataURL("image/png"));
+                videoRef.current.srcObject.getTracks().forEach(t => t.stop()); setShowCamera(false);
+            };
+
+            const bookCard = async (e) => {
+                e.preventDefault(); setIsUploading(true); const fd = new FormData(e.target); const n = selected.n;
+                const params = new URLSearchParams(Object.fromEntries(fd));
+                params.append("action", "BOOK"); params.append("S_No", n.toString());
+                params.append("Category", selected.cat); params.append("Base_Price", selected.price);
+                if(capturedImg) params.append("DP_Link", capturedImg);
+                await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
+                setLocalLocks(prev => { const ns = new Set(prev).add(n); localStorage.setItem('dps_locks', JSON.stringify([...ns])); return ns; });
+                setSuccessModal({...Object.fromEntries(fd), n, mid: selected.mid, token: `DPSG-TK-${n.toString().padStart(3,'0')}`});
+                setSelected(null); setCapturedImg(null); setIsUploading(false); setTimeout(loadData, 1500);
+            };
+
+            const masterUpdate = async (c, status, isEdit = false) => {
+                const params = new URLSearchParams({
+                    action: 'UPDATE', S_No: c.n, Status: status, staffID: staff.id, staffPass: staff.pass,
+                    Customer_Name: isEdit ? document.getElementById('s_name').value : c.d.name,
+                    Mobile: isEdit ? document.getElementById('s_mob').value : c.d.mob,
+                    Aadhaar: isEdit ? document.getElementById('s_adhar').value : c.d.adhar,
+                    PAN: isEdit ? document.getElementById('s_pan').value : c.d.pan,
+                    Payment_Mode: isEdit ? document.getElementById('s_pay').value : c.d.pay,
+                    Paid: isEdit ? document.getElementById('s_paid').value : c.price, Discount: discount
+                });
+                await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
+                if(status === 'Available') { setLocalLocks(p => { const ns = new Set(p); ns.delete(c.n); return ns; }); }
+                setSelected(null); setPayVerified(false); setTimeout(loadData, 1500);
+            };
+
+            const renderCard = (c) => {
+                const isLocked = localLocks.has(c.n) || c.status === 'Pending';
+                let s = c.status === 'Sold' ? 'Sold' : isLocked ? 'Pending' : 'Available';
+                const color = s === 'Sold' ? 'sold-card' : s === 'Pending' ? 'pending-card' : `card-${c.cat.split(' ')[0]}`;
+                return (
+                    <div key={c.n} onClick={() => s !== 'Sold' && setSelected(c)} className={`grid-item ${color}`}>
+                        <span className="z-10 relative text-white drop-shadow-md">{c.n}</span>
+                        {s === 'Pending' && <i className="fa-solid fa-lock absolute text-black/20 text-5xl md:text-7xl"></i>}
+                        {s === 'Sold' && <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-[25px]"><span className="text-red-400 text-2xl font-black rotate-[-15deg] border-4 border-red-500 px-2 py-1">SOLD</span></div>}
+                        {s === 'Available' && <div className="absolute bottom-2 text-xs md:text-sm font-black tracking-widest opacity-80 uppercase">{c.cat.split(' ')[0]}</div>}
+                    </div>
+                );
+            };
+
+            if(loading) return <div className="h-screen flex items-center justify-center font-black text-amber-500 text-6xl animate-pulse">DPSG Loading...</div>;
+
+            return (
+                <div className="max-w-[1600px] mx-auto p-4 py-10">
+                    {staff ? (
+                        <div className="mb-12 glass p-8 border-t-[10px] border-indigo-500 shadow-2xl relative">
+                            <button onClick={() => setStaff(null)} className="absolute top-8 right-8 bg-red-600 text-white px-6 py-2 rounded-xl font-black">LOGOUT</button>
+                            <h2 className="text-4xl font-black text-indigo-400 uppercase tracking-widest mb-2">{COMPANY}</h2>
+                            <p className="text-xl text-amber-400 font-bold mb-8">Live Admin Dashboard | User: {staff.id}</p>
+                            <input type="text" placeholder="UPI ID (e.g. 7229874128@paytm)" value={staffUpi} onChange={(e)=>setStaffUpi(e.target.value)} className="bg-black border-2 border-slate-700 text-white p-4 rounded-lg w-full mb-8 font-bold text-xl" />
+                            <h3 className="text-2xl font-black text-yellow-400 mb-4 border-b border-slate-700 pb-2">लाइव पेंडिंग रिक्वेस्ट:</h3>
+                            <div className="space-y-4 max-h-[400px] overflow-y-auto custom-scroll pr-2">
+                                {cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold').map(c => (
+                                    <div key={c.n} className="bg-slate-800 p-5 rounded-xl flex flex-col md:flex-row justify-between items-center border-l-8 border-yellow-500 shadow-lg">
+                                        <div className="flex items-center gap-6">
+                                            {c.d.dp ? <img src={c.d.dp} className="dp-circle" /> : <div className="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center text-xs">NO DP</div>}
+                                            <div><p className="text-2xl font-black text-white">#{c.n} - {c.d.name}</p><p className="text-lg text-slate-300 font-bold">Token: {c.token}</p></div>
+                                        </div>
+                                        <div className="flex gap-4 mt-4 md:mt-0">
+                                            <button onClick={() => {setSelected(c); setPayVerified(false); setPayMode(c.d.pay || "");}} className="bg-blue-600 px-6 py-3 rounded-lg font-black text-white shadow-md">EDIT & VERIFY</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <header className="text-center mb-16">
+                            <h1 className="text-6xl md:text-8xl font-black italic text-white rajdhani tracking-tighter drop-shadow-lg">{COMPANY}</h1>
+                            <p className="text-amber-500 text-xl md:text-2xl font-bold mt-4 italic">" {SLOGAN} "</p>
+                            <div className="banner-row mt-10">
+                                {[
+                                    {t:'VIP', p:'500', c:'card-VIP', d:'पूरा परिवार मान्य | 6 महीने | 100% ফ্রি ई-मित्र सेवा'},
+                                    {t:'GOLD', p:'100', c:'card-Gold', d:'1 व्यक्ति | 3 महीने | 50% ई-मित्र छूट | गारंटीड उपहार'},
+                                    {t:'SILVER', p:'50', c:'card-Silver', d:'1 व्यक्ति | 1 महीना | सीमित सेवा | लकी ड्रा मौका'}
+                                ].map((b, i) => (
+                                    <div key={i} className={`banner-3d ${b.c} p-8 rounded-[2rem] shadow-xl border-2 border-white/20 text-left`}>
+                                        <h2 className="text-4xl font-black mb-2">{b.t}</h2>
+                                        <p className="text-sm font-bold opacity-90 mb-6">{b.d}</p>
+                                        <div className="text-5xl font-black text-white">₹{b.p}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </header>
+                    )}
+
+                    <div className="flex flex-wrap gap-4 mt-6 mb-10 justify-center">
+                        {['ALL', 'VIP Card', 'Gold Card', 'Silver Card'].map(t => (
+                            <button key={t} onClick={() => setActiveTab(t)} className={`px-8 py-3 rounded-full font-black text-xl uppercase transition-all shadow-lg ${activeTab === t ? 'bg-amber-500 text-black scale-105' : 'bg-slate-800 text-slate-300'}`}>{t.split(' ')[0]}</button>
+                        ))}
+                    </div>
+
+                    <div className="grid lg:grid-cols-12 gap-10">
+                        {!staff && (
+                            <div className="lg:col-span-4 glass p-6 h-[800px] flex flex-col border-t-[8px] border-amber-500">
+                                <h2 className="text-3xl font-black italic text-amber-500 mb-6 text-center underline">51 MEGA PRIZES</h2>
+                                <div className="overflow-y-auto pr-2 space-y-4 flex-1 custom-scroll">
+                                    {PRIZES.map((p) => (
+                                        <div key={p.r} className="p-4 rounded-2xl bg-slate-800/80 border-l-[8px] border-amber-500 shadow-md">
+                                            <div className="flex items-center gap-4 mb-2"><div className="w-12 h-12 flex items-center justify-center font-black text-xl rounded-xl bg-amber-500 text-black shrink-0">{p.r}</div><h4 className="font-black text-xl text-white">{p.n}</h4></div><p className="text-sm text-slate-300 font-bold ml-16">{p.d}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        <div className={`${staff ? 'lg:col-span-12' : 'lg:col-span-8'} glass p-4 md:p-8 h-[800px] flex flex-col border-t-[8px] border-indigo-500`}>
+                            <div className="card-grid overflow-y-auto flex-1 custom-scroll">
+                                {cards.filter(c => activeTab === 'ALL' || c.cat === activeTab).map(renderCard)}
+                            </div>
+                        </div>
+                    </div>
+
+                    {selected && !staff && (
+                        <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
+                            <form onSubmit={bookCard} className="glass p-8 md:p-12 w-full max-w-3xl border-2 border-amber-500 rounded-[2rem] shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
+                                <button type="button" onClick={() => setSelected(null)} className="absolute top-6 right-8 text-5xl text-slate-400 hover:text-white">&times;</button>
+                                <div className="text-center mb-8"><h3 className="text-5xl font-black text-amber-500 mb-2">CARD #{selected.n} BOOKING</h3><span className="bg-amber-500 text-black px-6 py-2 rounded-full text-lg font-black">{selected.cat} | ₹{selected.price}</span></div>
+                                <div className="space-y-6">
+                                    <div className="bg-slate-900/50 p-6 rounded-2xl border-2 border-dashed border-amber-500 text-center">
+                                        <h4 className="text-amber-400 font-black mb-4"><i className="fa-solid fa-camera"></i> अपनी लाइव फोटो लें (Live DP)</h4>
+                                        {showCamera ? (
+                                            <div className="relative"><video ref={videoRef} autoPlay className="w-full rounded-xl border-2 border-amber-500" /><button type="button" onClick={capture} className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-amber-500 text-black p-4 rounded-full font-black shadow-lg">CLICK 📸</button></div>
+                                        ) : capturedImg ? (
+                                            <div className="relative"><img src={capturedImg} className="mx-auto rounded-full w-48 h-48 border-4 border-amber-500 object-cover shadow-xl" /><button type="button" onClick={startCamera} className="absolute -top-2 -right-2 bg-red-600 p-2 rounded-full text-xs">Retake</button></div>
+                                        ) : (
+                                            <button type="button" onClick={startCamera} className="bg-indigo-600 px-8 py-3 rounded-xl font-black text-white text-xl">START CAMERA 🤳</button>
+                                        )}
+                                    </div>
+                                    <div><label className="text-sm font-bold text-slate-400 ml-2">पूरा नाम (Full Name) *</label><input name="Customer_Name" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg" /></div>
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div><label className="text-sm font-bold text-slate-400 ml-2">मोबाइल (Mobile) *</label><input name="Mobile" type="tel" pattern="[0-9]{10}" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg" /></div>
+                                        <div><label className="text-sm font-bold text-slate-400 ml-2">आधार नंबर (Aadhaar) *</label><input name="Aadhaar" type="tel" pattern="[0-9]{12}" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg" /></div>
+                                    </div>
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div><label className="text-sm font-bold text-slate-400 ml-2">जन्मतिथि (DOB)</label><input name="DOB" type="date" className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg" /></div>
+                                        <div><label className="text-sm font-bold text-slate-400 ml-2">गाँव / शहर (Village/City)</label><input name="Village" className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg" /></div>
+                                    </div>
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div><label className="text-sm font-bold text-slate-400 ml-2">पेमेंट मोड (Payment Mode) *</label><select name="Payment_Mode" required onChange={(e)=>setPayMode(e.target.value)} className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg"><option value="">चुनें (Select)</option><option value="Cash">नकद (Cash / Offline)</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select></div>
+                                        {payMode === 'Airtel Payment Bank' && <div className="animate-pulse"><label className="text-sm font-black text-red-500 ml-2">PAN CARD (अनिवार्य) *</label><input name="PAN" required placeholder="ABCDE1234F" className="w-full bg-black p-4 rounded-xl font-black border-4 border-red-600 text-white text-lg uppercase shadow-lg" /></div>}
+                                    </div>
+                                    <button type="submit" disabled={isUploading} className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black py-4 rounded-xl text-2xl uppercase italic shadow-lg hover:scale-[1.02] transition-transform">
+                                        {isUploading ? "UPLOADING & BOOKING... ⏳" : "CONFIRM BOOKING 🔱"}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    {selected && staff && (
+                        <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
+                            <div className="glass p-8 md:p-12 w-full max-w-5xl border-2 border-amber-500 rounded-[2rem] bg-[#0a0a0a]">
+                                <button onClick={() => setSelected(null)} className="absolute top-6 right-8 text-5xl text-slate-400 hover:text-white">&times;</button>
+                                <div className="text-center mb-8"><h3 className="text-6xl font-black text-amber-500 italic mb-2">#{selected.n}</h3><span className="bg-amber-500 text-black px-6 py-2 rounded-full text-xl font-black">{selected.cat} | ₹{selected.price}</span></div>
+                                <div className="grid md:grid-cols-2 gap-8">
+                                    <div className="flex flex-col items-center justify-center bg-slate-900/50 p-6 rounded-2xl border border-slate-700">
+                                        {selected.d.dp ? <img src={selected.d.dp} className="w-64 h-64 rounded-full border-8 border-amber-500 object-cover shadow-2xl mb-4" /> : <div className="w-64 h-64 bg-slate-800 rounded-full flex items-center justify-center text-slate-500 font-black">NO LIVE PHOTO</div>}
+                                        <p className="text-amber-400 font-black text-xl">Customer Live Selfie</p>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <p className="text-indigo-400 font-black text-2xl border-b border-indigo-500 pb-2">✏️ Full Edit Mode</p>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div><label className="text-xs text-slate-400 ml-1">Name</label><input id="s_name" defaultValue={selected.d.name} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white font-bold" /></div>
+                                            <div><label className="text-xs text-slate-400 ml-1">Mobile</label><input id="s_mob" defaultValue={selected.d.mob} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white font-bold" /></div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div><label className="text-xs text-slate-400 ml-1">Aadhaar</label><input id="s_adhar" defaultValue={selected.d.adhar} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white font-bold" /></div>
+                                            <div><label className="text-xs text-slate-400 ml-1">PAN Card</label><input id="s_pan" defaultValue={selected.d.pan} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white uppercase font-bold" /></div>
+                                        </div>
+                                        <div><label className="text-xs text-slate-400 ml-1">Payment Mode</label><select id="s_pay" defaultValue={selected.d.pay} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white font-bold"><option value="Cash">Cash</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select></div>
+                                        <div className="bg-red-900/40 p-5 rounded-2xl border-2 border-red-500 shadow-lg"><label className="flex items-center gap-4 cursor-pointer"><input type="checkbox" checked={payVerified} onChange={(e)=>setPayVerified(e.target.checked)} className="w-8 h-8 accent-red-500" /><span className="text-white font-black text-xl">मैंने पेमेंट ले लिया है (Payment Received)</span></label></div>
+                                        <div className="flex gap-4 mt-6">
+                                            <button onClick={()=>masterUpdate(selected, 'Sold', true)} disabled={!payVerified} className={`flex-1 font-black py-4 rounded-xl text-2xl shadow-lg transition-transform ${payVerified ? 'bg-green-600 hover:scale-105 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed opacity-50'}`}>VERIFY ✅</button>
+                                            <button onClick={()=>masterUpdate(selected, 'Available', true)} className="flex-1 bg-red-700 text-white font-black py-4 rounded-xl text-2xl hover:scale-105 shadow-lg">REJECT ❌</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {successModal && (
+                        <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4">
+                            <div className="glass p-10 max-w-2xl text-center border-t-[10px] border-green-500 rounded-[2rem] shadow-2xl">
+                                <i className="fa-regular fa-circle-check text-8xl text-green-500 mb-6 animate-bounce"></i>
+                                <h3 className="text-4xl font-black mb-4 text-white uppercase">बुकिंग सफल!</h3>
+                                <div className="bg-green-600/20 p-4 rounded-xl border border-green-500 mb-6 font-black text-3xl text-green-400">TOKEN: {successModal.token}</div>
+                                <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *Digital Problem Solution Group* 🔱\n_"${SLOGAN}"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी! हुकुम जोरावर बना* 🚩\n\n🔖 *सदस्यता आवेदन सफल (Details):*\n• *टोकन नंबर:* ${successModal.token}\n• *नाम:* ${successModal.Customer_Name || successModal.name}\n• *कार्ड नंबर:* #${successModal.n}\n• *मोबाइल:* ${successModal.Mobile || successModal.mob}\n• *आधार:* ${successModal.Aadhaar || successModal.adhar}\n• *पेमेंट:* ${successModal.Payment_Mode || successModal.pay}\n\n⭐⭐ *Verified by DPSG Secure Server* ⭐⭐\n━━━━━━━━━━━━━━━━━━━━━━\n📞 +91 7229874128`)}`} onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-4 w-full bg-[#25D366] text-white font-black py-4 rounded-xl text-2xl shadow-lg hover:scale-105 transition-transform"><i className="fa-brands fa-whatsapp text-4xl"></i> SEND TO WHATSAPP</a>
+                            </div>
+                        </div>
+                    )}
+
+                    {!staff && <div className="mt-20 text-center"><button onClick={()=>{let u=prompt("Staff ID:");let p=prompt("Pass:");if(ADMINS[u]===p)setStaff({id:u,pass:p});else alert("Denied");}} className="text-slate-700 font-black tracking-widest text-xs uppercase">🔱 STAFF CONTROL 🔱</button></div>}
+                </div>
+            );
+        };
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
+
