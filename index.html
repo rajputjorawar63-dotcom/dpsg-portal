@@ -45,13 +45,13 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
         
-        // ⚠️ मास्टर बैकएंड इंजन ⚠️
-        const APP_URL = "https://script.google.com/macros/s/AKfycbwOQfdebHIIv6ud5M6arLov7a5MTnurlBaB-sGvrKOkspn2FC4ouoK_yDRpVpEqhjlAFw/exec";
-        const CSV_URL = "https://docs.google.com/spreadsheets/d/11UVWUzSUwI2mm9tsBMaNARgUnfwIZ5TKDaHsKb4Cl58/export?format=csv";
+        // ⚠️ आपका नया और पक्का APPS SCRIPT URL (डेटा यही से आएगा) ⚠️
+        const APP_URL = "https://script.google.com/macros/s/AKfycbzcuzFBuc1iNyzZ8J65ZzO1PleOoNybvaVV6T1EgYGQUrubQ0zivGiYNXdQnHqpjLKKCw/exec";
         const COMPANY = "Digital Problem Solution Group";
-        const SLOGAN = "आपकी समस्या हमारा समाधान, उचित मूल्य बेहतरीन सेवा";
+        const SLOGAN = "समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा";
         const ADMINS = { "Jorawar@DPS": "Jorawar@6020", "Parkash@DPS": "Parkash@6020", "Rajkumar@DPS": "Rajkumar@6020" };
 
+        // 🎁 51 इनामों की हूबहू फुल लिस्ट (बिना किसी शॉर्टकट के) 🎁
         const PRIZES = [
             {r:1, n:"₹5000 Cash", d:"किस्मत चमकेगी और जेब भरेगी सीधा ₹5000 कैश के साथ।"},
             {r:2, n:"LED TV", d:"घर बनेगा सिनेमा हॉल, जब आप जीतेंगे शानदार LED TV।"},
@@ -121,18 +121,19 @@
             const [isUploading, setIsUploading] = useState(false);
             const [discount, setDiscount] = useState(0);
 
-            // ⚠️ आपका पुराना और 100% सही ओरिजिनल लोडिंग इंजन ⚠️
+            // ⚠️ लाइव डेटा खींचने वाला पक्का इंजन (No CSV Delay) ⚠️
             const loadData = () => {
-                fetch(CSV_URL + "?t=" + Date.now()).then(r => r.text()).then(csv => {
-                    const rows = csv.split('\n').map(r => r.split(',')); // पुराना सिंपल स्प्लिट
+                fetch(APP_URL + "?action=GET_DATA")
+                .then(r => r.json())
+                .then(rows => {
                     let temp = [];
                     for(let i=1; i<=1000; i++) {
-                        let rD = rows.find(r => r[0] == i) || []; // पुराना सही नंबर मैच
+                        // डेटा एरे में से सही नंबर खोजना
+                        let rD = rows.find(r => r[0] && parseInt(r[0]) === i) || [];
                         
-                        let rawStatus = rD[4] ? rD[4].trim().toLowerCase() : 'Available';
+                        let rawStatus = (rD[4] || 'Available').toString().trim().toLowerCase();
                         let s = 'Available';
                         
-                        // सॉल्ड और पेंडिंग का पक्का फ़िल्टर
                         if(rawStatus.includes("सॉल्ड") || rawStatus.includes("sold")) {
                             s = "Sold";
                         } else if(rawStatus.includes("पेंडिंग") || rawStatus.includes("pending")) {
@@ -232,14 +233,14 @@
             };
 
             const handleCardClick = (c, s) => {
-                if(s === 'Sold') return; // Sold पर क्लिक बंद
+                if(s === 'Sold') return; // Sold पर क्लिक 100% बंद
                 
                 if(staff) {
                     setSelected(c); 
                     setPayMode(c.d.pay || "");
                     setDiscount(parseInt(c.d.discount || 0));
                 } else {
-                    if(s === 'Pending') return; // Pending पर ग्राहक का क्लिक बंद
+                    if(s === 'Pending') return; // ग्राहक Pending को नहीं खोल सकता
                     setSelected(c); 
                     setPayMode("");
                     setDiscount(0);
@@ -389,9 +390,8 @@
                         </div>
                     )}
 
-                    {/* ✨ FORM MODAL ✨ */}
+                    {/* ✨ STYLISH FORM MODAL ✨ */}
                     {selected && (
-                        /* ⚠️ मास्टर लॉक (Auto-fill) ⚠️ */
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <div className="glass p-8 md:p-12 w-full max-w-5xl border-2 border-amber-500 rounded-[2rem] shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
                                 <button onClick={() => setSelected(null)} className="absolute top-6 right-8 text-5xl text-slate-400 hover:text-white">&times;</button>
@@ -471,15 +471,30 @@
                         </div>
                     )}
 
-                    {/* ✅ WHATSAPP RECEIPT ✅ */}
+                    {/* ✅ PROFESSIONAL WHATSAPP RECEIPT ✅ */}
                     {successModal && (
                         <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4">
                             <div className="glass p-10 max-w-2xl text-center border-t-[10px] border-green-500 rounded-[2rem] shadow-2xl">
                                 <i className="fa-regular fa-circle-check text-8xl text-green-500 mb-6 animate-bounce"></i>
                                 <h3 className="text-4xl font-black mb-4 text-white uppercase">बुकिंग सफल! (SUCCESS)</h3>
-                                <p className="text-slate-300 text-lg mb-8 font-bold">हुकुम, कार्ड #{successModal.n} पेंडिंग है। वेरिफिकेशन के लिए व्हाट्सएप पर रिपोर्ट भेजें।</p>
-                                <a href={`https://wa.me/917229874128?text=${encodeURIComponent(`🔱 *${COMPANY}* 🔱\n_"${SLOGAN}"_\n━━━━━━━━━━━━━━━━━━━━━━\n🚩 जय माता दी! हुकुम,\n\nमैंने एक कार्ड बुक किया है, कृपया चेक करें:\n\n🔖 *बुकिंग विवरण (DETAILS)*:\n• नाम (Name): ${successModal.name}\n• कार्ड नंबर (Card No): #${successModal.n}\n• बुकिंग आईडी (ID): ${successModal.mid}\n\n✅ *Status*: पेंडिंग (वेरिफिकेशन बाकी)\n\nधन्यवाद! \nThank you for choosing DPSG! 🔱🚩`)}`} target="_blank" onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-4 w-full bg-[#25D366] text-white font-black py-4 rounded-xl text-2xl shadow-lg hover:scale-105 transition-transform">
-                                    <i className="fa-brands fa-whatsapp text-4xl"></i> SEND REPORT
+                                <p className="text-slate-300 text-lg mb-8 font-bold">हुकुम, आपका डेटा सुरक्षित कर लिया गया है। एक्टिवेशन के लिए व्हाट्सएप भेजें।</p>
+                                <a href={`https://wa.me/917229874128?text=${encodeURIComponent(`🔱 *Digital Problem Solution Group* 🔱
+_"${SLOGAN}"_
+━━━━━━━━━━━━━━━━━━━━━━
+🙏 *जय माता दी! हुकुम जोरावर बना* 🚩
+
+मैंने अभी DPSG की सदस्यता के लिए आवेदन किया है। कृपया मेरे विवरणों की जाँच करें और मेरा कार्ड एक्टिवेट (Activate) करने की कृपा करें।
+
+🔖 *आवेदन का विवरण (Booking Details):*
+• *नाम:* ${successModal.name}
+• *कार्ड नंबर:* #${successModal.n}
+• *बुकिंग आईडी:* ${successModal.mid}
+
+✅ *मेरा पूरा डेटा सही है। आपके कन्फर्मेशन का इंतज़ार रहेगा।*
+━━━━━━━━━━━━━━━━━━━━━━
+📞 कस्टमर केयर: +91 7229874128
+🙏 *DPSG - हमेशा आपके साथ!*`)}`} target="_blank" onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-4 w-full bg-[#25D366] text-white font-black py-4 rounded-xl text-2xl shadow-lg hover:scale-105 transition-transform">
+                                    <i className="fa-brands fa-whatsapp text-4xl"></i> SEND TO ACTIVATE
                                 </a>
                             </div>
                         </div>
