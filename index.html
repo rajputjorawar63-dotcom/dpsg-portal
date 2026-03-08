@@ -29,7 +29,7 @@
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.95); } }
         .custom-scroll::-webkit-scrollbar { width: 8px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 10px; }
-        .dp-view { width: 100px; height: 100px; border-radius: 50%; border: 4px solid #fbbf24; object-fit: cover; box-shadow: 0 0 15px rgba(251,191,36,0.5); }
+        .dp-circle { width: 100px; height: 100px; border-radius: 50%; border: 4px solid #fbbf24; object-fit: cover; box-shadow: 0 0 15px rgba(251,191,36,0.5); }
     </style>
 </head>
 <body>
@@ -37,7 +37,7 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
         
-        // ⚠️ आपकी नई लिंक ⚠️
+        // ⚠️ आपकी पक्की लिंक ⚠️
         const APP_URL = "https://script.google.com/macros/s/AKfycbwxQvF4a5-BEMVS7Znwbog7EfATC_bXHOsrl-nsujGtaUXV-gu1d2YfMBhhVSavC2zwWw/exec";
         const COMPANY = "Digital Problem Solution Group";
         const SLOGAN = "समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा";
@@ -102,18 +102,26 @@
             const [activeTab, setActiveTab] = useState('ALL'); 
             const [selected, setSelected] = useState(null);
             
-            // 🔐 सत्र (Session) लॉगिन 🔐
+            // 🔐 स्मार्ट लॉगिन (ताकि रिफ्रेश पर हटे नहीं) 🔐
             const [staff, setStaff] = useState(() => {
                 try { return JSON.parse(localStorage.getItem('dps_session')) || null; } catch(e) { return null; }
             });
             
-            const [successModal, setSuccessModal] = useState(null);
+            const [successModal, setSuccessModal] = useState(null); // ग्राहक के लिए
+            const [staffSuccessModal, setStaffSuccessModal] = useState(null); // स्टाफ के डुअल व्हाट्सएप के लिए
+            const [quickQrCard, setQuickQrCard] = useState(null); // बाहर वाले QR के लिए
+
             const [loading, setLoading] = useState(true);
             const [localLocks, setLocalLocks] = useState(new Set(JSON.parse(localStorage.getItem('dps_locks') || '[]')));
             const [staffUpi, setStaffUpi] = useState("");
+            const [payMode, setPayMode] = useState("");
             const [isUploading, setIsUploading] = useState(false);
             const [discount, setDiscount] = useState(0);
+            
+            // 🛡️ पेमेंट लॉक 🛡️
             const [payVerified, setPayVerified] = useState(false);
+            
+            // 🤳 लाइव कैमरा 🤳
             const [capturedImg, setCapturedImg] = useState(null);
             const [showCamera, setShowCamera] = useState(false);
             const videoRef = useRef(null);
@@ -139,7 +147,8 @@
                             d: { 
                                 name: (rD && rD[6])||"", mob: (rD && rD[7])||"", dob: (rD && rD[8])||"", 
                                 vill: (rD && rD[9])||"", adhar: (rD && rD[10])||"", pan: (rD && rD[11])||"", 
-                                pay: (rD && rD[12])||"", ref: (rD && rD[13])||"", link: (rD && rD[14])||"", dp: (rD && rD[26])||"" 
+                                pay: (rD && rD[12])||"", ref: (rD && rD[13])||"", link: (rD && rD[14])||"", 
+                                dp: (rD && rD[26])||"", discount: (rD && rD[17])||"0"
                             }
                         });
                     }
@@ -153,6 +162,7 @@
 
             useEffect(() => { loadData(); const itvl = setInterval(loadData, 10000); return () => clearInterval(itvl); }, []);
 
+            // 🤳 कैमरा कंट्रोल 🤳
             const startCamera = async () => { setShowCamera(true); const s = await navigator.mediaDevices.getUserMedia({video:true}); videoRef.current.srcObject = s; };
             const capture = () => {
                 const c = document.createElement("canvas"); c.width = videoRef.current.videoWidth; c.height = videoRef.current.videoHeight;
@@ -160,14 +170,37 @@
                 videoRef.current.srcObject.getTracks().forEach(t => t.stop()); setShowCamera(false);
             };
 
+            // 🚩 CUSTOMER BOOKING (With File Upload & Selfie)
             const bookCard = async (e) => {
-                e.preventDefault(); setIsUploading(true); const fd = new FormData(e.target); const n = selected.n;
+                e.preventDefault(); 
+                setIsUploading(true); 
+                const fd = new FormData(e.target); 
+                const n = selected.n;
                 const params = new URLSearchParams(Object.fromEntries(fd));
                 params.append("action", "BOOK"); params.append("S_No", n.toString());
                 params.append("Category", selected.cat); params.append("Base_Price", selected.price);
                 if(capturedImg) params.append("DP_Link", capturedImg);
-                
-                await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
+
+                // 📂 ओरिजिनल डॉक्यूमेंट अपलोड सिस्टम वापस
+                const fileInput = document.getElementById('file_upload_gallery');
+                if (fileInput && fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const reader = new FileReader();
+                    reader.onloadend = async () => {
+                        const base64String = reader.result.replace("data:", "").replace(/^.+,/, "");
+                        params.append("File_Data", base64String); 
+                        params.append("File_Name", file.name);
+                        await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
+                        finishBooking(fd, n);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
+                    finishBooking(fd, n);
+                }
+            };
+
+            const finishBooking = (fd, n) => {
                 setLocalLocks(prev => { const ns = new Set(prev).add(n); localStorage.setItem('dps_locks', JSON.stringify([...ns])); return ns; });
                 setSuccessModal({
                     n, name: fd.get("Customer_Name"), mid: selected.mid, mob: fd.get("Mobile"),
@@ -177,20 +210,42 @@
                 setSelected(null); setCapturedImg(null); setIsUploading(false); setTimeout(loadData, 1500);
             };
 
-            const masterUpdate = async (c, status, isEdit = false) => {
+            // 🚩 STAFF MASTER UPDATE (Verify/Reject)
+            const masterUpdate = async (c, status, isInsideForm = false) => {
                 setIsUploading(true);
+                let sName = c.d.name, sMob = c.d.mob, sAdhar = c.d.adhar, sPan = c.d.pan;
+                let sPay = c.d.pay, sRef = c.d.ref, sPaid = c.price, finalDisc = 0;
+
+                if(isInsideForm) {
+                    sName = document.getElementById('s_name').value;
+                    sMob = document.getElementById('s_mob').value;
+                    sAdhar = document.getElementById('s_adhar').value;
+                    sPan = document.getElementById('s_pan').value;
+                    sPay = document.getElementById('s_pay').value;
+                    sRef = document.getElementById('s_ref').value;
+                    sPaid = document.getElementById('s_paid').value;
+                    finalDisc = discount;
+                }
+
                 const params = new URLSearchParams({
                     action: 'UPDATE', S_No: c.n, Status: status, staffID: staff.id, staffPass: staff.pass,
-                    Customer_Name: isEdit ? document.getElementById('s_name').value : c.d.name,
-                    Mobile: isEdit ? document.getElementById('s_mob').value : c.d.mob,
-                    Aadhaar: isEdit ? document.getElementById('s_adhar').value : c.d.adhar,
-                    PAN: isEdit ? document.getElementById('s_pan').value : c.d.pan,
-                    Payment_Mode: isEdit ? document.getElementById('s_pay').value : c.d.pay,
-                    Paid: isEdit ? document.getElementById('s_paid').value : c.price, Discount: discount
+                    Customer_Name: sName, Mobile: sMob, Aadhaar: sAdhar, PAN: sPan,
+                    Payment_Mode: sPay, Payment_Ref: sRef, Paid: sPaid, Discount: finalDisc
                 });
+
                 await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
                 if(status === 'Available') { setLocalLocks(p => { const ns = new Set(p); ns.delete(c.n); return ns; }); }
-                setSelected(null); setPayVerified(false); setIsUploading(false); setTimeout(loadData, 1000);
+                
+                setIsUploading(false);
+                setSelected(null); setPayVerified(false); 
+                
+                if(status === 'Sold') {
+                    // डुअल व्हाट्सएप के लिए मोडल खोलें
+                    setStaffSuccessModal({...c, finalPaid: sPaid, finalName: sName, finalMob: sMob});
+                } else {
+                    alert("❌ कार्ड रिजेक्ट हो गया और वापस खाली हो गया।");
+                }
+                setTimeout(loadData, 1500);
             };
 
             const renderCard = (c) => {
@@ -214,21 +269,37 @@
                     {staff ? (
                         <div className="mb-12 glass p-8 border-t-[10px] border-indigo-500 shadow-2xl relative">
                             <button onClick={() => {localStorage.removeItem('dps_session'); setStaff(null);}} className="absolute top-8 right-8 bg-red-600 text-white px-6 py-2 rounded-xl font-black shadow-lg">LOGOUT</button>
-                            <h2 className="text-4xl font-black text-indigo-400 uppercase tracking-widest mb-2">{COMPANY}</h2>
-                            <p className="text-amber-400 font-bold mb-4">Admin: {staff.id}</p>
-                            <input type="text" placeholder="UPI ID for Live QR" value={staffUpi} onChange={(e)=>setStaffUpi(e.target.value)} className="bg-black border-2 border-slate-700 text-white p-4 rounded-lg w-full mb-8 font-bold text-xl" />
-                            <h3 className="text-2xl font-black text-yellow-400 mb-4 border-b border-slate-700 pb-2">पेंडिंग रिक्वेस्ट:</h3>
-                            <div className="space-y-4 max-h-[400px] overflow-y-auto custom-scroll pr-2">
-                                {cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold').map(c => (
+                            <h2 className="text-4xl md:text-5xl font-black text-indigo-400 uppercase tracking-widest mb-2">{COMPANY}</h2>
+                            <p className="text-amber-400 font-bold text-xl mb-4">Admin Dashboard: {staff.id}</p>
+                            
+                            <div className="bg-slate-900/80 p-6 rounded-2xl border border-amber-500 mb-8 max-w-lg">
+                                <label className="text-amber-400 font-black mb-2 block"><i className="fa-solid fa-qrcode"></i> आपकी UPI ID (QR के लिए):</label>
+                                <input type="text" placeholder="e.g. 7229874128@paytm" value={staffUpi} onChange={(e)=>setStaffUpi(e.target.value)} className="bg-black border-2 border-slate-700 text-white p-4 rounded-lg w-full font-bold text-xl" />
+                            </div>
+
+                            <h3 className="text-2xl font-black text-yellow-400 mb-4 border-b border-slate-700 pb-2">लाइव पेंडिंग रिक्वेस्ट:</h3>
+                            <div className="space-y-4 max-h-[500px] overflow-y-auto custom-scroll pr-2">
+                                {cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold').length === 0 ? <p className="text-slate-400 italic font-bold">कोई पेंडिंग रिक्वेस्ट नहीं है...</p> : 
+                                cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold').map(c => (
                                     <div key={c.n} className="bg-slate-800 p-5 rounded-xl flex flex-col md:flex-row justify-between items-center border-l-8 border-yellow-500 shadow-lg">
-                                        <div className="flex items-center gap-6">
-                                            {c.d.dp ? <img src={c.d.dp} className="dp-view shadow-lg" /> : <div className="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center text-xs">NO DP</div>}
-                                            <div>
-                                                <p className="text-2xl font-black text-white">#{c.n} - {c.d.name || "नाम नहीं"}</p>
-                                                <p className="text-lg text-slate-300 font-bold">Mob: {c.d.mob} | Mode: {c.d.pay} | Token: {c.token}</p>
+                                        <div className="flex flex-col md:flex-row items-center gap-6 w-full md:w-auto mb-4 md:mb-0">
+                                            {/* ✨ 100% फिक्स: स्टाफ को सेल्फी पक्का दिखेगी ✨ */}
+                                            {c.d.dp ? <img src={c.d.dp} className="dp-circle shadow-lg" alt="Selfie" /> : <div className="w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center text-xs border-2 border-dashed border-slate-500">NO DP</div>}
+                                            <div className="text-center md:text-left">
+                                                <p className="text-2xl font-black text-white">#{c.n} - <span className="text-amber-400">{c.d.name || "नाम दर्ज़ नहीं"}</span></p>
+                                                <p className="text-lg text-slate-300 font-bold"><i className="fa-solid fa-phone text-sm"></i> {c.d.mob || "N/A"} | Mode: {c.d.pay || "N/A"}</p>
+                                                <p className="text-sm font-black text-green-400 bg-green-900/30 inline-block px-2 py-1 rounded mt-1">Token: {c.token}</p>
+                                                {/* ✨ 100% फिक्स: डॉक्यूमेंट देखने का लिंक वापस ✨ */}
+                                                {c.d.link && <a href={c.d.link} target="_blank" className="text-blue-400 text-sm font-bold underline mt-1 block"><i className="fa-solid fa-file-invoice"></i> Uploaded Doc देखें</a>}
                                             </div>
                                         </div>
-                                        <button onClick={() => {setSelected(c); setPayVerified(false);}} className="bg-blue-600 px-6 py-3 rounded-lg font-black text-white shadow-md hover:scale-105 transition-transform">EDIT & VERIFY</button>
+                                        {/* ✨ 100% फिक्स: फ्रंट पेज के 3 बटन वापस ✨ */}
+                                        <div className="flex flex-wrap gap-3 w-full md:w-auto">
+                                            <button onClick={() => masterUpdate(c, 'Sold', false)} className="bg-green-600 hover:bg-green-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">✅ Verify</button>
+                                            <button onClick={() => masterUpdate(c, 'Available', false)} className="bg-red-700 hover:bg-red-600 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">❌ Reject</button>
+                                            <button onClick={() => {if(!staffUpi){alert("पहले ऊपर अपनी UPI ID डालें!");return;} setQuickQrCard(c);}} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">📲 Pay QR</button>
+                                            <button onClick={() => { setSelected(c); setPayVerified(false); setPayMode(c.d.pay || ""); setDiscount(parseInt(c.d.discount || 0)); }} className="bg-slate-600 hover:bg-slate-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">✏️ Edit Details</button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -262,7 +333,7 @@
                                 <div className="overflow-y-auto pr-2 space-y-4 flex-1 custom-scroll">
                                     {PRIZES.map((p) => (
                                         <div key={p.r} className="p-4 rounded-2xl bg-slate-800/80 border-l-[8px] border-amber-500 shadow-md">
-                                            <div className="flex items-center gap-4 mb-2"><div className="w-12 h-12 flex items-center justify-center font-black text-xl rounded-xl bg-amber-500 text-black shrink-0">{p.r}</div><h4 className="font-black text-xl text-white">{p.n}</h4></div><p className="text-sm text-slate-300 font-bold ml-16">{p.d}</p>
+                                            <div className="flex items-center gap-4 mb-2"><div className="w-12 h-12 flex items-center justify-center font-black text-xl rounded-xl bg-amber-500 text-black shrink-0">{p.r}</div><h4 className="font-black text-xl text-white leading-tight">{p.n}</h4></div><p className="text-sm text-slate-300 font-bold ml-16">{p.d}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -275,71 +346,115 @@
                         </div>
                     </div>
 
-                    {/* ✨ CUSTOMER FORM - ALL ORIGINAL FIELDS RESTORED ✨ */}
+                    {/* ✨ 100% फिक्स: बाहर वाले 3 बटन का स्मार्ट QR कोड पॉपअप ✨ */}
+                    {quickQrCard && (
+                        <div className="fixed inset-0 z-[150] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm">
+                            <div className="bg-white p-10 rounded-3xl text-center max-w-sm w-full shadow-[0_0_50px_rgba(251,191,36,0.5)] relative">
+                                <button onClick={() => setQuickQrCard(null)} className="absolute top-4 right-6 text-4xl text-black hover:text-red-500">&times;</button>
+                                <h3 className="text-2xl font-black text-black mb-2">Pay ₹{quickQrCard.price - (quickQrCard.d.discount || 0)}</h3>
+                                <p className="text-sm font-bold text-slate-600 mb-6">{COMPANY}</p>
+                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=${staffUpi}%26pn=Digital%20Problem%20Solution%20Group%26am=${quickQrCard.price - (quickQrCard.d.discount || 0)}%26tr=${quickQrCard.mid}%26tn=Membership_${quickQrCard.mid}`} alt="Live QR" className="mx-auto border-8 border-slate-100 rounded-xl" />
+                                <p className="text-sm font-black text-slate-700 mt-6 bg-slate-100 py-2 rounded-lg">Auto-ID: {quickQrCard.mid}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ✨ CUSTOMER FORM - 100% ORIGINAL FIELDS WITH SELFIE ✨ */}
                     {selected && !staff && (
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <form onSubmit={bookCard} className="glass p-8 md:p-12 w-full max-w-3xl border-2 border-amber-500 rounded-[2rem] shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
                                 <button type="button" onClick={() => setSelected(null)} className="absolute top-6 right-8 text-5xl text-slate-400 hover:text-white">&times;</button>
                                 <div className="text-center mb-8"><h3 className="text-5xl font-black text-amber-500 mb-2 uppercase">CARD #{selected.n} BOOKING</h3><span className="bg-amber-500 text-black px-6 py-2 rounded-full text-lg font-black">{selected.cat} | ₹{selected.price}</span></div>
                                 <div className="space-y-6">
+                                    {/* 🤳 लाइव सेल्फी */}
                                     <div className="bg-slate-900/50 p-6 rounded-2xl border-2 border-dashed border-amber-500 text-center">
+                                        <h4 className="text-amber-400 font-black mb-4"><i className="fa-solid fa-camera"></i> अपनी लाइव फोटो लें (Live DP)</h4>
                                         {showCamera ? (
-                                            <div className="relative"><video ref={videoRef} autoPlay className="w-full rounded-xl" /><button type="button" onClick={capture} className="mt-4 bg-amber-500 text-black p-4 rounded-full font-black">CLICK 📸</button></div>
+                                            <div className="relative"><video ref={videoRef} autoPlay className="w-full rounded-xl" /><button type="button" onClick={capture} className="mt-4 bg-amber-500 text-black px-8 py-3 rounded-full font-black shadow-lg">CLICK 📸</button></div>
                                         ) : capturedImg ? (
                                             <div className="relative"><img src={capturedImg} className="mx-auto rounded-full w-40 h-40 border-4 border-amber-500 object-cover shadow-xl" /><button type="button" onClick={startCamera} className="absolute -top-2 -right-2 bg-red-600 p-2 rounded-full text-xs">Retake</button></div>
                                         ) : (
                                             <button type="button" onClick={startCamera} className="bg-indigo-600 px-8 py-3 rounded-xl font-black text-white text-xl shadow-lg">START CAMERA 🤳</button>
                                         )}
                                     </div>
-                                    <input name="Customer_Name" placeholder="पूरा नाम (Full Name) *" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg focus:border-amber-500 outline-none" />
+
+                                    {/* 📂 पुरानी डिटेल्स वापस */}
+                                    <div><label className="text-sm font-bold text-slate-400 ml-2">पूरा नाम (Full Name) *</label><input name="Customer_Name" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg focus:border-amber-500 outline-none" /></div>
                                     <div className="grid md:grid-cols-2 gap-6">
-                                        <input name="Mobile" type="tel" pattern="[0-9]{10}" placeholder="मोबाइल (Mobile) *" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg focus:border-amber-500 outline-none" />
-                                        <input name="Aadhaar" type="tel" pattern="[0-9]{12}" placeholder="आधार नंबर (Aadhaar) *" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg focus:border-amber-500 outline-none" />
+                                        <div><label className="text-sm font-bold text-slate-400 ml-2">मोबाइल (Mobile) *</label><input name="Mobile" type="tel" pattern="[0-9]{10}" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg focus:border-amber-500 outline-none" /></div>
+                                        <div><label className="text-sm font-bold text-slate-400 ml-2">आधार नंबर (Aadhaar) *</label><input name="Aadhaar" type="tel" pattern="[0-9]{12}" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg focus:border-amber-500 outline-none" /></div>
                                     </div>
                                     <div className="grid md:grid-cols-2 gap-6">
-                                        <input name="DOB" type="date" className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg" />
-                                        <input name="Village" placeholder="गाँव / शहर (Village/City)" className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg" />
+                                        <div><label className="text-sm font-bold text-slate-400 ml-2">जन्मतिथि (DOB)</label><input name="DOB" type="date" className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg focus:border-amber-500 outline-none" /></div>
+                                        <div><label className="text-sm font-bold text-slate-400 ml-2">गाँव / शहर (Village/City)</label><input name="Village" className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg focus:border-amber-500 outline-none" /></div>
                                     </div>
-                                    <select name="Payment_Mode" required onChange={(e)=>setPayMode(e.target.value)} className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg"><option value="">पेमेंट मोड *</option><option value="Cash">नकद (Cash)</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select>
-                                    {payMode === 'Airtel Payment Bank' && <input name="PAN" required placeholder="PAN CARD *" className="w-full bg-black p-4 rounded-xl border-4 border-red-600 text-white text-lg uppercase shadow-lg" />}
-                                    <button type="submit" disabled={isUploading} className="w-full bg-amber-500 text-black font-black py-4 rounded-xl text-2xl uppercase italic shadow-lg">{isUploading ? "BOOKING... ⏳" : "CONFIRM BOOKING 🔱"}</button>
+                                    
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div><label className="text-sm font-bold text-slate-400 ml-2">पेमेंट मोड (Payment Mode) *</label><select name="Payment_Mode" required onChange={(e)=>setPayMode(e.target.value)} className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg focus:border-amber-500 outline-none"><option value="" disabled>चुनें (Select)</option><option value="Cash">नकद (Cash / Offline)</option><option value="PhonePe/GPay">PhonePe / Google Pay</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select></div>
+                                        {payMode === 'Airtel Payment Bank' && <div><label className="text-sm font-black text-red-500 ml-2">PAN CARD (अनिवार्य) *</label><input name="PAN" required pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" placeholder="Ex: ABCDE1234F" className="w-full bg-black p-4 rounded-xl font-black border-4 border-red-600 text-white text-lg uppercase shadow-[0_0_15px_rgba(220,38,38,0.6)]" /></div>}
+                                    </div>
+
+                                    {/* 📂 पुराना फाइल अपलोड और Txn ID वापस */}
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div><label className="text-sm font-bold text-amber-400 ml-2"><i className="fa-solid fa-camera"></i> डॉक्यूमेंट / स्क्रीनशॉट अपलोड</label><input type="file" id="file_upload_gallery" accept="image/*" className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-amber-500 file:text-black" /></div>
+                                        <div><label className="text-sm font-bold text-slate-400 ml-2">Txn ID / Ref (Option)</label><input name="Payment_Ref" className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg focus:border-amber-500 outline-none" /></div>
+                                    </div>
+
+                                    <button type="submit" disabled={isUploading} className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black py-4 rounded-xl text-2xl uppercase italic shadow-lg hover:scale-[1.02] transition-transform mt-4 disabled:opacity-50">
+                                        {isUploading ? "UPLOADING & BOOKING... ⏳" : "CONFIRM BOOKING 🔱"}
+                                    </button>
                                 </div>
                             </form>
                         </div>
                     )}
 
-                    {/* ✨ STAFF EDIT MODAL - ALL ORIGINAL FEATURES RESTORED ✨ */}
+                    {/* ✨ STAFF EDIT MODAL - FULLY RESTORED & ENHANCED ✨ */}
                     {selected && staff && (
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
-                            <div className="glass p-8 md:p-12 w-full max-w-5xl border-2 border-amber-500 rounded-[2rem] bg-[#0a0a0a] shadow-2xl relative">
+                            <div className="glass p-8 md:p-12 w-full max-w-5xl border-2 border-amber-500 rounded-[2rem] bg-[#0a0a0a] shadow-2xl relative mt-20 md:mt-0">
                                 <button onClick={() => setSelected(null)} className="absolute top-6 right-8 text-5xl text-slate-400 hover:text-white">&times;</button>
                                 <div className="text-center mb-8"><h3 className="text-6xl font-black text-amber-500 italic mb-2">#{selected.n}</h3><span className="bg-amber-500 text-black px-6 py-2 rounded-full text-xl font-black">{selected.cat} | ₹{selected.price}</span></div>
                                 <div className="grid md:grid-cols-2 gap-8">
                                     <div className="flex flex-col items-center justify-center bg-slate-900/50 p-6 rounded-2xl border border-slate-700 shadow-xl">
-                                        {selected.d.dp ? <img src={selected.d.dp} className="w-64 h-64 rounded-full border-8 border-amber-500 object-cover shadow-2xl mb-4" /> : <div className="w-48 h-48 bg-slate-800 rounded-full flex items-center justify-center text-slate-500 font-black">NO LIVE PHOTO</div>}
-                                        {selected.d.link && <a href={selected.d.link} target="_blank" className="text-blue-400 underline font-bold mt-2">ग्राहक की अपलोड की गई फाइल देखें</a>}
+                                        {/* 🤳 सेल्फी वापस */}
+                                        {selected.d.dp ? <img src={selected.d.dp} className="w-64 h-64 rounded-full border-8 border-amber-500 object-cover shadow-2xl mb-4" /> : <div className="w-48 h-48 bg-slate-800 rounded-full flex items-center justify-center text-slate-500 font-black mb-4">NO LIVE DP</div>}
+                                        {/* 📂 डॉक्यूमेंट लिंक वापस */}
+                                        {selected.d.link && <a href={selected.d.link} target="_blank" className="bg-blue-900/40 border border-blue-500 text-blue-400 px-6 py-3 rounded-lg font-black mt-2 hover:bg-blue-600 hover:text-white transition-colors"><i className="fa-solid fa-file-image"></i> View Customer Upload</a>}
+                                        
+                                        {/* 📲 अंदर वाला स्मार्ट QR कोड */}
                                         {staffUpi && (
-                                            <div className="mt-6 text-center">
-                                                <p className="text-amber-400 font-black mb-2">LIVE QR CODE</p>
-                                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=${staffUpi}%26pn=DPSG%26am=${selected.price - discount}`} className="mx-auto border-4 border-white rounded-lg" />
+                                            <div className="mt-8 text-center bg-black p-4 rounded-xl border border-dashed border-amber-500 w-full">
+                                                <p className="text-amber-400 font-black mb-2 text-xl">LIVE PAY QR</p>
+                                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=${staffUpi}%26pn=Digital%20Problem%20Solution%20Group%26am=${selected.price - discount}%26tr=${selected.mid}%26tn=Membership_${selected.mid}`} className="mx-auto border-4 border-white rounded-lg shadow-lg" />
+                                                <p className="text-green-400 font-black text-2xl mt-2">₹{selected.price - discount}</p>
                                             </div>
                                         )}
                                     </div>
                                     <div className="space-y-4">
                                         <p className="text-indigo-400 font-black text-2xl border-b border-indigo-500 pb-2">✏️ Full Edit Mode</p>
-                                        <input id="s_name" defaultValue={selected.d.name} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white font-bold" placeholder="Name" />
-                                        <input id="s_mob" defaultValue={selected.d.mob} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white font-bold" placeholder="Mobile" />
-                                        <input id="s_adhar" defaultValue={selected.d.adhar} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white font-bold" placeholder="Aadhaar" />
-                                        <input id="s_pan" defaultValue={selected.d.pan} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white uppercase font-bold" placeholder="PAN" />
-                                        <select id="s_pay" defaultValue={selected.d.pay} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white font-bold"><option value="Cash">Cash</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select>
                                         <div className="grid grid-cols-2 gap-4">
-                                            <div><label className="text-xs text-red-400 ml-1">Discount (₹)</label><input type="number" value={discount} onChange={(e)=>setDiscount(parseInt(e.target.value)||0)} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-red-400 font-bold" /></div>
-                                            <div><label className="text-xs text-green-400 ml-1">Final Paid (₹)</label><input id="s_paid" type="number" value={selected.price - discount} readOnly className="w-full bg-green-900/40 p-3 rounded-xl border border-green-700 text-green-400 font-black" /></div>
+                                            <div><label className="text-xs text-slate-400 ml-1">Customer Name</label><input id="s_name" defaultValue={selected.d.name} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white font-bold" /></div>
+                                            <div><label className="text-xs text-slate-400 ml-1">Mobile</label><input id="s_mob" defaultValue={selected.d.mob} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white font-bold" /></div>
                                         </div>
-                                        <div className="bg-red-900/40 p-5 rounded-2xl border-2 border-red-500 shadow-lg"><label className="flex items-center gap-4 cursor-pointer"><input type="checkbox" checked={payVerified} onChange={(e)=>setPayVerified(e.target.checked)} className="w-8 h-8 accent-red-500" /><span className="text-white font-black text-xl">मैंने पेमेंट ले लिया है (Confirm Pay)</span></label></div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div><label className="text-xs text-slate-400 ml-1">Aadhaar</label><input id="s_adhar" defaultValue={selected.d.adhar} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white font-bold" /></div>
+                                            <div><label className="text-xs text-slate-400 ml-1">PAN Card</label><input id="s_pan" defaultValue={selected.d.pan} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white uppercase font-bold" /></div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div><label className="text-xs text-slate-400 ml-1">Payment Mode</label><select id="s_pay" defaultValue={selected.d.pay} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white font-bold"><option value="Cash">Cash</option><option value="PhonePe/GPay">PhonePe / Google Pay</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select></div>
+                                            <div><label className="text-xs text-slate-400 ml-1">Txn ID / Ref</label><input id="s_ref" defaultValue={selected.d.ref} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-amber-400 font-bold" /></div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div><label className="text-xs text-red-400 ml-1">Discount (₹)</label><input type="number" value={discount} onChange={(e)=>setDiscount(parseInt(e.target.value)||0)} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-red-400 font-bold outline-none" /></div>
+                                            <div><label className="text-xs text-green-400 ml-1">Final Paid (₹)</label><input id="s_paid" type="number" value={selected.price - discount} readOnly className="w-full bg-green-900/40 p-3 rounded-xl border-2 border-green-700 text-green-400 font-black outline-none" /></div>
+                                        </div>
+                                        
+                                        {/* 🛡️ पेमेंट लॉक चेकबॉक्स 🛡️ */}
+                                        <div className="bg-red-900/40 p-5 rounded-2xl border-2 border-red-500 shadow-lg mt-4"><label className="flex items-center gap-4 cursor-pointer"><input type="checkbox" checked={payVerified} onChange={(e)=>setPayVerified(e.target.checked)} className="w-8 h-8 accent-red-500 shadow-md" /><span className="text-white font-black text-xl">मैंने पेमेंट ले लिया है (Pay Verified)</span></label></div>
+                                        
                                         <div className="flex gap-4 mt-6">
-                                            <button onClick={()=>masterUpdate(selected, 'Sold', true)} disabled={!payVerified || isUploading} className={`flex-1 font-black py-4 rounded-xl text-2xl shadow-lg transition-transform ${payVerified ? 'bg-green-600 hover:scale-105 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed opacity-50'}`}>{isUploading ? "Wait..." : "VERIFY ✅"}</button>
-                                            <button onClick={()=>masterUpdate(selected, 'Available', true)} className="flex-1 bg-red-700 text-white font-black py-4 rounded-xl text-2xl hover:scale-105 shadow-lg">REJECT ❌</button>
+                                            <button onClick={()=>masterUpdate(selected, 'Sold', true)} disabled={!payVerified || isUploading} className={`flex-1 font-black py-4 rounded-xl text-2xl shadow-lg transition-transform ${payVerified ? 'bg-green-600 hover:scale-105 text-white shadow-[0_0_20px_rgba(22,163,74,0.5)]' : 'bg-slate-700 text-slate-500 cursor-not-allowed opacity-50'}`}>{isUploading ? "Wait..." : "VERIFY ✅"}</button>
+                                            <button onClick={()=>masterUpdate(selected, 'Available', true)} disabled={isUploading} className="flex-1 bg-red-700 text-white font-black py-4 rounded-xl text-2xl hover:scale-105 shadow-lg">REJECT ❌</button>
                                         </div>
                                     </div>
                                 </div>
@@ -347,18 +462,43 @@
                         </div>
                     )}
 
+                    {/* ✅ CUSTOMER BOOKING SUCCESS (ORIGINAL) ✅ */}
                     {successModal && (
                         <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4">
                             <div className="glass p-10 max-w-2xl text-center border-t-[10px] border-green-500 rounded-[2rem] shadow-2xl">
                                 <i className="fa-regular fa-circle-check text-8xl text-green-500 mb-6 animate-bounce"></i>
-                                <h3 className="text-4xl font-black mb-4 text-white uppercase">बुकिंग सफल!</h3>
-                                <div className="bg-green-600/20 p-4 rounded-xl border border-green-500 mb-6 font-black text-3xl text-green-400">TOKEN: {successModal.token}</div>
-                                <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *Digital Problem Solution Group* 🔱\n_"${SLOGAN}"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी! हुकुम जोरावर बना* 🚩\n\n🔖 *सदस्यता आवेदन सफल (Details):*\n• *टोकन नंबर:* ${successModal.token}\n• *नाम:* ${successModal.name}\n• *कार्ड नंबर:* #${successModal.n}\n• *मोबाइल:* ${successModal.mob}\n• *आधार:* ${successModal.adhar}\n• *पैन:* ${successModal.pan}\n• *पेमेंट:* ${successModal.pay}\n• *गाँव:* ${successModal.vill}\n\n⭐⭐ *Verified by DPSG Secure Server* ⭐⭐\n━━━━━━━━━━━━━━━━━━━━━━\n📞 +91 7229874128`)}`} onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-4 w-full bg-[#25D366] text-white font-black py-4 rounded-xl text-2xl shadow-lg hover:scale-105 transition-transform"><i className="fa-brands fa-whatsapp text-4xl"></i> SEND TO WHATSAPP</a>
+                                <h3 className="text-4xl font-black mb-4 text-white uppercase">बुकिंग सफल! (SUCCESS)</h3>
+                                <div className="bg-green-600/20 p-4 rounded-xl border border-green-500 mb-6 font-black text-3xl text-green-400 shadow-inner">TOKEN: {successModal.token}</div>
+                                <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *Digital Problem Solution Group* 🔱\n_"${SLOGAN}"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी! हुकुम जोरावर बना* 🚩\n\nमैंने अभी DPSG की सदस्यता के लिए आवेदन किया है।\n\n🔖 *आवेदन का पूरा विवरण (Details):*\n• *टोकन नंबर:* ${successModal.token}\n• *नाम:* ${successModal.name}\n• *कार्ड नंबर:* #${successModal.n}\n• *बुकिंग आईडी:* ${successModal.mid}\n• *मोबाइल:* ${successModal.mob}\n• *आधार:* ${successModal.adhar}\n• *पैन:* ${successModal.pan}\n• *पेमेंट:* ${successModal.pay}\n• *गाँव:* ${successModal.vill}\n\n✅ *मेरा पूरा डेटा सही है।*\n━━━━━━━━━━━━━━━━━━━━━━\n📞 +91 7229874128`)}`} onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-4 w-full bg-[#25D366] text-white font-black py-4 rounded-xl text-2xl shadow-lg hover:scale-105 transition-transform"><i className="fa-brands fa-whatsapp text-4xl"></i> DIRECT SEND (APP)</a>
                             </div>
                         </div>
                     )}
-                    
-                    {!staff && <div className="mt-20 text-center"><button onClick={()=>{let u=prompt("ID:");let p=prompt("Pass:");if(ADMINS[u]===p){const sess={id:u,pass:p};localStorage.setItem('dps_session',JSON.stringify(sess));setStaff(sess);}else alert("Denied");}} className="text-slate-700 font-black tracking-widest text-xs uppercase">🔱 STAFF CONTROL 🔱</button></div>}
+
+                    {/* ✨ 100% फिक्स: STAFF DUAL WHATSAPP SUCCESS POPUP ✨ */}
+                    {staffSuccessModal && (
+                        <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4">
+                            <div className="glass p-10 max-w-2xl text-center border-t-[10px] border-blue-500 rounded-[2rem] shadow-2xl">
+                                <i className="fa-solid fa-shield-halved text-8xl text-blue-500 mb-6"></i>
+                                <h3 className="text-4xl font-black mb-2 text-white uppercase">कार्ड #{staffSuccessModal.n} वेरीफाई हो गया!</h3>
+                                <p className="text-slate-300 font-bold mb-8">अब आप किसे मैसेज भेजना चाहते हैं?</p>
+                                
+                                <div className="space-y-4">
+                                    {/* 1. Send Report To Owner */}
+                                    <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *DPSG STAFF REPORT* 🔱\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 जय माता दी हुकुम! 🚩\n\nमैने एक कार्ड वेरीफाई कर दिया है और पेमेंट प्राप्त कर ली है।\n\n🔖 *DETAILS:*\n• *कार्ड:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *ग्राहक:* ${staffSuccessModal.finalName}\n• *मोबाइल:* ${staffSuccessModal.finalMob}\n• *पेमेंट प्राप्त:* ₹${staffSuccessModal.finalPaid}\n• *Verified By:* ${staff.id}\n━━━━━━━━━━━━━━━━━━━━━━\n✅ कार्य संपन्न हुआ।`)}`} className="flex items-center justify-center gap-4 w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl text-xl shadow-lg transition-transform">
+                                        <i className="fa-solid fa-user-tie text-3xl"></i> 1. SEND REPORT TO OWNER (मालिक को भेजें)
+                                    </a>
+                                    
+                                    {/* 2. Send Message To Customer */}
+                                    <a href={`whatsapp://send?phone=91${staffSuccessModal.finalMob}&text=${encodeURIComponent(`🔱 *Digital Problem Solution Group* 🔱\n_"${SLOGAN}"_\n━━━━━━━━━━━━━━━━━━━━━━\n🎉 *बधाई हो ${staffSuccessModal.finalName} जी!* 🎉\n\nआपकी DPSG की सदस्यता (Card #${staffSuccessModal.n}) सफलतापूर्वक *एक्टिवेट (Activate)* कर दी गई है और आपका पेमेंट (₹${staffSuccessModal.finalPaid}) हमें प्राप्त हो गया है।\n\nअब आप DPSG की सभी सुविधाओं और ई-मित्र सेवाओं का लाभ उठा सकते हैं।\n━━━━━━━━━━━━━━━━━━━━━━\n📞 हेल्पलाईन: +91 7229874128\n🙏 *DPSG में आपका स्वागत है!*`)}`} className="flex items-center justify-center gap-4 w-full bg-[#25D366] hover:bg-[#20b858] text-white font-black py-4 rounded-xl text-xl shadow-lg transition-transform">
+                                        <i className="fa-brands fa-whatsapp text-3xl"></i> 2. SEND TO CUSTOMER (ग्राहक को भेजें)
+                                    </a>
+                                </div>
+                                <button onClick={()=>setStaffSuccessModal(null)} className="mt-8 text-slate-500 hover:text-white font-black underline">Close Dashboard</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {!staff && <div className="mt-20 mb-10 text-center"><button onClick={()=>{let u=prompt("Staff ID:");let p=prompt("Pass:");if(ADMINS[u]===p){const sess={id:u,pass:p};localStorage.setItem('dps_session',JSON.stringify(sess));setStaff(sess);}else alert("Access Denied");}} className="text-slate-500 hover:text-indigo-400 font-black tracking-widest text-sm uppercase transition-colors">🔱 STAFF CONTROL CENTER 🔱</button></div>}
                 </div>
             );
         };
