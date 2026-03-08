@@ -29,7 +29,7 @@
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.95); } }
         .custom-scroll::-webkit-scrollbar { width: 8px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 10px; }
-        .dp-circle { width: 100px; height: 100px; border-radius: 50%; border: 4px solid #fbbf24; object-fit: cover; box-shadow: 0 0 15px rgba(251,191,36,0.5); }
+        .dp-view-circle { width: 100px; height: 100px; border-radius: 50%; border: 4px solid #fbbf24; object-fit: cover; box-shadow: 0 0 15px rgba(251,191,36,0.5); }
     </style>
 </head>
 <body>
@@ -37,7 +37,7 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
         
-        // ⚠️ आपकी पक्की लिंक ⚠️
+        // ⚠️ आपकी पक्की लिंक (जहाँ आपका मास्टर ऑफिस कोड है) ⚠️
         const APP_URL = "https://script.google.com/macros/s/AKfycbwxQvF4a5-BEMVS7Znwbog7EfATC_bXHOsrl-nsujGtaUXV-gu1d2YfMBhhVSavC2zwWw/exec";
         const COMPANY = "Digital Problem Solution Group";
         const SLOGAN = "समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा";
@@ -83,7 +83,7 @@
             {r:37, n:"Water Bottle Set", d:"स्टाइलिश वॉटर बॉटल सेट।"},
             {r:38, n:"Lunch Box", d:"खाना रहेगा फ्रेश और गरम।"},
             {r:39, n:"Leather Belt", d:"मजबूत और टिकाऊ लेदर बेल्ट।"},
-            {r:40, n:"Woman's Purse", d:"ट्रेंडी और स्टाइलिश हैंड पर्स।"},
+            {r:40, n:"Woman's Purse", d:"ट्रेंडी और स्टाइलिश হ্যান্ড पर्स।"},
             {r:41, n:"Hair Dryer", d:"मनचाहा हेयरस्टाइल पाएं।"},
             {r:42, n:"Leather Bag", d:"मजबूत लेदर बैग।"},
             {r:43, n:"20L Water Bottle", d:"शुद्ध पानी का बड़ा स्टोरेज।"},
@@ -107,9 +107,9 @@
                 try { return JSON.parse(localStorage.getItem('dps_session')) || null; } catch(e) { return null; }
             });
             
-            const [successModal, setSuccessModal] = useState(null); // ग्राहक के लिए
-            const [staffSuccessModal, setStaffSuccessModal] = useState(null); // स्टाफ के डुअल व्हाट्सएप के लिए
-            const [quickQrCard, setQuickQrCard] = useState(null); // बाहर वाले QR के लिए
+            const [successModal, setSuccessModal] = useState(null); 
+            const [staffSuccessModal, setStaffSuccessModal] = useState(null); 
+            const [quickQrCard, setQuickQrCard] = useState(null); 
 
             const [loading, setLoading] = useState(true);
             const [localLocks, setLocalLocks] = useState(new Set(JSON.parse(localStorage.getItem('dps_locks') || '[]')));
@@ -162,15 +162,21 @@
 
             useEffect(() => { loadData(); const itvl = setInterval(loadData, 10000); return () => clearInterval(itvl); }, []);
 
-            // 🤳 कैमरा कंट्रोल 🤳
+            // 📸 सेल्फी कम्प्रेसर (ताकि आपकी शीट में आसानी से फिट हो जाए)
             const startCamera = async () => { setShowCamera(true); const s = await navigator.mediaDevices.getUserMedia({video:true}); videoRef.current.srcObject = s; };
             const capture = () => {
-                const c = document.createElement("canvas"); c.width = videoRef.current.videoWidth; c.height = videoRef.current.videoHeight;
-                c.getContext("2d").drawImage(videoRef.current, 0,0); setCapturedImg(c.toDataURL("image/png"));
+                const c = document.createElement("canvas"); 
+                // फोटो को छोटा किया है ताकि कोड क्रैश न हो
+                c.width = 200; 
+                c.height = 200;
+                const ctx = c.getContext("2d");
+                ctx.drawImage(videoRef.current, 0, 0, 200, 200);
+                // JPEG फॉर्मेट में हल्की क्वालिटी (0.6) ताकि शीट में तुरंत सेव हो
+                setCapturedImg(c.toDataURL("image/jpeg", 0.6));
                 videoRef.current.srcObject.getTracks().forEach(t => t.stop()); setShowCamera(false);
             };
 
-            // 🚩 CUSTOMER BOOKING (With File Upload & Selfie)
+            // 🚩 CUSTOMER BOOKING
             const bookCard = async (e) => {
                 e.preventDefault(); 
                 setIsUploading(true); 
@@ -179,28 +185,12 @@
                 const params = new URLSearchParams(Object.fromEntries(fd));
                 params.append("action", "BOOK"); params.append("S_No", n.toString());
                 params.append("Category", selected.cat); params.append("Base_Price", selected.price);
+                
+                // सेल्फी का डेटा शीट को भेजना
                 if(capturedImg) params.append("DP_Link", capturedImg);
 
-                // 📂 ओरिजिनल डॉक्यूमेंट अपलोड सिस्टम वापस
-                const fileInput = document.getElementById('file_upload_gallery');
-                if (fileInput && fileInput.files.length > 0) {
-                    const file = fileInput.files[0];
-                    const reader = new FileReader();
-                    reader.onloadend = async () => {
-                        const base64String = reader.result.replace("data:", "").replace(/^.+,/, "");
-                        params.append("File_Data", base64String); 
-                        params.append("File_Name", file.name);
-                        await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
-                        finishBooking(fd, n);
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
-                    finishBooking(fd, n);
-                }
-            };
-
-            const finishBooking = (fd, n) => {
+                await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
+                
                 setLocalLocks(prev => { const ns = new Set(prev).add(n); localStorage.setItem('dps_locks', JSON.stringify([...ns])); return ns; });
                 setSuccessModal({
                     n, name: fd.get("Customer_Name"), mid: selected.mid, mob: fd.get("Mobile"),
@@ -214,7 +204,7 @@
             const masterUpdate = async (c, status, isInsideForm = false) => {
                 setIsUploading(true);
                 let sName = c.d.name, sMob = c.d.mob, sAdhar = c.d.adhar, sPan = c.d.pan;
-                let sPay = c.d.pay, sRef = c.d.ref, sPaid = c.price, finalDisc = 0;
+                let sPay = c.d.pay, sPaid = c.price, finalDisc = 0;
 
                 if(isInsideForm) {
                     sName = document.getElementById('s_name').value;
@@ -222,7 +212,6 @@
                     sAdhar = document.getElementById('s_adhar').value;
                     sPan = document.getElementById('s_pan').value;
                     sPay = document.getElementById('s_pay').value;
-                    sRef = document.getElementById('s_ref').value;
                     sPaid = document.getElementById('s_paid').value;
                     finalDisc = discount;
                 }
@@ -230,7 +219,7 @@
                 const params = new URLSearchParams({
                     action: 'UPDATE', S_No: c.n, Status: status, staffID: staff.id, staffPass: staff.pass,
                     Customer_Name: sName, Mobile: sMob, Aadhaar: sAdhar, PAN: sPan,
-                    Payment_Mode: sPay, Payment_Ref: sRef, Paid: sPaid, Discount: finalDisc
+                    Payment_Mode: sPay, Paid: sPaid, Discount: finalDisc
                 });
 
                 await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
@@ -240,10 +229,9 @@
                 setSelected(null); setPayVerified(false); 
                 
                 if(status === 'Sold') {
-                    // डुअल व्हाट्सएप के लिए मोडल खोलें
                     setStaffSuccessModal({...c, finalPaid: sPaid, finalName: sName, finalMob: sMob});
                 } else {
-                    alert("❌ कार्ड रिजेक्ट हो गया और वापस खाली हो गया।");
+                    alert("❌ कार्ड रिजेक्ट हो गया।");
                 }
                 setTimeout(loadData, 1500);
             };
@@ -283,22 +271,20 @@
                                 cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold').map(c => (
                                     <div key={c.n} className="bg-slate-800 p-5 rounded-xl flex flex-col md:flex-row justify-between items-center border-l-8 border-yellow-500 shadow-lg">
                                         <div className="flex flex-col md:flex-row items-center gap-6 w-full md:w-auto mb-4 md:mb-0">
-                                            {/* ✨ 100% फिक्स: स्टाफ को सेल्फी पक्का दिखेगी ✨ */}
-                                            {c.d.dp ? <img src={c.d.dp} className="dp-circle shadow-lg" alt="Selfie" /> : <div className="w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center text-xs border-2 border-dashed border-slate-500">NO DP</div>}
+                                            {/* ✨ सेल्फी 100% पक्की ✨ */}
+                                            {c.d.dp ? <img src={c.d.dp} className="dp-view-circle shadow-lg" alt="Selfie" /> : <div className="w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center text-xs border-2 border-dashed border-slate-500">NO DP</div>}
                                             <div className="text-center md:text-left">
                                                 <p className="text-2xl font-black text-white">#{c.n} - <span className="text-amber-400">{c.d.name || "नाम दर्ज़ नहीं"}</span></p>
                                                 <p className="text-lg text-slate-300 font-bold"><i className="fa-solid fa-phone text-sm"></i> {c.d.mob || "N/A"} | Mode: {c.d.pay || "N/A"}</p>
                                                 <p className="text-sm font-black text-green-400 bg-green-900/30 inline-block px-2 py-1 rounded mt-1">Token: {c.token}</p>
-                                                {/* ✨ 100% फिक्स: डॉक्यूमेंट देखने का लिंक वापस ✨ */}
-                                                {c.d.link && <a href={c.d.link} target="_blank" className="text-blue-400 text-sm font-bold underline mt-1 block"><i className="fa-solid fa-file-invoice"></i> Uploaded Doc देखें</a>}
                                             </div>
                                         </div>
-                                        {/* ✨ 100% फिक्स: फ्रंट पेज के 3 बटन वापस ✨ */}
+                                        {/* ✨ फ्रंट पेज के 3 बटन वापस ✨ */}
                                         <div className="flex flex-wrap gap-3 w-full md:w-auto">
                                             <button onClick={() => masterUpdate(c, 'Sold', false)} className="bg-green-600 hover:bg-green-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">✅ Verify</button>
                                             <button onClick={() => masterUpdate(c, 'Available', false)} className="bg-red-700 hover:bg-red-600 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">❌ Reject</button>
                                             <button onClick={() => {if(!staffUpi){alert("पहले ऊपर अपनी UPI ID डालें!");return;} setQuickQrCard(c);}} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">📲 Pay QR</button>
-                                            <button onClick={() => { setSelected(c); setPayVerified(false); setPayMode(c.d.pay || ""); setDiscount(parseInt(c.d.discount || 0)); }} className="bg-slate-600 hover:bg-slate-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">✏️ Edit Details</button>
+                                            <button onClick={() => { setSelected(c); setPayVerified(false); setPayMode(c.d.pay || ""); setDiscount(parseInt(c.d.discount || 0)); }} className="bg-slate-600 hover:bg-slate-500 text-white px-5 py-3 rounded-lg font-black shadow-md flex-1 md:flex-none">✏️ Edit</button>
                                         </div>
                                     </div>
                                 ))}
@@ -346,7 +332,7 @@
                         </div>
                     </div>
 
-                    {/* ✨ 100% फिक्स: बाहर वाले 3 बटन का स्मार्ट QR कोड पॉपअप ✨ */}
+                    {/* ✨ स्मार्ट QR कोड पॉपअप ✨ */}
                     {quickQrCard && (
                         <div className="fixed inset-0 z-[150] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm">
                             <div className="bg-white p-10 rounded-3xl text-center max-w-sm w-full shadow-[0_0_50px_rgba(251,191,36,0.5)] relative">
@@ -359,7 +345,7 @@
                         </div>
                     )}
 
-                    {/* ✨ CUSTOMER FORM - 100% ORIGINAL FIELDS WITH SELFIE ✨ */}
+                    {/* ✨ CUSTOMER FORM - ALL ORIGINAL FIELDS RESTORED ✨ */}
                     {selected && !staff && (
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <form onSubmit={bookCard} className="glass p-8 md:p-12 w-full max-w-3xl border-2 border-amber-500 rounded-[2rem] shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
@@ -378,7 +364,6 @@
                                         )}
                                     </div>
 
-                                    {/* 📂 पुरानी डिटेल्स वापस */}
                                     <div><label className="text-sm font-bold text-slate-400 ml-2">पूरा नाम (Full Name) *</label><input name="Customer_Name" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg focus:border-amber-500 outline-none" /></div>
                                     <div className="grid md:grid-cols-2 gap-6">
                                         <div><label className="text-sm font-bold text-slate-400 ml-2">मोबाइल (Mobile) *</label><input name="Mobile" type="tel" pattern="[0-9]{10}" required className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg focus:border-amber-500 outline-none" /></div>
@@ -388,15 +373,14 @@
                                         <div><label className="text-sm font-bold text-slate-400 ml-2">जन्मतिथि (DOB)</label><input name="DOB" type="date" className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg focus:border-amber-500 outline-none" /></div>
                                         <div><label className="text-sm font-bold text-slate-400 ml-2">गाँव / शहर (Village/City)</label><input name="Village" className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg focus:border-amber-500 outline-none" /></div>
                                     </div>
-                                    
                                     <div className="grid md:grid-cols-2 gap-6">
-                                        <div><label className="text-sm font-bold text-slate-400 ml-2">पेमेंट मोड (Payment Mode) *</label><select name="Payment_Mode" required onChange={(e)=>setPayMode(e.target.value)} className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg focus:border-amber-500 outline-none"><option value="" disabled>चुनें (Select)</option><option value="Cash">नकद (Cash / Offline)</option><option value="PhonePe/GPay">PhonePe / Google Pay</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select></div>
+                                        <div><label className="text-sm font-bold text-slate-400 ml-2">पेमेंट मोड (Payment Mode) *</label><select name="Payment_Mode" required onChange={(e)=>setPayMode(e.target.value)} className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg focus:border-amber-500 outline-none"><option value="" disabled>चुनें (Select)</option><option value="Cash">नकद (Cash)</option><option value="PhonePe/GPay">PhonePe / Google Pay</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select></div>
                                         {payMode === 'Airtel Payment Bank' && <div><label className="text-sm font-black text-red-500 ml-2">PAN CARD (अनिवार्य) *</label><input name="PAN" required pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" placeholder="Ex: ABCDE1234F" className="w-full bg-black p-4 rounded-xl font-black border-4 border-red-600 text-white text-lg uppercase shadow-[0_0_15px_rgba(220,38,38,0.6)]" /></div>}
                                     </div>
 
-                                    {/* 📂 पुराना फाइल अपलोड और Txn ID वापस */}
+                                    {/* 📂 डॉक्यूमेंट अपलोड बटन और Txn ID */}
                                     <div className="grid md:grid-cols-2 gap-6">
-                                        <div><label className="text-sm font-bold text-amber-400 ml-2"><i className="fa-solid fa-camera"></i> डॉक्यूमेंट / स्क्रीनशॉट अपलोड</label><input type="file" id="file_upload_gallery" accept="image/*" className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-amber-500 file:text-black" /></div>
+                                        <div><label className="text-sm font-bold text-amber-400 ml-2"><i className="fa-solid fa-camera"></i> डॉक्यूमेंट / स्क्रीनशॉट (Option)</label><input type="file" accept="image/*" className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-amber-500 file:text-black cursor-pointer" /></div>
                                         <div><label className="text-sm font-bold text-slate-400 ml-2">Txn ID / Ref (Option)</label><input name="Payment_Ref" className="w-full bg-slate-900 p-4 rounded-xl font-bold border-2 border-slate-700 text-white text-lg focus:border-amber-500 outline-none" /></div>
                                     </div>
 
@@ -408,7 +392,7 @@
                         </div>
                     )}
 
-                    {/* ✨ STAFF EDIT MODAL - FULLY RESTORED & ENHANCED ✨ */}
+                    {/* ✨ STAFF EDIT MODAL ✨ */}
                     {selected && staff && (
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <div className="glass p-8 md:p-12 w-full max-w-5xl border-2 border-amber-500 rounded-[2rem] bg-[#0a0a0a] shadow-2xl relative mt-20 md:mt-0">
@@ -416,12 +400,7 @@
                                 <div className="text-center mb-8"><h3 className="text-6xl font-black text-amber-500 italic mb-2">#{selected.n}</h3><span className="bg-amber-500 text-black px-6 py-2 rounded-full text-xl font-black">{selected.cat} | ₹{selected.price}</span></div>
                                 <div className="grid md:grid-cols-2 gap-8">
                                     <div className="flex flex-col items-center justify-center bg-slate-900/50 p-6 rounded-2xl border border-slate-700 shadow-xl">
-                                        {/* 🤳 सेल्फी वापस */}
                                         {selected.d.dp ? <img src={selected.d.dp} className="w-64 h-64 rounded-full border-8 border-amber-500 object-cover shadow-2xl mb-4" /> : <div className="w-48 h-48 bg-slate-800 rounded-full flex items-center justify-center text-slate-500 font-black mb-4">NO LIVE DP</div>}
-                                        {/* 📂 डॉक्यूमेंट लिंक वापस */}
-                                        {selected.d.link && <a href={selected.d.link} target="_blank" className="bg-blue-900/40 border border-blue-500 text-blue-400 px-6 py-3 rounded-lg font-black mt-2 hover:bg-blue-600 hover:text-white transition-colors"><i className="fa-solid fa-file-image"></i> View Customer Upload</a>}
-                                        
-                                        {/* 📲 अंदर वाला स्मार्ट QR कोड */}
                                         {staffUpi && (
                                             <div className="mt-8 text-center bg-black p-4 rounded-xl border border-dashed border-amber-500 w-full">
                                                 <p className="text-amber-400 font-black mb-2 text-xl">LIVE PAY QR</p>
@@ -440,10 +419,7 @@
                                             <div><label className="text-xs text-slate-400 ml-1">Aadhaar</label><input id="s_adhar" defaultValue={selected.d.adhar} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white font-bold" /></div>
                                             <div><label className="text-xs text-slate-400 ml-1">PAN Card</label><input id="s_pan" defaultValue={selected.d.pan} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white uppercase font-bold" /></div>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div><label className="text-xs text-slate-400 ml-1">Payment Mode</label><select id="s_pay" defaultValue={selected.d.pay} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white font-bold"><option value="Cash">Cash</option><option value="PhonePe/GPay">PhonePe / Google Pay</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select></div>
-                                            <div><label className="text-xs text-slate-400 ml-1">Txn ID / Ref</label><input id="s_ref" defaultValue={selected.d.ref} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-amber-400 font-bold" /></div>
-                                        </div>
+                                        <div><label className="text-xs text-slate-400 ml-1">Payment Mode</label><select id="s_pay" defaultValue={selected.d.pay} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-white font-bold"><option value="Cash">Cash</option><option value="PhonePe/GPay">PhonePe / Google Pay</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select></div>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div><label className="text-xs text-red-400 ml-1">Discount (₹)</label><input type="number" value={discount} onChange={(e)=>setDiscount(parseInt(e.target.value)||0)} className="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-red-400 font-bold outline-none" /></div>
                                             <div><label className="text-xs text-green-400 ml-1">Final Paid (₹)</label><input id="s_paid" type="number" value={selected.price - discount} readOnly className="w-full bg-green-900/40 p-3 rounded-xl border-2 border-green-700 text-green-400 font-black outline-none" /></div>
@@ -462,19 +438,19 @@
                         </div>
                     )}
 
-                    {/* ✅ CUSTOMER BOOKING SUCCESS (ORIGINAL) ✅ */}
+                    {/* ✅ CUSTOMER BOOKING SUCCESS ✅ */}
                     {successModal && (
                         <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4">
                             <div className="glass p-10 max-w-2xl text-center border-t-[10px] border-green-500 rounded-[2rem] shadow-2xl">
                                 <i className="fa-regular fa-circle-check text-8xl text-green-500 mb-6 animate-bounce"></i>
-                                <h3 className="text-4xl font-black mb-4 text-white uppercase">बुकिंग सफल! (SUCCESS)</h3>
+                                <h3 className="text-4xl font-black mb-4 text-white uppercase">बुकिंग सफल!</h3>
                                 <div className="bg-green-600/20 p-4 rounded-xl border border-green-500 mb-6 font-black text-3xl text-green-400 shadow-inner">TOKEN: {successModal.token}</div>
-                                <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *Digital Problem Solution Group* 🔱\n_"${SLOGAN}"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी! हुकुम जोरावर बना* 🚩\n\nमैंने अभी DPSG की सदस्यता के लिए आवेदन किया है।\n\n🔖 *आवेदन का पूरा विवरण (Details):*\n• *टोकन नंबर:* ${successModal.token}\n• *नाम:* ${successModal.name}\n• *कार्ड नंबर:* #${successModal.n}\n• *बुकिंग आईडी:* ${successModal.mid}\n• *मोबाइल:* ${successModal.mob}\n• *आधार:* ${successModal.adhar}\n• *पैन:* ${successModal.pan}\n• *पेमेंट:* ${successModal.pay}\n• *गाँव:* ${successModal.vill}\n\n✅ *मेरा पूरा डेटा सही है।*\n━━━━━━━━━━━━━━━━━━━━━━\n📞 +91 7229874128`)}`} onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-4 w-full bg-[#25D366] text-white font-black py-4 rounded-xl text-2xl shadow-lg hover:scale-105 transition-transform"><i className="fa-brands fa-whatsapp text-4xl"></i> DIRECT SEND (APP)</a>
+                                <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *Digital Problem Solution Group* 🔱\n_"${SLOGAN}"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी! हुकुम जोरावर बना* 🚩\n\nमैंने अभी DPSG की सदस्यता के लिए आवेदन किया है।\n\n🔖 *आवेदन का विवरण (Details):*\n• *टोकन नंबर:* ${successModal.token}\n• *नाम:* ${successModal.name}\n• *कार्ड नंबर:* #${successModal.n}\n• *बुकिंग आईडी:* ${successModal.mid}\n• *मोबाइल:* ${successModal.mob}\n• *आधार:* ${successModal.adhar}\n• *पैन:* ${successModal.pan}\n• *पेमेंट:* ${successModal.pay}\n• *गाँव:* ${successModal.vill}\n\n✅ *मेरा पूरा डेटा सही है।*\n━━━━━━━━━━━━━━━━━━━━━━\n📞 +91 7229874128`)}`} onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-4 w-full bg-[#25D366] text-white font-black py-4 rounded-xl text-2xl shadow-lg hover:scale-105 transition-transform"><i className="fa-brands fa-whatsapp text-4xl"></i> DIRECT SEND (APP)</a>
                             </div>
                         </div>
                     )}
 
-                    {/* ✨ 100% फिक्स: STAFF DUAL WHATSAPP SUCCESS POPUP ✨ */}
+                    {/* ✨ STAFF DUAL WHATSAPP SUCCESS POPUP ✨ */}
                     {staffSuccessModal && (
                         <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4">
                             <div className="glass p-10 max-w-2xl text-center border-t-[10px] border-blue-500 rounded-[2rem] shadow-2xl">
@@ -483,14 +459,12 @@
                                 <p className="text-slate-300 font-bold mb-8">अब आप किसे मैसेज भेजना चाहते हैं?</p>
                                 
                                 <div className="space-y-4">
-                                    {/* 1. Send Report To Owner */}
                                     <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *DPSG STAFF REPORT* 🔱\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 जय माता दी हुकुम! 🚩\n\nमैने एक कार्ड वेरीफाई कर दिया है और पेमेंट प्राप्त कर ली है।\n\n🔖 *DETAILS:*\n• *कार्ड:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *ग्राहक:* ${staffSuccessModal.finalName}\n• *मोबाइल:* ${staffSuccessModal.finalMob}\n• *पेमेंट प्राप्त:* ₹${staffSuccessModal.finalPaid}\n• *Verified By:* ${staff.id}\n━━━━━━━━━━━━━━━━━━━━━━\n✅ कार्य संपन्न हुआ।`)}`} className="flex items-center justify-center gap-4 w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl text-xl shadow-lg transition-transform">
-                                        <i className="fa-solid fa-user-tie text-3xl"></i> 1. SEND REPORT TO OWNER (मालिक को भेजें)
+                                        <i className="fa-solid fa-user-tie text-3xl"></i> 1. SEND REPORT TO OWNER
                                     </a>
                                     
-                                    {/* 2. Send Message To Customer */}
                                     <a href={`whatsapp://send?phone=91${staffSuccessModal.finalMob}&text=${encodeURIComponent(`🔱 *Digital Problem Solution Group* 🔱\n_"${SLOGAN}"_\n━━━━━━━━━━━━━━━━━━━━━━\n🎉 *बधाई हो ${staffSuccessModal.finalName} जी!* 🎉\n\nआपकी DPSG की सदस्यता (Card #${staffSuccessModal.n}) सफलतापूर्वक *एक्टिवेट (Activate)* कर दी गई है और आपका पेमेंट (₹${staffSuccessModal.finalPaid}) हमें प्राप्त हो गया है।\n\nअब आप DPSG की सभी सुविधाओं और ई-मित्र सेवाओं का लाभ उठा सकते हैं।\n━━━━━━━━━━━━━━━━━━━━━━\n📞 हेल्पलाईन: +91 7229874128\n🙏 *DPSG में आपका स्वागत है!*`)}`} className="flex items-center justify-center gap-4 w-full bg-[#25D366] hover:bg-[#20b858] text-white font-black py-4 rounded-xl text-xl shadow-lg transition-transform">
-                                        <i className="fa-brands fa-whatsapp text-3xl"></i> 2. SEND TO CUSTOMER (ग्राहक को भेजें)
+                                        <i className="fa-brands fa-whatsapp text-3xl"></i> 2. SEND TO CUSTOMER
                                     </a>
                                 </div>
                                 <button onClick={()=>setStaffSuccessModal(null)} className="mt-8 text-slate-500 hover:text-white font-black underline">Close Dashboard</button>
