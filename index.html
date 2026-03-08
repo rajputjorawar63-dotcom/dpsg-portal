@@ -43,7 +43,7 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
         
-        // ⚠️ आपकी एकदम नई और पक्की लिंक (अब आपको कुछ पेस्ट नहीं करना) ⚠️
+        // ⚠️ आपकी पक्की लिंक (कुछ पेस्ट नहीं करना है) ⚠️
         const APP_URL = "https://script.google.com/macros/s/AKfycbzXCjocdZoRXDGf4I17W2Fy6rqLlUIXyk3RrtA_w-BydF1sqcYQneEDCWwu1irtTXRl0Q/exec";
         const COMPANY = "Digital Problem Solution Group";
         const SLOGAN = "समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा";
@@ -76,7 +76,7 @@
             {r:23, n:"₹101 Cash", d:"बचत कार्ड के साथ जीतें ₹101 नकद।"},
             {r:24, n:"Photo Frame", d:"राधा कृष्ण की कृपा का सुंदर फ्रेम।"},
             {r:25, n:"Wall Clock", d:"समय की कीमत समझें और जीतें घड़ी।"},
-            {r:26, n:"Tea Cup Set", d:"सुंदर टी cup सेट के साथ स्वागत करें।"},
+            {r:26, n:"Tea Cup Set", d:"सुंदर टी कप सेट के साथ स्वागत करें।"},
             {r:27, n:"Movie Ticket", d:"पसंदीदा फिल्म की टिकट।"},
             {r:28, n:"Umbrella", d:"यह रंगीन और मजबूत छाता रहेगा साथ।"},
             {r:29, n:"Sunglasses", d:"दिखें सबसे अलग और स्टाइलिश।"},
@@ -119,7 +119,7 @@
             const [isUploading, setIsUploading] = useState(false);
             const [discount, setDiscount] = useState(0);
 
-            // ⚠️ लाइव डेटा लोडिंग (पक्का इंजन) ⚠️
+            // ⚠️ लाइव डेटा लोडिंग ⚠️
             const loadData = () => {
                 fetch(APP_URL + "?action=GET_DATA")
                 .then(r => r.json())
@@ -188,7 +188,6 @@
             };
 
             const finishBooking = (fd, n) => {
-                // व्हाट्सएप मैसेज के लिए 100% पूरी डिटेल सेव करना
                 setSuccessModal({ 
                     n, 
                     name: fd.get("Customer_Name"), 
@@ -238,7 +237,7 @@
             };
 
             const handleCardClick = (c, s) => {
-                // 🛑 SOLD कार्ड पर परमानेंट ताला: कोई भी क्लिक करके एडिट नहीं कर सकता 🛑
+                // 🛑 SOLD कार्ड पर ताला 🛑
                 if(s === 'Sold') return; 
                 
                 if(staff) {
@@ -270,7 +269,6 @@
 
             if(loading) return <div className="h-screen flex items-center justify-center font-black text-amber-500 text-6xl animate-pulse">DPSG Loading...</div>;
 
-            // 🛑 पेंडिंग लिस्ट में से SOLD कार्ड हमेशा के लिए गायब (Hide) कर दिया गया है 🛑
             const pendingCards = cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold');
             const staffHistory = staff ? cards.filter(c => c.status === 'Sold' && c.d.verifiedBy === staff.id) : [];
 
@@ -324,7 +322,7 @@
                             
                             <div className="banner-row mt-10">
                                 {[
-                                    {t:'VIP', p:'500', c:'card-VIP', d:'पूरा परिवार मान्य | 6 महीने | 100% फ्री ई-मित्र सेवा'},
+                                    {t:'VIP', p:'500', c:'card-VIP', d:'पूरा परिवार मान्य | 6 महीने | 100% ফ্রি ई-मित्र सेवा'},
                                     {t:'GOLD', p:'100', c:'card-Gold', d:'1 व्यक्ति | 3 महीने | 50% ई-मित्र छूट | गारंटीड उपहार'},
                                     {t:'SILVER', p:'50', c:'card-Silver', d:'1 व्यक्ति | 1 महीना | सीमित सेवा | लकी ड्रा मौका'}
                                 ].map((b, i) => (
@@ -395,7 +393,7 @@
                         </div>
                     )}
 
-                    {/* ✨ STAFF FULL EDIT MODAL (Auto-filled + Auto-Discount) ✨ */}
+                    {/* ✨ STAFF FULL EDIT MODAL (Auto QR Added here) ✨ */}
                     {selected && staff && (
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <div className="glass p-8 md:p-12 w-full max-w-5xl border-2 border-amber-500 rounded-[2rem] shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
@@ -435,6 +433,20 @@
                                         <div><label className="text-sm text-green-400 font-bold ml-1">Final Amount Paid (₹)</label><input id="s_paid" type="number" value={selected.price - discount} readOnly className="w-full bg-green-900/40 p-4 rounded-xl text-3xl font-black border-2 border-green-500 text-green-400 focus:outline-none" /></div>
                                     </div>
                                     
+                                    {/* ✨ नया ऑटोमैटिक QR कोड सेक्शन ✨ */}
+                                    <div className="mt-6 bg-slate-900/50 p-6 rounded-2xl border border-dashed border-amber-500 flex flex-col items-center text-center">
+                                        <h4 className="text-amber-400 font-black text-xl mb-2"><i className="fa-solid fa-qrcode"></i> Live Payment QR</h4>
+                                        {staffUpi ? (
+                                            <>
+                                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${staffUpi}%26pn=Digital%20Problem%20Solution%20Group%26am=${selected.price - discount}%26tr=${selected.mid}%26tn=Digital_Problem_Solution_Group_ID_${selected.mid}`} alt="Live QR" className="border-4 border-white rounded-xl mb-2 shadow-[0_0_20px_rgba(251,191,36,0.3)]" />
+                                                <p className="text-green-400 font-black text-2xl">Pay: ₹{selected.price - discount}</p>
+                                                <p className="text-xs text-slate-400 font-bold mt-1 tracking-widest uppercase">Scan to Complete Payment</p>
+                                            </>
+                                        ) : (
+                                            <p className="text-red-400 font-bold">QR कोड के लिए कृपया पहले पीछे डैशबोर्ड में अपनी UPI ID डालें।</p>
+                                        )}
+                                    </div>
+
                                     <div className="flex gap-4 mt-8 pt-4 border-t border-slate-700">
                                         <button onClick={() => masterUpdate(selected, 'Sold', true)} className="flex-1 bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-xl text-2xl shadow-lg transition-transform hover:scale-105">VERIFY & SELL ✅</button>
                                         <button onClick={() => masterUpdate(selected, 'Available', true)} className="flex-1 bg-red-700 hover:bg-red-600 text-white font-black py-4 rounded-xl text-2xl shadow-lg transition-transform hover:scale-105">REJECT ❌</button>
@@ -504,7 +516,6 @@
                                 <h3 className="text-4xl font-black mb-4 text-white uppercase">बुकिंग सफल! (SUCCESS)</h3>
                                 <p className="text-slate-300 text-lg mb-8 font-bold">हुकुम, आपका डेटा सुरक्षित कर लिया गया है। एक्टिवेशन के लिए व्हाट्सएप भेजें।</p>
                                 
-                                {/* ⚠️ डायरेक्ट ऐप लिंक (No Browser) + फुल डिटेल ⚠️ */}
                                 <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *Digital Problem Solution Group* 🔱
 _"${SLOGAN}"_
 ━━━━━━━━━━━━━━━━━━━━━━
