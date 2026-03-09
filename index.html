@@ -29,16 +29,12 @@
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.95); } }
         .custom-scroll::-webkit-scrollbar { width: 8px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 10px; }
-        
-        /* ✨ चमकती फोटो और असली दबने वाले बटन (Real Press Effect) ✨ */
         @keyframes goldGlow {
             0%, 100% { box-shadow: 0 0 15px #fbbf24, 0 0 30px #d97706; transform: scale(1); border-color: #fbbf24; }
             50% { box-shadow: 0 0 40px #fbbf24, 0 0 70px #f59e0b; transform: scale(1.05); border-color: #fcd34d; }
         }
         .glow-dp-huge { animation: goldGlow 1.5s infinite alternate; border: 8px solid #fbbf24; }
         .red-alert-dp { border: 8px dashed #ef4444; box-shadow: 0 0 20px #ef4444; }
-        
-        /* बटन दबाने का इफ़ेक्ट */
         .btn-press:active { transform: scale(0.92) !important; filter: brightness(0.8); }
         .btn-press:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
     </style>
@@ -93,7 +89,7 @@
             {r:37, n:"Water Bottle Set", d:"स्टाइलिश वॉटर बॉटल सेट।"},
             {r:38, n:"Lunch Box", d:"खाना रहेगा फ्रेश और गरम।"},
             {r:39, n:"Leather Belt", d:"मजबूत और टिकाऊ लेदर बेल्ट।"},
-            {r:40, n:"Woman's Purse", d:"ट्रेंडी और स्टाइलिश হ্যান্ড पर्स।"},
+            {r:40, n:"Woman's Purse", d:"ट्रेंडी और स्टाइलिश हैंड पर्स।"},
             {r:41, n:"Hair Dryer", d:"मनचाहा हेयरस्टाइल पाएं।"},
             {r:42, n:"Leather Bag", d:"मजबूत लेदर बैग।"},
             {r:43, n:"20L Water Bottle", d:"शुद्ध पानी का बड़ा स्टोरेज।"},
@@ -112,8 +108,9 @@
             const [activeTab, setActiveTab] = useState('ALL'); 
             const [selected, setSelected] = useState(null);
             
+            // 🛡️ AUTO-LOGOUT SECURITY: sessionStorage use (Tab band hote hi logout)
             const [staff, setStaff] = useState(() => {
-                try { return JSON.parse(localStorage.getItem('dps_session')) || null; } catch(e) { return null; }
+                try { return JSON.parse(sessionStorage.getItem('dps_session')) || null; } catch(e) { return null; }
             });
             
             const [staffAppTab, setStaffAppTab] = useState('DASHBOARD');
@@ -148,13 +145,11 @@
             const [showCamera, setShowCamera] = useState(false);
             const [facingMode, setFacingMode] = useState("user"); 
             const videoRef = useRef(null);
-            
             const [enlargedImg, setEnlargedImg] = useState(null);
 
-            // 🛠️ BUG FIX 1 & 5: Cache Buster & Anti-Crash Handling
+            // 🛠️ BUG FIX: Cache Buster & Anti-Crash Handling
             const loadData = async () => {
                 try {
-                    // ?_cb=... जोड़ने से यह ब्राउज़र की पुरानी कैश फाइल नहीं उठाएगा, हमेशा नया डेटा लाएगा।
                     const res = await fetch(APP_URL + "?action=GET_DATA&_cb=" + new Date().getTime());
                     const rows = await res.json();
                     
@@ -185,8 +180,6 @@
                         setLoading(false);
                     }
                 } catch (error) {
-                    console.log("Data Load Background Error (Safe Mode):", error);
-                    // अगर इंटरनेट स्लो है तो क्रैश नहीं होगा (Black Screen Fix)
                     if(cards.length === 0) {
                         let temp = [];
                         for(let i=1; i<=1000; i++) temp.push({ n: i, status: 'Available', cat: i<=100?"VIP Card":i<=600?"Gold Card":"Silver Card", price: (i<=100?500:i<=600?100:50) });
@@ -252,11 +245,9 @@
                 setSelected(null); setCapturedImg(null); setProcessingId(null); setTimeout(loadData, 1500);
             };
 
-            // 🛠️ BUG FIX 2 & 3: Master Update (Instant Hide & 100% WhatsApp Guarantee)
+            // 🛠️ INSTANT HIDE & WHATSAPP GUARANTEE
             const masterUpdate = async (c, status, isInsideForm = false) => {
                 setProcessingId(c.n);
-                
-                // 🚀 Instant Hide: बटन दबाते ही कार्ड को लिस्ट से तुरंत गायब करना (Status Update)
                 setCards(prev => prev.map(card => card.n === c.n ? { ...card, status: status === 'Sold' ? 'Sold' : 'Available' } : card));
                 
                 if(status === 'Available') { 
@@ -291,22 +282,17 @@
                 });
                 if(capturedImg) params.append("DP_Link", capturedImg);
 
-                // 🚀 Fail-Safe Fetch: अगर इंटरनेट अटके भी तो क्रैश नहीं होगा और पॉपअप 100% आएगा
-                try {
-                    await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
-                } catch(error) {
-                    console.error("Update Request Warning:", error);
-                }
+                try { await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' }); } catch(error) { console.error(error); }
                 
                 setProcessingId(null); setSelected(null); setVerifyOutsideModal(null); setPayVerified(false); setCapturedImg(null);
                 
-                // 🚀 100% Guaranteed WhatsApp Popup (चाहे रिजेक्ट हो या वेरीफाई)
+                // 🚀 PASS AADHAAR TO POPUP STATE
                 if(status === 'Sold') {
                     setSessionStats(prev => {
                         const nState = { ...prev, verified: [{n: c.n, name: sName || "Unknown"}, ...prev.verified] };
                         localStorage.setItem('dps_session_stats', JSON.stringify(nState)); return nState;
                     });
-                    setStaffSuccessModal({...c, finalPaid: sPaid, finalName: sName, finalMob: sMob, finalPan: sPan, finalVill: c.d.vill, finalDisc, finalPayMode: sPay, changesStr});
+                    setStaffSuccessModal({...c, finalPaid: sPaid, finalName: sName, finalMob: sMob, finalPan: sPan, finalAdhar: sAdhar, finalVill: c.d.vill, finalDisc, finalPayMode: sPay, changesStr});
                 } else {
                     setSessionStats(prev => {
                         const nState = { ...prev, rejected: [{n: c.n, name: sName || "Unknown"}, ...prev.rejected] };
@@ -314,8 +300,6 @@
                     });
                     setStaffSuccessModal({...c, isReject: true, finalName: sName, finalMob: sMob}); 
                 }
-                
-                // रिफ्रेश डेटा 1.5 सेकंड बाद
                 setTimeout(loadData, 1500);
             };
 
@@ -326,7 +310,6 @@
                 let s = c.status === 'Sold' ? 'Sold' : isLocked ? 'Pending' : 'Available';
                 const color = s === 'Sold' ? 'sold-card' : s === 'Pending' ? 'pending-card' : `card-${c.cat.split(' ')[0]}`;
                 
-                // अगर कार्ड Processing_Hide में है (यानी अभी अभी रिजेक्ट/वेरीफाई हुआ है), तो उसे स्क्रीन पर मत दिखाओ!
                 if(c.status === 'Processing_Hide') return null;
 
                 return (
@@ -343,10 +326,36 @@
                 );
             };
 
+            // 💰 FINANCE REPORT CALCULATION (Front-End logic)
+            const getFinanceStats = () => {
+                const soldCards = cards.filter(c => c.status === 'Sold');
+                const pendingCards = cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Processing_Hide');
+                const availableCards = cards.filter(c => c.status === 'Available' && !localLocks.has(c.n) && c.status !== 'Processing_Hide');
+                
+                let totalRev = 0, upiC = 0, cashC = 0, airtelC = 0, totalDisc = 0;
+                soldCards.forEach(c => {
+                    let d = parseInt(c.d.discount || 0);
+                    totalRev += (c.price - d);
+                    totalDisc += d;
+                    if(c.d.pay === "PhonePe/GPay") upiC++;
+                    else if(c.d.pay === "Airtel Payment Bank") airtelC++;
+                    else cashC++;
+                });
+                
+                let vipA = availableCards.filter(c=>c.cat==="VIP Card").length;
+                let goldA = availableCards.filter(c=>c.cat==="Gold Card").length;
+                let silverA = availableCards.filter(c=>c.cat==="Silver Card").length;
+
+                return { soldCards, pendingCards, availableCards, totalRev, totalDisc, upiC, cashC, airtelC, vipA, goldA, silverA };
+            };
+
             if(loading) return <div className="h-screen flex items-center justify-center font-black text-amber-500 text-6xl animate-pulse bg-[#050505]">DPSG Loading...</div>;
 
             // 📱 STAFF APP UI (WHATSAPP-LIKE FULL SCREEN) 📱
             if(staff) {
+                const stats = getFinanceStats();
+                const reportText = `🔱 *DPSG DAILY FINANCE REPORT* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n📊 *TODAY'S STOCK (बचे कार्ड)*\n• *कुल कार्ड:* 1000\n• *बिक चुके (Sold):* ${stats.soldCards.length}\n• *पेंडिंग (Pending):* ${stats.pendingCards.length}\n• *बचे हुए (Available):* ${stats.availableCards.length}\n  (VIP: ${stats.vipA} | Gold: ${stats.goldA} | Silver: ${stats.silverA})\n\n💰 *FINANCE & SALES (अनुमानित)*\n• *कुल सेल (Revenue):* ₹${stats.totalRev}\n• *कुल डिस्काउंट दिया:* ₹${stats.totalDisc}\n\n💳 *PAYMENT MODE:*\n• *UPI / App:* ${stats.upiC} कार्ड\n• *Cash (नकद):* ${stats.cashC} कार्ड\n• *Airtel Bank:* ${stats.airtelC} कार्ड\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 जय माता दी! 🚩`;
+
                 return (
                     <div className="flex flex-col min-h-screen bg-[#050505] text-white">
                         <div className="fixed top-0 w-full z-40 bg-black/95 backdrop-blur-md border-b border-slate-800 px-5 py-3 flex justify-between items-center shadow-lg">
@@ -354,7 +363,7 @@
                                 <h2 className="text-xl md:text-2xl font-black text-indigo-400 leading-tight tracking-widest">{COMPANY}</h2>
                                 <p className="text-amber-500 text-[10px] md:text-xs font-bold italic truncate">"{SLOGAN}"</p>
                             </div>
-                            <button onClick={() => {localStorage.removeItem('dps_session'); setStaff(null);}} className="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-lg font-black text-xs md:text-sm shadow-lg btn-press"><i className="fa-solid fa-power-off"></i> LOGOUT</button>
+                            <button onClick={() => {sessionStorage.removeItem('dps_session'); setStaff(null);}} className="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-lg font-black text-xs md:text-sm shadow-lg btn-press"><i className="fa-solid fa-power-off"></i> LOGOUT</button>
                         </div>
 
                         <div className="flex-1 overflow-y-auto pt-24 pb-28 px-4 custom-scroll">
@@ -379,7 +388,6 @@
                                                     <p className="text-xl font-black text-white leading-none mb-1">#{c.n} <span className="text-amber-400 text-lg">- {c.d.name || "N/A"}</span></p>
                                                     <p className="text-xs text-slate-400 font-bold"><i className="fa-solid fa-phone"></i> {c.d.mob || "N/A"} | {c.d.pay || "N/A"}</p>
                                                     <p className="text-[10px] text-green-400 font-bold mt-1">Tk: {c.token} {c.d.ref && `| Ref: ${c.d.ref}`}</p>
-                                                    {/* 👁️ BUG FIX 4: साफ़ व्यू बटन */}
                                                     {c.d.link && c.d.link.trim() !== "" && <a href={c.d.link} target="_blank" className="text-blue-400 text-[10px] font-black underline mt-1 block"><i className="fa-solid fa-file-video"></i> View Document / Video</a>}
                                                 </div>
                                             </div>
@@ -402,36 +410,39 @@
                                 </div>
                             )}
 
+                            {/* 📊 FINANCE & REPORTING TAB */}
                             {staffAppTab === 'ACTIVITY' && (
                                 <div className="max-w-3xl mx-auto space-y-4">
-                                    <h3 className="text-lg font-black text-blue-400 border-b border-slate-800 pb-2"><i className="fa-solid fa-chart-pie"></i> Session Activity Report</h3>
+                                    <h3 className="text-2xl font-black text-amber-500 italic mb-4"><i className="fa-solid fa-chart-pie"></i> FINANCE DASHBOARD</h3>
+                                    
                                     <div className="grid grid-cols-2 gap-4 mb-4">
-                                        <div className="bg-green-900/20 border border-green-800 p-3 rounded-xl text-center shadow-inner">
-                                            <p className="text-3xl font-black text-green-500">{sessionStats.verified.length}</p>
-                                            <p className="text-[10px] text-green-400 font-bold uppercase tracking-wider">Total Verified</p>
+                                        <div className="bg-green-900/30 border-2 border-green-600 p-4 rounded-2xl text-center shadow-lg">
+                                            <p className="text-[10px] text-green-400 font-black uppercase tracking-widest mb-1">TOTAL REVENUE</p>
+                                            <p className="text-4xl font-black text-white">₹{stats.totalRev}</p>
                                         </div>
-                                        <div className="bg-red-900/20 border border-red-800 p-3 rounded-xl text-center shadow-inner">
-                                            <p className="text-3xl font-black text-red-500">{sessionStats.rejected.length}</p>
-                                            <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider">Total Rejected</p>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <p className="text-xs font-black text-slate-500 mb-2 uppercase">Verified History</p>
-                                            {sessionStats.verified.length === 0 ? <p className="text-xs text-slate-600 italic">No verifications yet.</p> : 
-                                            <div className="bg-slate-900 rounded-lg p-2 max-h-[200px] overflow-y-auto custom-scroll border border-slate-800 space-y-1">
-                                                {sessionStats.verified.map((v, i) => (<div key={i} className="flex justify-between items-center bg-black px-3 py-2 rounded text-xs"><span className="text-green-400 font-black">#{v.n}</span><span className="text-slate-300 truncate w-32 text-right">{v.name}</span></div>))}
-                                            </div>}
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-black text-slate-500 mb-2 uppercase">Rejected History</p>
-                                            {sessionStats.rejected.length === 0 ? <p className="text-xs text-slate-600 italic">No rejections yet.</p> : 
-                                            <div className="bg-slate-900 rounded-lg p-2 max-h-[200px] overflow-y-auto custom-scroll border border-slate-800 space-y-1">
-                                                {sessionStats.rejected.map((r, i) => (<div key={i} className="flex justify-between items-center bg-black px-3 py-2 rounded text-xs"><span className="text-red-400 font-black">#{r.n}</span><span className="text-slate-300 truncate w-32 text-right">{r.name}</span></div>))}
-                                            </div>}
+                                        <div className="bg-blue-900/30 border-2 border-blue-600 p-4 rounded-2xl text-center shadow-lg">
+                                            <p className="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-1">TOTAL SOLD CARDS</p>
+                                            <p className="text-4xl font-black text-white">{stats.soldCards.length}</p>
                                         </div>
                                     </div>
-                                    <button onClick={()=>{if(window.confirm("Clear History?")){setSessionStats({verified:[],rejected:[]}); localStorage.removeItem('dps_session_stats');}}} className="w-full text-center text-xs text-slate-600 underline mt-4">Clear History</button>
+
+                                    <div className="grid grid-cols-3 gap-2 mb-4">
+                                        <div className="bg-slate-900 p-3 rounded-xl border border-slate-700 text-center"><p className="text-[10px] text-slate-400 font-bold uppercase">UPI/App</p><p className="text-xl font-black text-white">{stats.upiC}</p></div>
+                                        <div className="bg-slate-900 p-3 rounded-xl border border-slate-700 text-center"><p className="text-[10px] text-slate-400 font-bold uppercase">Cash</p><p className="text-xl font-black text-white">{stats.cashC}</p></div>
+                                        <div className="bg-slate-900 p-3 rounded-xl border border-slate-700 text-center"><p className="text-[10px] text-slate-400 font-bold uppercase">Airtel</p><p className="text-xl font-black text-white">{stats.airtelC}</p></div>
+                                    </div>
+
+                                    <div className="bg-slate-900/80 p-5 rounded-2xl border-l-[6px] border-amber-500 shadow-lg mb-6">
+                                        <h4 className="font-black text-white mb-3 uppercase tracking-wider text-sm"><i className="fa-solid fa-boxes-stacked text-amber-500"></i> LIVE STOCK (कार्ड्स का हिसाब)</h4>
+                                        <div className="flex justify-between items-center bg-black p-3 rounded-lg mb-2"><span className="text-slate-400 font-bold text-xs">Total Cards</span><span className="font-black text-lg">1000</span></div>
+                                        <div className="flex justify-between items-center bg-black p-3 rounded-lg mb-2"><span className="text-yellow-400 font-bold text-xs">Pending (पेंडिंग बुकिंग)</span><span className="font-black text-lg text-yellow-400">{stats.pendingCards.length}</span></div>
+                                        <div className="flex justify-between items-center bg-black p-3 rounded-lg"><span className="text-green-400 font-bold text-xs">Available (बचे हुए)</span><span className="font-black text-lg text-green-400">{stats.availableCards.length}</span></div>
+                                        <p className="text-right text-[10px] text-slate-500 font-bold mt-2">VIP: {stats.vipA} | Gold: {stats.goldA} | Silver: {stats.silverA}</p>
+                                    </div>
+
+                                    <a href={`whatsapp://send?text=${encodeURIComponent(reportText)}`} target="_blank" className="w-full bg-[#25D366] hover:bg-[#20b858] text-black font-black py-4 rounded-xl text-lg shadow-lg btn-press flex items-center justify-center gap-3">
+                                        <i className="fa-brands fa-whatsapp text-2xl"></i> GENERATE 9 PM REPORT
+                                    </a>
                                 </div>
                             )}
 
@@ -454,7 +465,7 @@
                                 <i className="fa-solid fa-list-check text-xl mb-1"></i><span className="text-[10px] font-black uppercase">Pending</span>
                             </button>
                             <button onClick={()=>setStaffAppTab('ACTIVITY')} className={`flex flex-col items-center p-2 rounded-xl w-1/3 transition-colors ${staffAppTab==='ACTIVITY'?'text-blue-500':'text-slate-500'}`}>
-                                <i className="fa-solid fa-chart-pie text-xl mb-1"></i><span className="text-[10px] font-black uppercase">Activity</span>
+                                <i className="fa-solid fa-chart-pie text-xl mb-1"></i><span className="text-[10px] font-black uppercase">Report</span>
                             </button>
                             <button onClick={()=>setStaffAppTab('CARDS')} className={`flex flex-col items-center p-2 rounded-xl w-1/3 transition-colors ${staffAppTab==='CARDS'?'text-green-500':'text-slate-500'}`}>
                                 <i className="fa-solid fa-address-card text-xl mb-1"></i><span className="text-[10px] font-black uppercase">All Cards</span>
@@ -518,7 +529,6 @@
                                                 </div>
                                             )}
                                             
-                                            {/* 👁️ VIEW DOCUMENT BUTTON GUARANTEE */}
                                             {selected.d.link && selected.d.link.trim() !== "" && (
                                                 <a href={selected.d.link} target="_blank" className="bg-blue-900/30 border border-blue-500 text-blue-400 px-6 py-3 rounded-lg font-black text-sm mt-2 hover:bg-blue-600 hover:text-white transition-colors btn-press shadow-lg w-full text-center block">
                                                     <i className="fa-solid fa-file-video"></i> View Uploaded Document
@@ -561,7 +571,7 @@
                             </div>
                         )}
 
-                        {/* 📍 STAFF STICKY WHATSAPP SUCCESS POPUP 📍 */}
+                        {/* 📍 STAFF WHATSAPP SUCCESS POPUP 📍 */}
                         {staffSuccessModal && (
                             <div className="fixed inset-0 z-[300] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md pb-safe">
                                 <div className={`glass p-6 md:p-8 max-w-md w-full text-center border-t-8 rounded-3xl bg-[#0a0a0a] shadow-[0_0_30px_rgba(59,130,246,0.3)] ${staffSuccessModal.isReject ? 'border-red-500' : 'border-blue-500'}`}>
@@ -570,12 +580,12 @@
                                     <p className="text-amber-400 font-bold text-xs mb-6 px-4">नोट: मैसेज भेजने के बाद यह बॉक्स अपने आप बंद नहीं होगा। आपको खुद 'Close' दबाना पड़ेगा।</p>
                                     
                                     <div className="space-y-3">
-                                        <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *DPSG STAFF VERIFICATION REPORT* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी हुकुम!* 🚩\n\nप्रबंधन को सूचित किया जाता है कि एक लंबित आवेदन को सफलतापूर्वक *${staffSuccessModal.isReject ? 'REJECT' : 'VERIFY'}* कर दिया गया है。\n\n📋 *ग्राहक विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *ग्राहक का नाम:* ${staffSuccessModal.finalName || 'N/A'}\n• *संपर्क सूत्र:* ${staffSuccessModal.finalMob || 'N/A'}\n• *निवास स्थान:* ${staffSuccessModal.finalVill || 'N/A'}\n${!staffSuccessModal.isReject ? `• *पैन कार्ड (PAN):* ${staffSuccessModal.finalPan || 'N/A'}\n\n💰 *वित्तीय विवरण:*\n• *कार्ड का मूल शुल्क:* ₹${staffSuccessModal.price}\n• *प्रदान की गई छूट:* ₹${staffSuccessModal.finalDisc || 0}\n• *प्राप्त अंतिम राशि:* ₹${staffSuccessModal.finalPaid}\n• *भुगतान का माध्यम:* ${staffSuccessModal.finalPayMode || 'N/A'}\n\n🛠️ *प्रशासनिक टिप्पणी:*\n• *किए गए सुधार/बदलाव:* ${staffSuccessModal.changesStr}\n` : ''}• *सत्यापन कर्ता (Staff ID):* ${staff.id}\n━━━━━━━━━━━━━━━━━━━━━━\n✅ *कार्य पूर्णता के साथ पोर्टल पर अपडेट कर दिया गया है।*`)}`} target="_blank" className="flex items-center justify-center gap-3 w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
+                                        <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *DPSG STAFF VERIFICATION REPORT* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी हुकुम!* 🚩\n\nप्रबंधन को सूचित किया जाता है कि एक लंबित आवेदन को सफलतापूर्वक *${staffSuccessModal.isReject ? 'REJECT' : 'VERIFY'}* कर दिया गया है。\n\n📋 *ग्राहक विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *ग्राहक का नाम:* ${staffSuccessModal.finalName || 'N/A'}\n• *संपर्क सूत्र:* ${staffSuccessModal.finalMob || 'N/A'}\n• *आधार नंबर:* ${staffSuccessModal.finalAdhar || 'N/A'}\n• *निवास स्थान:* ${staffSuccessModal.finalVill || 'N/A'}\n${!staffSuccessModal.isReject ? `• *पैन कार्ड (PAN):* ${staffSuccessModal.finalPan || 'N/A'}\n\n💰 *वित्तीय विवरण:*\n• *कार्ड का मूल शुल्क:* ₹${staffSuccessModal.price}\n• *प्रदान की गई छूट:* ₹${staffSuccessModal.finalDisc || 0}\n• *प्राप्त अंतिम राशि:* ₹${staffSuccessModal.finalPaid}\n• *भुगतान का माध्यम:* ${staffSuccessModal.finalPayMode || 'N/A'}\n\n🛠️ *प्रशासनिक टिप्पणी:*\n• *किए गए सुधार/बदलाव:* ${staffSuccessModal.changesStr}\n` : ''}• *सत्यापन कर्ता (Staff ID):* ${staff.id}\n━━━━━━━━━━━━━━━━━━━━━━\n✅ *कार्य पूर्णता के साथ पोर्टल पर अपडेट कर दिया गया है।*`)}`} target="_blank" className="flex items-center justify-center gap-3 w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
                                             <i className="fa-solid fa-user-tie text-xl"></i> 1. OWNER REPORT (FULL)
                                         </a>
                                         
                                         {!staffSuccessModal.isReject && (
-                                            <a href={`whatsapp://send?phone=91${staffSuccessModal.finalMob}&text=${encodeURIComponent(`🔱 *DIGITAL PROBLEM SOLUTION GROUP (DPSG)* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\nआदरणीय *${staffSuccessModal.finalName}* जी,\n🙏 *जय माता दी! DPSG परिवार में आपका हार्दिक स्वागत है।*\n\nहमें आपको यह सूचित करते हुए अत्यंत हर्ष हो रहा है कि आपने हमारी संस्था पर जो विश्वास जताया है, उसके तहत आपकी DPSG सदस्यता सफलतापूर्वक सक्रिय (Activate) कर दी गई है।\n\n🔖 *आपकी सदस्यता का विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *टोकन संख्या:* ${staffSuccessModal.token}\n• *पंजीकृत पता:* ${staffSuccessModal.finalVill || 'N/A'}\n• *भुगतान राशि:* ₹${staffSuccessModal.finalPaid} (${staffSuccessModal.finalPayMode || ''} द्वारा)\n${staffSuccessModal.finalPan && staffSuccessModal.finalPan !== "N/A" ? `• *पैन कार्ड:* ${staffSuccessModal.finalPan}\n` : ""} \n🎁 *51 मेगा प्राइज़ लकी ड्रॉ (विशेष अवसर):*\nDPSG का सम्मानित सदस्य बनने के साथ ही, अब आप हमारे बहुचर्चित "51 मेगा प्राइज़" के लकी ड्रॉ में आधिकारिक रूप से शामिल हो चुके हैं! ईश्वर ने चाहा तो अगला बड़ा इनाम आपका हो सकता है।\n\n✨ *सदस्यता के लाभ:*\nअब से DPSG द्वारा प्रदान की जाने वाली सभी प्रीमियम ई-मित्र और डिजिटल सेवाएं आपको निरंतर मिलती रहेंगी।\n\n📞 *24/7 ग्राहक सहायता:*\nभविष्य में आपको किसी भी प्रकार की डिजिटल समस्या हो या किसी योजना की जानकारी चाहिए, तो कृपया बेझिझक हमारी हेल्पलाइन (+91 7229874128) पर संपर्क करें। \n\nDPSG परिवार का अभिन्न हिस्सा बनने और हमारा सहयोग करने के लिए आपका हृदय की गहराइयों से बहुत-बहुत धन्यवाद।\n🙏 *आपका दिन शुभ एवं मंगलमय हो!*\n━━━━━━━━━━━━━━━━━━━━━━`)}`} target="_blank" className="flex items-center justify-center gap-3 w-full bg-[#25D366] hover:bg-[#20b858] text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
+                                            <a href={`whatsapp://send?phone=91${staffSuccessModal.finalMob}&text=${encodeURIComponent(`🔱 *DIGITAL PROBLEM SOLUTION GROUP (DPSG)* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\nआदरणीय *${staffSuccessModal.finalName}* जी,\n🙏 *जय माता दी! DPSG परिवार में आपका हार्दिक स्वागत है।*\n\nहमें आपको यह सूचित करते हुए अत्यंत हर्ष हो रहा है कि आपने हमारी संस्था पर जो विश्वास जताया है, उसके तहत आपकी DPSG सदस्यता सफलतापूर्वक सक्रिय (Activate) कर दी गई है।\n\n🔖 *आपकी सदस्यता का विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *टोकन संख्या:* ${staffSuccessModal.token}\n• *आधार नंबर:* ${staffSuccessModal.finalAdhar || 'N/A'}\n• *पंजीकृत पता:* ${staffSuccessModal.finalVill || 'N/A'}\n• *भुगतान राशि:* ₹${staffSuccessModal.finalPaid} (${staffSuccessModal.finalPayMode || ''} द्वारा)\n${staffSuccessModal.finalPan && staffSuccessModal.finalPan !== "N/A" ? `• *पैन कार्ड:* ${staffSuccessModal.finalPan}\n` : ""} \n🎁 *51 मेगा प्राइज़ लकी ड्रॉ (विशेष अवसर):*\nDPSG का सम्मानित सदस्य बनने के साथ ही, अब आप हमारे बहुचर्चित "51 मेगा प्राइज़" के लकी ड्रॉ में आधिकारिक रूप से शामिल हो चुके हैं! ईश्वर ने चाहा तो अगला बड़ा इनाम आपका हो सकता है।\n\n✨ *सदस्यता के लाभ:*\nअब से DPSG द्वारा प्रदान की जाने वाली सभी प्रीमियम ई-मित्र और डिजिटल सेवाएं आपको निरंतर मिलती रहेंगी।\n\n📞 *24/7 ग्राहक सहायता:*\nभविष्य में आपको किसी भी प्रकार की डिजिटल समस्या हो या किसी योजना की जानकारी चाहिए, तो कृपया बेझिझक हमारी हेल्पलाइन (+91 7229874128) पर संपर्क करें। \n\nDPSG परिवार का अभिन्न हिस्सा बनने और हमारा सहयोग करने के लिए आपका हृदय की गहराइयों से बहुत-बहुत धन्यवाद।\n🙏 *आपका दिन शुभ एवं मंगलमय हो!*\n━━━━━━━━━━━━━━━━━━━━━━`)}`} target="_blank" className="flex items-center justify-center gap-3 w-full bg-[#25D366] hover:bg-[#20b858] text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
                                                 <i className="fa-brands fa-whatsapp text-xl"></i> 2. VIP MSG TO CUSTOMER
                                             </a>
                                         )}
@@ -591,7 +601,6 @@
                             </div>
                         )}
                         
-                        {/* 🔍 FULL SCREEN ENLARGED IMAGE MODAL (STAFF) 🔍 */}
                         {enlargedImg && (
                             <div className="fixed inset-0 z-[500] bg-black/95 flex items-center justify-center p-4 backdrop-blur-xl" onClick={() => setEnlargedImg(null)}>
                                 <button onClick={() => setEnlargedImg(null)} className="absolute top-5 right-5 text-white text-5xl font-black hover:text-red-500 transition-colors">&times;</button>
@@ -704,13 +713,14 @@
                         </div>
                     )}
 
+                    {/* 📍 CUSTOMER BOOKING SUCCESS POPUP (WITH AADHAAR) 📍 */}
                     {successModal && (
                         <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4">
                             <div className="glass p-8 max-w-md w-full text-center border-t-8 border-green-500 rounded-3xl shadow-2xl">
                                 <i className="fa-regular fa-circle-check text-7xl text-green-500 mb-4 animate-bounce"></i>
                                 <h3 className="text-3xl font-black mb-2 text-white uppercase">बुकिंग सफल!</h3>
                                 <div className="bg-green-600/20 p-3 rounded-xl border border-green-500 mb-6 font-black text-xl text-green-400">TOKEN: {successModal.token}</div>
-                                <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *DIGITAL PROBLEM SOLUTION GROUP (DPSG)* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी! हुकुम जोरावर बना* 🚩\n\nसंस्था के पोर्टल पर एक नया आवेदन (Booking) सफलतापूर्वक दर्ज किया गया है। कृपया निम्नलिखित विवरण की समीक्षा करें:\n\n📋 *आवेदक का संपूर्ण विवरण:*\n• *टोकन संख्या:* ${successModal.token}\n• *कार्ड क्रमांक:* #${successModal.n} (${successModal.cat})\n• *आवेदक का नाम:* ${successModal.name}\n• *पंजीकृत मोबाइल:* ${successModal.mob}\n• *निवास स्थान (पता):* ${successModal.vill}\n${successModal.pan && successModal.pan !== "N/A" ? `• *पैन कार्ड संख्या:* ${successModal.pan}\n` : ""}💳 *भुगतान का विवरण:*\n• *भुगतान का माध्यम:* ${successModal.pay}\n• *ट्रांजेक्शन आईडी:* ${successModal.ref} \n━━━━━━━━━━━━━━━━━━━━━━\n📞 *हेल्पलाइन:* +91 7229874128\n🌐 *DPSG ऑटोमेटेड सिस्टम*`)}`} onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-3 w-full bg-[#25D366] hover:bg-[#20b858] text-white font-black py-3 rounded-xl text-lg shadow-lg btn-press"><i className="fa-brands fa-whatsapp text-2xl"></i> SEND REPORT (OWNER)</a>
+                                <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *DIGITAL PROBLEM SOLUTION GROUP (DPSG)* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी! हुकुम जोरावर बना* 🚩\n\nसंस्था के पोर्टल पर एक नया आवेदन (Booking) सफलतापूर्वक दर्ज किया गया है। कृपया निम्नलिखित विवरण की समीक्षा करें:\n\n📋 *आवेदक का संपूर्ण विवरण:*\n• *टोकन संख्या:* ${successModal.token}\n• *कार्ड क्रमांक:* #${successModal.n} (${successModal.cat})\n• *आवेदक का नाम:* ${successModal.name}\n• *पंजीकृत मोबाइल:* ${successModal.mob}\n• *आधार नंबर:* ${successModal.adhar}\n• *निवास स्थान (पता):* ${successModal.vill}\n${successModal.pan && successModal.pan !== "N/A" ? `• *पैन कार्ड संख्या:* ${successModal.pan}\n` : ""}💳 *भुगतान का विवरण:*\n• *भुगतान का माध्यम:* ${successModal.pay}\n• *ट्रांजेक्शन आईडी:* ${successModal.ref} \n━━━━━━━━━━━━━━━━━━━━━━\n📞 *हेल्पलाइन:* +91 7229874128\n🌐 *DPSG ऑटोमेटेड सिस्टम*`)}`} onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-3 w-full bg-[#25D366] hover:bg-[#20b858] text-white font-black py-3 rounded-xl text-lg shadow-lg btn-press"><i className="fa-brands fa-whatsapp text-2xl"></i> SEND REPORT (OWNER)</a>
                             </div>
                         </div>
                     )}
@@ -722,7 +732,7 @@
                         </div>
                     )}
 
-                    {!staff && <div className="mt-20 mb-10 text-center"><button onClick={()=>{let u=prompt("Staff ID:");let p=prompt("Pass:");if(ADMINS[u]===p){const sess={id:u,pass:p};localStorage.setItem('dps_session',JSON.stringify(sess));setStaff(sess);}else alert("Access Denied");}} className="text-slate-500 hover:text-indigo-400 font-black tracking-widest text-xs uppercase transition-colors">🔱 STAFF CONTROL CENTER 🔱</button></div>}
+                    {!staff && <div className="mt-20 mb-10 text-center"><button onClick={()=>{let u=prompt("Staff ID:");let p=prompt("Pass:");if(ADMINS[u]===p){const sess={id:u,pass:p};sessionStorage.setItem('dps_session',JSON.stringify(sess));setStaff(sess);}else alert("Access Denied");}} className="text-slate-500 hover:text-indigo-400 font-black tracking-widest text-xs uppercase transition-colors">🔱 STAFF CONTROL CENTER 🔱</button></div>}
                 </div>
             );
         };
