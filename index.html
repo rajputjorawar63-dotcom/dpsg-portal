@@ -29,7 +29,6 @@
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.95); } }
         .custom-scroll::-webkit-scrollbar { width: 8px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 10px; }
-        .dp-view-circle { width: 80px; height: 80px; border-radius: 50%; border: 4px solid #fbbf24; object-fit: cover; box-shadow: 0 0 15px rgba(251,191,36,0.5); }
         
         /* ✨ चमकती फोटो और असली दबने वाले बटन (Real Press Effect) ✨ */
         @keyframes goldGlow {
@@ -149,6 +148,9 @@
             const [showCamera, setShowCamera] = useState(false);
             const [facingMode, setFacingMode] = useState("user"); 
             const videoRef = useRef(null);
+            
+            // 🔍 फोटो को फुल स्क्रीन करने का स्टेट
+            const [enlargedImg, setEnlargedImg] = useState(null);
 
             const loadData = () => {
                 fetch(APP_URL + "?action=GET_DATA")
@@ -242,7 +244,7 @@
                 setSelected(null); setCapturedImg(null); setProcessingId(null); setTimeout(loadData, 1500);
             };
 
-            // 🚩 STAFF MASTER UPDATE (सिंगल क्लिक लॉक और VIP WhatsApp रिपोर्टिंग के साथ)
+            // 🚩 STAFF MASTER UPDATE (VIP WhatsApp रिपोर्टिंग के साथ)
             const masterUpdate = async (c, status, isInsideForm = false) => {
                 setProcessingId(c.n);
                 setCards(prev => prev.map(card => card.n === c.n ? { ...card, status: 'Processing_Hide' } : card));
@@ -298,12 +300,17 @@
 
             const handleOutsideVerify = (c) => { setPayVerified(false); setVerifyOutsideModal(c); };
 
+            // 🔒 कार्ड रेंडर - पीले कार्ड पर लॉक (ग्राहकों के लिए)
             const renderCard = (c) => {
                 const isLocked = localLocks.has(c.n) || c.status === 'Pending';
                 let s = c.status === 'Sold' ? 'Sold' : isLocked ? 'Pending' : 'Available';
                 const color = s === 'Sold' ? 'sold-card' : s === 'Pending' ? 'pending-card' : `card-${c.cat.split(' ')[0]}`;
                 return (
-                    <div key={c.n} onClick={() => s !== 'Sold' && setSelected(c)} className={`grid-item ${color}`}>
+                    <div key={c.n} onClick={() => {
+                        if (s === 'Sold') return;
+                        if (!staff && s === 'Pending') { alert("यह कार्ड पहले ही बुक / पेंडिंग है। कृपया दूसरा कार्ड चुनें।"); return; }
+                        setSelected(c);
+                    }} className={`grid-item ${color}`}>
                         <span className="z-10 relative text-white drop-shadow-md">{c.n}</span>
                         {s === 'Pending' && <i className="fa-solid fa-lock absolute text-black/20 text-5xl md:text-7xl"></i>}
                         {s === 'Sold' && <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-[25px]"><span className="text-red-400 text-2xl font-black rotate-[-15deg] border-4 border-red-500 px-2 py-1">SOLD</span></div>}
@@ -343,7 +350,7 @@
                                     cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Processing_Hide').map(c => (
                                         <div key={c.n} className="bg-slate-900/90 p-4 rounded-2xl border-l-[6px] border-amber-500 shadow-lg flex flex-col gap-4">
                                             <div className="flex items-center gap-4">
-                                                {c.d.dp ? <img src={c.d.dp} className="w-16 h-16 rounded-full border-2 border-amber-500 object-cover" alt="DP" /> : <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black border border-dashed border-slate-600 text-slate-500">NO DP</div>}
+                                                {c.d.dp ? <img src={c.d.dp} onClick={() => setEnlargedImg(c.d.dp)} className="w-16 h-16 rounded-full border-2 border-amber-500 object-cover cursor-pointer" alt="DP" title="बड़ा करें" /> : <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black border border-dashed border-slate-600 text-slate-500">NO DP</div>}
                                                 <div className="flex-1">
                                                     <p className="text-xl font-black text-white leading-none mb-1">#{c.n} <span className="text-amber-400 text-lg">- {c.d.name || "N/A"}</span></p>
                                                     <p className="text-xs text-slate-400 font-bold"><i className="fa-solid fa-phone"></i> {c.d.mob || "N/A"} | {c.d.pay || "N/A"}</p>
@@ -455,6 +462,7 @@
                             </div>
                         )}
 
+                        {/* ✏️ EDIT MODAL (STAFF) */}
                         {selected && (
                             <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto pb-24">
                                 <div className="glass p-6 md:p-10 w-full max-w-5xl border border-amber-500 rounded-3xl bg-[#0a0a0a] shadow-2xl relative my-auto mt-20 md:mt-auto">
@@ -462,6 +470,7 @@
                                     <div className="text-center mb-6"><h3 className="text-4xl font-black text-amber-500 italic mb-1">#{selected.n}</h3><span className="bg-amber-500 text-black px-4 py-1 rounded-full text-sm font-black">{selected.cat}</span></div>
                                     <div className="grid md:grid-cols-2 gap-8">
                                         <div className="flex flex-col items-center justify-center bg-black/40 p-5 rounded-2xl border border-slate-800 shadow-inner">
+                                            {/* 🤳 STAFF DP SECTION WITH UPLOAD BUTTON 🤳 */}
                                             {showCamera ? (
                                                 <div className="relative mb-4">
                                                     <video ref={videoRef} autoPlay playsInline className="w-[200px] h-[200px] rounded-full object-cover border-4 border-blue-500" />
@@ -469,16 +478,22 @@
                                                 </div>
                                             ) : (capturedImg || selected.d.dp) ? (
                                                 <div className="relative mb-4 text-center">
-                                                    <img src={capturedImg || selected.d.dp} className="w-[200px] h-[200px] rounded-full object-cover glow-dp-huge" alt="Customer DP" />
-                                                    <button onClick={()=>startCamera()} className="mt-4 bg-slate-800 text-white px-4 py-2 rounded-full text-xs font-bold border border-slate-600 btn-press"><i className="fa-solid fa-camera"></i> Update DP</button>
+                                                    <img src={capturedImg || selected.d.dp} onClick={() => setEnlargedImg(capturedImg || selected.d.dp)} className="w-[200px] h-[200px] rounded-full object-cover glow-dp-huge cursor-pointer" alt="Customer DP" title="बड़ा करने के लिए क्लिक करें" />
+                                                    <div className="flex gap-2 justify-center mt-4">
+                                                        <button onClick={()=>startCamera()} className="bg-slate-800 text-white px-4 py-2 rounded-full text-xs font-bold border border-slate-600 btn-press"><i className="fa-solid fa-camera"></i> Update DP</button>
+                                                        <label className="bg-slate-800 text-white px-4 py-2 rounded-full text-xs font-bold border border-slate-600 btn-press cursor-pointer"><i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>{if(e.target.files[0]){let r=new FileReader();r.onload=()=>setCapturedImg(r.result);r.readAsDataURL(e.target.files[0]);}}} /></label>
+                                                    </div>
                                                 </div>
                                             ) : (
                                                 <div className="text-center mb-4">
                                                     <div className="w-[200px] h-[200px] bg-slate-900 rounded-full flex flex-col items-center justify-center text-slate-500 font-black mb-2 red-alert-dp"><i className="fa-solid fa-image-portrait text-4xl mb-2 text-red-500/50"></i><span className="text-xl text-red-500">NO DP</span></div>
-                                                    <button onClick={()=>startCamera()} className="bg-amber-500 text-black px-4 py-2 rounded-full text-xs font-bold btn-press"><i className="fa-solid fa-camera"></i> Take Photo Now</button>
+                                                    <div className="flex gap-2 justify-center mt-4">
+                                                        <button onClick={()=>startCamera()} className="bg-amber-500 text-black px-4 py-2 rounded-full text-xs font-bold btn-press"><i className="fa-solid fa-camera"></i> Take Photo</button>
+                                                        <label className="bg-amber-500 text-black px-4 py-2 rounded-full text-xs font-bold btn-press cursor-pointer"><i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>{if(e.target.files[0]){let r=new FileReader();r.onload=()=>setCapturedImg(r.result);r.readAsDataURL(e.target.files[0]);}}} /></label>
+                                                    </div>
                                                 </div>
                                             )}
-                                            {selected.d.link && <a href={selected.d.link} target="_blank" className="bg-blue-900/30 border border-blue-500 text-blue-400 px-6 py-3 rounded-lg font-black text-sm mt-2 hover:bg-blue-600 hover:text-white transition-colors btn-press shadow-lg w-full text-center"><i className="fa-solid fa-file-image"></i> View Uploaded Document</a>}
+                                            {selected.d.link && <a href={selected.d.link} target="_blank" className="bg-blue-900/30 border border-blue-500 text-blue-400 px-6 py-3 rounded-lg font-black text-sm mt-2 hover:bg-blue-600 hover:text-white transition-colors btn-press shadow-lg w-full text-center"><i className="fa-solid fa-file-video"></i> View Uploaded Document</a>}
                                             {staffUpi && (
                                                 <div className="mt-6 text-center bg-black p-4 rounded-xl border border-dashed border-blue-500 w-full">
                                                     <p className="text-blue-400 font-black mb-2 text-sm uppercase">Live Pay QR (Staff Only)</p>
@@ -515,7 +530,6 @@
                             </div>
                         )}
 
-                        {/* 📍 STAFF STICKY WHATSAPP SUCCESS POPUP (FULL VIP DETAIL REPORT) 📍 */}
                         {staffSuccessModal && (
                             <div className="fixed inset-0 z-[300] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md pb-safe">
                                 <div className={`glass p-6 md:p-8 max-w-md w-full text-center border-t-8 rounded-3xl bg-[#0a0a0a] shadow-[0_0_30px_rgba(59,130,246,0.3)] ${staffSuccessModal.isReject ? 'border-red-500' : 'border-blue-500'}`}>
@@ -524,7 +538,7 @@
                                     <p className="text-amber-400 font-bold text-xs mb-6 px-4">नोट: मैसेज भेजने के बाद यह बॉक्स अपने आप बंद नहीं होगा। आपको खुद 'Close' दबाना पड़ेगा।</p>
                                     
                                     <div className="space-y-3">
-                                        <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *DPSG STAFF VERIFICATION REPORT* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी हुकुम!* 🚩\n\nप्रबंधन को सूचित किया जाता है कि एक लंबित आवेदन को सफलतापूर्वक *${staffSuccessModal.isReject ? 'REJECT' : 'VERIFY'}* कर दिया गया है।\n\n📋 *ग्राहक विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *ग्राहक का नाम:* ${staffSuccessModal.finalName || 'N/A'}\n• *संपर्क सूत्र:* ${staffSuccessModal.finalMob || 'N/A'}\n• *निवास स्थान:* ${staffSuccessModal.finalVill || 'N/A'}\n${!staffSuccessModal.isReject ? `• *पैन कार्ड (PAN):* ${staffSuccessModal.finalPan || 'N/A'}\n\n💰 *वित्तीय विवरण:*\n• *कार्ड का मूल शुल्क:* ₹${staffSuccessModal.price}\n• *प्रदान की गई छूट:* ₹${staffSuccessModal.finalDisc || 0}\n• *प्राप्त अंतिम राशि:* ₹${staffSuccessModal.finalPaid}\n• *भुगतान का माध्यम:* ${staffSuccessModal.finalPayMode || 'N/A'}\n\n🛠️ *प्रशासनिक टिप्पणी:*\n• *किए गए सुधार/बदलाव:* ${staffSuccessModal.changesStr}\n` : ''}• *सत्यापन कर्ता (Staff ID):* ${staff.id}\n━━━━━━━━━━━━━━━━━━━━━━\n✅ *कार्य पूर्णता के साथ पोर्टल पर अपडेट कर दिया गया है।*`)}`} target="_blank" className="flex items-center justify-center gap-3 w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
+                                        <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *DPSG STAFF VERIFICATION REPORT* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी हुकुम!* 🚩\n\nप्रबंधन को सूचित किया जाता है कि एक लंबित आवेदन को सफलतापूर्वक *${staffSuccessModal.isReject ? 'REJECT' : 'VERIFY'}* कर दिया गया है。\n\n📋 *ग्राहक विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *ग्राहक का नाम:* ${staffSuccessModal.finalName || 'N/A'}\n• *संपर्क सूत्र:* ${staffSuccessModal.finalMob || 'N/A'}\n• *निवास स्थान:* ${staffSuccessModal.finalVill || 'N/A'}\n${!staffSuccessModal.isReject ? `• *पैन कार्ड (PAN):* ${staffSuccessModal.finalPan || 'N/A'}\n\n💰 *वित्तीय विवरण:*\n• *कार्ड का मूल शुल्क:* ₹${staffSuccessModal.price}\n• *प्रदान की गई छूट:* ₹${staffSuccessModal.finalDisc || 0}\n• *प्राप्त अंतिम राशि:* ₹${staffSuccessModal.finalPaid}\n• *भुगतान का माध्यम:* ${staffSuccessModal.finalPayMode || 'N/A'}\n\n🛠️ *प्रशासनिक टिप्पणी:*\n• *किए गए सुधार/बदलाव:* ${staffSuccessModal.changesStr}\n` : ''}• *सत्यापन कर्ता (Staff ID):* ${staff.id}\n━━━━━━━━━━━━━━━━━━━━━━\n✅ *कार्य पूर्णता के साथ पोर्टल पर अपडेट कर दिया गया है।*`)}`} target="_blank" className="flex items-center justify-center gap-3 w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
                                             <i className="fa-solid fa-user-tie text-xl"></i> 1. OWNER REPORT (FULL)
                                         </a>
                                         
@@ -542,6 +556,14 @@
                                     </div>
                                     <button onClick={() => setStaffSuccessModal(null)} className="mt-6 text-slate-500 font-black text-sm underline pb-2">✖ Close Dashboard</button>
                                 </div>
+                            </div>
+                        )}
+                        
+                        {/* 🔍 FULL SCREEN ENLARGED IMAGE MODAL (STAFF) 🔍 */}
+                        {enlargedImg && (
+                            <div className="fixed inset-0 z-[500] bg-black/95 flex items-center justify-center p-4 backdrop-blur-xl" onClick={() => setEnlargedImg(null)}>
+                                <button onClick={() => setEnlargedImg(null)} className="absolute top-5 right-5 text-white text-5xl font-black hover:text-red-500 transition-colors">&times;</button>
+                                <img src={enlargedImg} className="max-w-full max-h-[90vh] rounded-2xl border-4 border-amber-500 shadow-[0_0_50px_rgba(251,191,36,0.5)] object-contain" />
                             </div>
                         )}
                     </div>
@@ -599,7 +621,8 @@
                                 
                                 <div className="space-y-5">
                                     <div className="bg-black/50 p-6 rounded-2xl border border-dashed border-amber-500 text-center">
-                                        <h4 className="text-amber-400 font-black mb-4"><i className="fa-solid fa-camera"></i> अपनी लाइव फोटो लें (Live DP) *</h4>
+                                        <h4 className="text-amber-400 font-black mb-4"><i className="fa-solid fa-camera"></i> अपनी लाइव फोटो लें या अपलोड करें (Live DP) *</h4>
+                                        {/* 🤳 CUSTOMER DP SECTION WITH UPLOAD BUTTON 🤳 */}
                                         {showCamera ? (
                                             <div className="relative max-w-xs mx-auto">
                                                 <video ref={videoRef} autoPlay playsInline className="w-[200px] h-[200px] mx-auto rounded-full object-cover border-4 border-blue-500" />
@@ -610,11 +633,17 @@
                                             </div>
                                         ) : capturedImg ? (
                                             <div className="relative">
-                                                <img src={capturedImg} className="mx-auto rounded-full w-[200px] h-[200px] border-4 border-amber-500 object-cover shadow-lg" />
-                                                <button type="button" onClick={()=>startCamera(facingMode)} className="mt-4 bg-slate-700 text-white px-4 py-2 rounded-full text-xs font-bold btn-press">Retake Photo</button>
+                                                <img src={capturedImg} onClick={() => setEnlargedImg(capturedImg)} className="mx-auto rounded-full w-[200px] h-[200px] border-4 border-amber-500 object-cover shadow-lg cursor-pointer" title="बड़ा करने के लिए क्लिक करें" />
+                                                <div className="flex gap-2 justify-center mt-4">
+                                                    <button type="button" onClick={()=>startCamera(facingMode)} className="bg-slate-700 text-white px-4 py-2 rounded-full text-xs font-bold btn-press">Retake Photo</button>
+                                                    <label className="bg-slate-700 text-white px-4 py-2 rounded-full text-xs font-bold btn-press cursor-pointer">Upload Photo<input type="file" accept="image/*" hidden onChange={(e)=>{if(e.target.files[0]){let r=new FileReader();r.onload=()=>setCapturedImg(r.result);r.readAsDataURL(e.target.files[0]);}}} /></label>
+                                                </div>
                                             </div>
                                         ) : (
-                                            <button type="button" onClick={()=>startCamera()} className="bg-indigo-600 w-full max-w-xs py-3 rounded-xl font-black text-white text-lg shadow-lg hover:bg-indigo-500 btn-press"><i className="fa-solid fa-camera"></i> START CAMERA</button>
+                                            <div className="flex gap-2 justify-center">
+                                                <button type="button" onClick={()=>startCamera()} className="bg-indigo-600 w-full max-w-xs py-3 rounded-xl font-black text-white text-lg shadow-lg hover:bg-indigo-500 btn-press"><i className="fa-solid fa-camera"></i> START CAMERA</button>
+                                                <label className="bg-slate-700 text-white px-4 py-3 rounded-xl font-black text-lg shadow-lg btn-press cursor-pointer flex items-center gap-2"><i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>{if(e.target.files[0]){let r=new FileReader();r.onload=()=>setCapturedImg(r.result);r.readAsDataURL(e.target.files[0]);}}} /></label>
+                                            </div>
                                         )}
                                     </div>
 
@@ -632,7 +661,8 @@
                                         {payMode === 'Airtel Payment Bank' && <div><label className="text-xs font-black text-red-500 ml-1">PAN CARD *</label><input name="PAN" required pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" placeholder="ABCDE1234F" className="w-full bg-black p-3 rounded-xl font-black border-2 border-red-600 text-white text-base uppercase shadow-inner" /></div>}
                                     </div>
                                     <div className="grid md:grid-cols-2 gap-4">
-                                        <div><label className="text-xs font-bold text-amber-400 ml-1"><i className="fa-solid fa-file-arrow-up"></i> पेमेंट का स्क्रीनशॉट (Option)</label><input type="file" id="file_upload_gallery" accept="image/*" className="w-full bg-slate-900 p-2 rounded-xl font-bold border border-slate-700 text-white file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-black cursor-pointer text-sm" /></div>
+                                        {/* 🎥 CUSTOMER VIDEO / IMAGE UPLOAD FOR DOCUMENT 🎥 */}
+                                        <div><label className="text-xs font-bold text-amber-400 ml-1"><i className="fa-solid fa-file-arrow-up"></i> स्क्रीनशॉट या वीडियो (Option)</label><input type="file" id="file_upload_gallery" accept="image/*,video/*,.pdf" className="w-full bg-slate-900 p-2 rounded-xl font-bold border border-slate-700 text-white file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-black cursor-pointer text-sm" /></div>
                                         <div><label className="text-xs font-bold text-green-400 ml-1"><i className="fa-solid fa-hashtag"></i> Txn ID (रेफरेंस) *</label><input name="Payment_Ref" required placeholder="UTR Number" className="w-full bg-black p-3 rounded-xl font-black border border-green-500 text-green-400 text-base focus:border-amber-500 outline-none shadow-inner" /></div>
                                     </div>
                                     <button type="submit" disabled={processingId === "BOOKING" || !capturedImg} className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black py-4 rounded-xl text-xl md:text-2xl uppercase italic shadow-lg mt-2 disabled:opacity-50 btn-press flex items-center justify-center gap-2">
@@ -644,7 +674,6 @@
                         </div>
                     )}
 
-                    {/* ✅ CUSTOMER BOOKING SUCCESS (OWNER VIP MESSAGE) ✅ */}
                     {successModal && (
                         <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4">
                             <div className="glass p-8 max-w-md w-full text-center border-t-8 border-green-500 rounded-3xl shadow-2xl">
@@ -653,6 +682,14 @@
                                 <div className="bg-green-600/20 p-3 rounded-xl border border-green-500 mb-6 font-black text-xl text-green-400">TOKEN: {successModal.token}</div>
                                 <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *DIGITAL PROBLEM SOLUTION GROUP (DPSG)* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी! हुकुम जोरावर बना* 🚩\n\nसंस्था के पोर्टल पर एक नया आवेदन (Booking) सफलतापूर्वक दर्ज किया गया है। कृपया निम्नलिखित विवरण की समीक्षा करें:\n\n📋 *आवेदक का संपूर्ण विवरण:*\n• *टोकन संख्या:* ${successModal.token}\n• *कार्ड क्रमांक:* #${successModal.n} (${successModal.cat})\n• *आवेदक का नाम:* ${successModal.name}\n• *पंजीकृत मोबाइल:* ${successModal.mob}\n• *निवास स्थान (पता):* ${successModal.vill}\n${successModal.pan && successModal.pan !== "N/A" ? `• *पैन कार्ड संख्या:* ${successModal.pan}\n` : ""}💳 *भुगतान का विवरण:*\n• *भुगतान का माध्यम:* ${successModal.pay}\n• *ट्रांजेक्शन आईडी:* ${successModal.ref} \n━━━━━━━━━━━━━━━━━━━━━━\n📞 *हेल्पलाइन:* +91 7229874128\n🌐 *DPSG ऑटोमेटेड सिस्टम*`)}`} onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-3 w-full bg-[#25D366] hover:bg-[#20b858] text-white font-black py-3 rounded-xl text-lg shadow-lg btn-press"><i className="fa-brands fa-whatsapp text-2xl"></i> SEND REPORT (OWNER)</a>
                             </div>
+                        </div>
+                    )}
+
+                    {/* 🔍 FULL SCREEN ENLARGED IMAGE MODAL (CUSTOMER VIEW) 🔍 */}
+                    {enlargedImg && (
+                        <div className="fixed inset-0 z-[500] bg-black/95 flex items-center justify-center p-4 backdrop-blur-xl" onClick={() => setEnlargedImg(null)}>
+                            <button onClick={() => setEnlargedImg(null)} className="absolute top-5 right-5 text-white text-5xl font-black hover:text-red-500 transition-colors">&times;</button>
+                            <img src={enlargedImg} className="max-w-full max-h-[90vh] rounded-2xl border-4 border-amber-500 shadow-[0_0_50px_rgba(251,191,36,0.5)] object-contain" />
                         </div>
                     )}
 
