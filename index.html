@@ -50,9 +50,9 @@
 <body>
     <div id="root"></div>
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect } = React;
         
-        // 🚀 आपकी एकदम नई फ्रेश लिंक (1000% Confirm) 🚀
+        // 🚀 आपकी न्यू लिंक (पूरी तरह सुरक्षित और वर्किंग)
         const APP_URL = "https://script.google.com/macros/s/AKfycbwvCfeNdYwUqOv7AJfH9NAenCzAPHo3mTzmHlrlFnEZkYQKEiLpd6JXe1GoMMJ7jrN88A/exec";
         
         const COMPANY = "Digital Problem Solution Group";
@@ -99,7 +99,7 @@
             {r:37, n:"Water Bottle Set", d:"स्टाइलिश वॉटर बॉटल सेट।"},
             {r:38, n:"Lunch Box", d:"खाना रहेगा फ्रेश और गरम।"},
             {r:39, n:"Leather Belt", d:"मजबूत और टिकाऊ लेदर बेल्ट।"},
-            {r:40, n:"Woman's Purse", d:"ट्रेंडी और स्टाइलिश হ্যান্ড पर्स।"},
+            {r:40, n:"Woman's Purse", d:"ट्रेंडी और स्टाइलिश हैंड पर्स।"},
             {r:41, n:"Hair Dryer", d:"मनचाहा हेयरस्टाइल पाएं।"},
             {r:42, n:"Leather Bag", d:"मजबूत लेदर बैग।"},
             {r:43, n:"20L Water Bottle", d:"शुद्ध पानी का बड़ा स्टोरेज।"},
@@ -150,17 +150,12 @@
             const [discount, setDiscount] = useState(0);
             const [payVerified, setPayVerified] = useState(false);
             
-            // 📸 4 अलग-अलग डिब्बों के लिए स्टेट (4 Different Boxes State) 📸
-            const [activeCameraBox, setActiveCameraBox] = useState(null); 
-            const [showCamera, setShowCamera] = useState(false);
-            const [facingMode, setFacingMode] = useState("environment"); 
-            const videoRef = useRef(null);
+            // 📸 4 डिब्बों की असली इमेजेस 📸
             const [enlargedImg, setEnlargedImg] = useState(null);
-            
-            const [capturedImg, setCapturedImg] = useState(null);    // 1. Selfie
-            const [aFrontImg, setAFrontImg] = useState(null);        // 2. Aadhaar Front
-            const [aBackImg, setABackImg] = useState(null);          // 3. Aadhaar Back
-            const [panImg, setPanImg] = useState(null);              // 4. PAN Card
+            const [capturedImg, setCapturedImg] = useState(null);    // Selfie (Round)
+            const [aFrontImg, setAFrontImg] = useState(null);        // Aadhaar Front
+            const [aBackImg, setABackImg] = useState(null);          // Aadhaar Back
+            const [panImg, setPanImg] = useState(null);              // PAN Card
 
             const [showLogin, setShowLogin] = useState(false);
             const [showSalesBoard, setShowSalesBoard] = useState(false);
@@ -170,10 +165,10 @@
             const [generatedOtp, setGeneratedOtp] = useState("");
             const [staffTempCreds, setStaffTempCreds] = useState(null);
 
-            // 🌟 1. पीला कार्ड (Pending) वाली बीमारी का पक्का इलाज 🌟
+            // 🌟 ताज़ा डेटा लाने का अचूक लॉजिक (Cache Fix) 🌟
             const loadData = async () => {
                 try {
-                    const res = await fetch(APP_URL + "?action=GET_DATA&_cb=" + new Date().getTime(), { cache: "no-store", headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' } });
+                    const res = await fetch(APP_URL + "?action=GET_DATA&_cb=" + new Date().getTime());
                     const rows = await res.json();
                     
                     if(rows && Array.isArray(rows)) {
@@ -233,43 +228,24 @@
 
             const fetchSoldList = async () => {
                 try {
-                    const res = await fetch(APP_URL + "?action=GET_SOLD_LIST&_cb=" + new Date().getTime(), { cache: "no-store" });
+                    const res = await fetch(APP_URL + "?action=GET_SOLD_LIST&_cb=" + new Date().getTime());
                     const data = await res.json();
                     setSoldListData(data);
                     setShowSalesBoard(true);
-                } catch(e) { alert("Bikri Board data load error!"); }
+                } catch(e) { alert("बिक्री बोर्ड लोड नहीं हो पाया!"); }
             };
 
-            // 📸 4 डिब्बों के लिए स्मार्ट कैमरा इंजन 📸
-            const startCamera = async (boxType, mode = facingMode) => {
-                if(videoRef.current && videoRef.current.srcObject) { videoRef.current.srcObject.getTracks().forEach(t => t.stop()); }
-                setActiveCameraBox(boxType);
-                setShowCamera(true); 
-                setFacingMode(mode);
-                try {
-                    const s = await navigator.mediaDevices.getUserMedia({video: { facingMode: mode }});
-                    videoRef.current.srcObject = s;
-                } catch(err) { alert("Camera Error: " + err.message); }
+            // 📸 नेटिव (मोबाइल के असली) कैमरे और अपलोड का फंक्शन 📸
+            const handleNativeCapture = (e, setterFn) => {
+                const file = e.target.files[0];
+                if(file) {
+                    const reader = new FileReader();
+                    reader.onload = () => setterFn(reader.result);
+                    reader.readAsDataURL(file);
+                }
             };
 
-            const switchCamera = () => { startCamera(activeCameraBox, facingMode === "user" ? "environment" : "user"); };
-
-            const capture = () => {
-                const c = document.createElement("canvas"); c.width = 640; c.height = 480;
-                const ctx = c.getContext("2d"); ctx.drawImage(videoRef.current, 0, 0, 640, 480);
-                const base64Data = c.toDataURL("image/jpeg", 0.6);
-                
-                if (activeCameraBox === "selfie") setCapturedImg(base64Data);
-                else if (activeCameraBox === "aFront") setAFrontImg(base64Data);
-                else if (activeCameraBox === "aBack") setABackImg(base64Data);
-                else if (activeCameraBox === "pan") setPanImg(base64Data);
-                
-                videoRef.current.srcObject.getTracks().forEach(t => t.stop()); 
-                setShowCamera(false);
-                setActiveCameraBox(null);
-            };
-
-            // 🌟 3. OTP और इंटरनेट कनेक्शन की एरर का पक्का इलाज 🌟
+            // 🌟 OTP का सही और परमानेंट तरीका (GET Request) 🌟
             const handleLoginAttempt = async () => {
                 let u = document.getElementById('l_id').value;
                 let p = document.getElementById('l_pass').value;
@@ -277,25 +253,20 @@
                     setProcessingId("OTP_SENDING");
                     setStaffTempCreds({id: u, pass: p});
                     try {
-                        // POST Request to strictly bypass opaque CORS issues
-                        const params = new URLSearchParams({ action: 'SEND_OTP', staffEmail: 'Chanchalbaisa722@gmail.com' });
-                        const res = await fetch(APP_URL, {
-                            method: 'POST',
-                            body: params
-                        });
+                        const res = await fetch(APP_URL + "?action=SEND_OTP&staffEmail=Chanchalbaisa722@gmail.com&_cb=" + new Date().getTime());
                         const data = await res.json();
                         
                         if(data.status === "SUCCESS") {
                             setGeneratedOtp(data.otp);
                             setOtpStep(true);
                             setProcessingId(null);
-                            alert("सुरक्षा अलर्ट: ओनर की ईमेल (Chanchalbaisa...) पर OTP भेज दिया गया है।");
+                            alert("सुरक्षा अलर्ट: ओनर की ईमेल पर OTP भेज दिया गया है।");
                         } else {
                             throw new Error("OTP Failed Server Side");
                         }
                     } catch(e) {
                         setProcessingId(null);
-                        alert("OTP भेजने में तकनीकी समस्या आई। (नेटवर्क त्रुटि या सर्वर उपलब्ध नहीं है)");
+                        alert("OTP भेजने में तकनीकी समस्या आई।");
                     }
                 } else {
                     alert("Access Denied: Wrong ID or Password!");
@@ -322,7 +293,6 @@
                 params.append("action", "BOOK"); params.append("S_No", n.toString());
                 params.append("Category", selected.cat); params.append("Base_Price", selected.price);
                 
-                // 📸 चारों डिब्बों की फोटो एक साथ भेजना 📸
                 if(capturedImg) params.append("selfie", capturedImg); 
                 if(aFrontImg) params.append("aFront", aFrontImg); 
                 if(aBackImg) params.append("aBack", aBackImg); 
@@ -624,32 +594,15 @@
                                     <div className="text-center mb-6"><h3 className="text-4xl font-black text-amber-500 italic mb-1">#{selected.n}</h3><span className="bg-amber-500 text-black px-4 py-1 rounded-full text-sm font-black">{selected.cat}</span></div>
                                     <div className="grid md:grid-cols-2 gap-8">
                                         <div className="flex flex-col items-center justify-center bg-black/40 p-5 rounded-2xl border border-slate-800 shadow-inner">
-                                            {showCamera ? (
-                                                <div className="relative mb-4 w-full h-[300px] overflow-hidden rounded-xl border-4 border-amber-500">
-                                                    <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-                                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[80%] h-[70%] border-4 border-dashed border-white rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] pointer-events-none flex items-center justify-center">
-                                                        <span className="text-white/50 font-black tracking-widest text-xl">DPSG SCAN</span>
-                                                    </div>
-                                                    <div className="absolute bottom-4 left-0 w-full flex gap-2 justify-center z-10">
-                                                        <button onClick={switchCamera} className="bg-slate-700 text-white px-3 py-1 rounded text-xs btn-press">Flip</button>
-                                                        <button onClick={capture} className="bg-amber-500 text-black px-4 py-1 rounded text-xs font-black btn-press">Click</button>
-                                                    </div>
-                                                </div>
-                                            ) : (capturedImg || selected.d.dp) ? (
+                                            
+                                            {/* स्टाफ के लिए सिर्फ कस्टमर की अपलोडेड DP दिखेगी */}
+                                            {selected.d.dp ? (
                                                 <div className="relative mb-4 text-center">
-                                                    <img src={capturedImg || selected.d.dp} onClick={() => setEnlargedImg(capturedImg || selected.d.dp)} className="w-[200px] h-[200px] rounded-full object-cover glow-dp-huge cursor-pointer" alt="Customer DP" title="बड़ा करने के लिए क्लिक करें" />
-                                                    <div className="flex gap-2 justify-center mt-4">
-                                                        <button onClick={()=>startCamera('selfie')} className="bg-slate-800 text-white px-4 py-2 rounded-full text-xs font-bold border border-slate-600 btn-press"><i className="fa-solid fa-camera"></i> Update DP</button>
-                                                        <label className="bg-slate-800 text-white px-4 py-2 rounded-full text-xs font-bold border border-slate-600 btn-press cursor-pointer"><i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>{if(e.target.files[0]){let r=new FileReader();r.onload=()=>setCapturedImg(r.result);r.readAsDataURL(e.target.files[0]);}}} /></label>
-                                                    </div>
+                                                    <img src={selected.d.dp} onClick={() => setEnlargedImg(selected.d.dp)} className="w-[200px] h-[200px] rounded-full object-cover glow-dp-huge cursor-pointer" alt="Customer DP" title="बड़ा करने के लिए क्लिक करें" />
                                                 </div>
                                             ) : (
                                                 <div className="text-center mb-4">
                                                     <div className="w-[200px] h-[200px] bg-slate-900 rounded-full flex flex-col items-center justify-center text-slate-500 font-black mb-2 red-alert-dp"><i className="fa-solid fa-image-portrait text-4xl mb-2 text-red-500/50"></i><span className="text-xl text-red-500">NO DP</span></div>
-                                                    <div className="flex gap-2 justify-center mt-4">
-                                                        <button onClick={()=>startCamera('selfie')} className="bg-amber-500 text-black px-4 py-2 rounded-full text-xs font-bold btn-press"><i className="fa-solid fa-camera"></i> Take Photo</button>
-                                                        <label className="bg-amber-500 text-black px-4 py-2 rounded-full text-xs font-bold btn-press cursor-pointer"><i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>{if(e.target.files[0]){let r=new FileReader();r.onload=()=>setCapturedImg(r.result);r.readAsDataURL(e.target.files[0]);}}} /></label>
-                                                    </div>
                                                 </div>
                                             )}
                                             
@@ -831,106 +784,113 @@
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <form onSubmit={bookCard} className="glass p-6 md:p-10 w-full max-w-3xl border border-amber-500 rounded-3xl shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
                                 <button type="button" onClick={() => {
-                                    setSelected(null); setShowCamera(false); setCapturedImg(null); setAFrontImg(null); setABackImg(null); setPanImg(null);
+                                    setSelected(null); setCapturedImg(null); setAFrontImg(null); setABackImg(null); setPanImg(null);
                                 }} className="absolute top-4 right-6 text-4xl text-slate-400 hover:text-white btn-press">&times;</button>
                                 <div className="text-center mb-6"><h3 className="text-3xl md:text-5xl font-black text-amber-500 mb-1 uppercase">CARD #{selected.n}</h3><span className="bg-amber-500 text-black px-4 py-1 rounded-full text-sm font-black">{selected.cat} | ₹{selected.price}</span></div>
                                 
                                 <div className="space-y-5">
-                                    {showCamera ? (
-                                        <div className="bg-black/50 p-6 rounded-2xl border border-dashed border-amber-500 text-center">
-                                            <h4 className="text-amber-400 font-black mb-4"><i className="fa-solid fa-camera"></i> कैमरा चालू है...</h4>
-                                            <div className="relative mx-auto w-full h-[300px] overflow-hidden rounded-xl border-4 border-blue-500">
-                                                <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-                                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[80%] h-[70%] border-4 border-dashed border-white rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] pointer-events-none flex items-center justify-center">
-                                                    <span className="text-white/50 font-black tracking-widest text-2xl uppercase">{activeCameraBox === 'selfie' ? 'चेहरा (Face)' : 'DPSG SCAN'}</span>
+                                    
+                                    {/* 📦 1. NATIVE SELFIE CAMERA 📦 */}
+                                    <div className="bg-black/50 p-6 rounded-2xl border-2 border-dashed border-amber-500 text-center">
+                                        <h4 className="text-amber-400 font-black mb-4"><i className="fa-solid fa-user-circle"></i> 1. लाइव सेल्फी (Face Photo) *</h4>
+                                        {capturedImg ? (
+                                            <div>
+                                                <img src={capturedImg} className="mx-auto rounded-full w-[150px] h-[150px] border-4 border-amber-500 object-cover shadow-lg" />
+                                                <div className="flex justify-center gap-3 mt-4">
+                                                    <button type="button" onClick={()=>setEnlargedImg(capturedImg)} className="bg-blue-600 px-4 py-2 rounded-lg font-bold text-white shadow-md btn-press"><i className="fa-solid fa-eye"></i> View</button>
+                                                    <label className="bg-red-600 px-4 py-2 rounded-lg font-bold text-white shadow-md cursor-pointer btn-press"><i className="fa-solid fa-camera"></i> Retake<input type="file" accept="image/*" capture="user" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} /></label>
                                                 </div>
-                                                <div className="absolute bottom-4 left-0 w-full flex gap-2 justify-center z-10">
-                                                    <button type="button" onClick={switchCamera} className="bg-slate-700 text-white px-4 py-2 rounded-lg font-bold text-sm btn-press shadow-lg border border-slate-500"><i className="fa-solid fa-camera-rotate"></i> Flip</button>
-                                                    <button type="button" onClick={capture} className="bg-amber-500 text-black px-8 py-2 rounded-lg font-black shadow-lg btn-press border-2 border-white">CLICK 📸</button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex justify-center gap-3">
+                                                <label className="bg-amber-500 hover:bg-amber-400 px-6 py-4 rounded-2xl font-black text-black shadow-[0_0_20px_rgba(251,191,36,0.4)] cursor-pointer flex-1 text-lg btn-press transition-transform">
+                                                    <i className="fa-solid fa-camera text-2xl mb-1 block"></i> OPEN NATIVE CAMERA
+                                                    <input type="file" accept="image/*" capture="user" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} />
+                                                </label>
+                                                <label className="bg-slate-800 border border-slate-600 px-4 py-4 rounded-2xl font-bold text-slate-300 shadow-lg cursor-pointer flex-none btn-press">
+                                                    <i className="fa-solid fa-images text-xl mb-1 block"></i> Gallery
+                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} />
+                                                </label>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* 📦 2. NATIVE AADHAAR FRONT 📦 */}
+                                    <div className="bg-black/40 p-5 rounded-xl border border-dashed border-indigo-500 text-center">
+                                        <h4 className="text-indigo-400 font-black mb-3 text-sm"><i className="fa-regular fa-id-card"></i> 2. आधार कार्ड (Front)</h4>
+                                        {aFrontImg ? (
+                                            <div>
+                                                <img src={aFrontImg} className="mx-auto rounded-lg w-full max-w-[250px] border-2 border-indigo-500 shadow-md" />
+                                                <div className="flex justify-center gap-2 mt-3">
+                                                    <button type="button" onClick={()=>setEnlargedImg(aFrontImg)} className="bg-blue-600 px-4 py-1.5 rounded-lg text-xs font-bold text-white btn-press">View</button>
+                                                    <label className="bg-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer btn-press">Retake<input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} /></label>
                                                 </div>
                                             </div>
-                                            <button type="button" onClick={()=>{setShowCamera(false); setActiveCameraBox(null);}} className="mt-4 text-slate-400 underline">कैमरा बंद करें</button>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            {/* 📦 BOX 1: SELFIE 📦 */}
-                                            <div className="bg-black/40 p-5 rounded-2xl border-2 border-dashed border-amber-500 text-center">
-                                                <h4 className="text-amber-400 font-black mb-3 text-sm"><i className="fa-solid fa-user-circle"></i> 1. लाइव सेल्फी (Live Photo) *</h4>
-                                                {capturedImg ? (
-                                                    <div>
-                                                        <img src={capturedImg} className="mx-auto rounded-full w-[120px] h-[120px] border-4 border-amber-500 object-cover shadow-lg" />
-                                                        <div className="flex justify-center gap-2 mt-3">
-                                                            <button type="button" onClick={()=>startCamera("selfie", "user")} className="bg-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold text-white"><i className="fa-solid fa-camera"></i> Retake</button>
-                                                            <label className="bg-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer"><i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>{let r=new FileReader();r.onload=()=>setCapturedImg(r.result);r.readAsDataURL(e.target.files[0]);}} /></label>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex justify-center gap-3">
-                                                        <button type="button" onClick={()=>startCamera("selfie", "user")} className="bg-indigo-600 px-4 py-2 rounded-xl text-sm font-black text-white shadow-lg btn-press flex-1"><i className="fa-solid fa-camera"></i> TAKE SELFIE</button>
-                                                        <label className="bg-slate-700 px-4 py-2 rounded-xl text-sm font-black text-white shadow-lg btn-press cursor-pointer flex-1"><i className="fa-solid fa-upload"></i> UPLOAD<input type="file" accept="image/*" hidden onChange={(e)=>{let r=new FileReader();r.onload=()=>setCapturedImg(r.result);r.readAsDataURL(e.target.files[0]);}} /></label>
-                                                    </div>
-                                                )}
+                                        ) : (
+                                            <div className="flex justify-center gap-3">
+                                                <label className="bg-indigo-600 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                                    <i className="fa-solid fa-camera mb-1 block text-lg"></i> Scan Front
+                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} />
+                                                </label>
+                                                <label className="bg-slate-700 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                                    <i className="fa-solid fa-upload mb-1 block text-lg"></i> Upload
+                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} />
+                                                </label>
                                             </div>
+                                        )}
+                                    </div>
 
-                                            {/* 📦 BOX 2: AADHAAR FRONT 📦 */}
-                                            <div className="bg-black/40 p-4 rounded-xl border border-dashed border-indigo-500 text-center">
-                                                <h4 className="text-indigo-400 font-black mb-2 text-sm"><i className="fa-regular fa-id-card"></i> 2. आधार कार्ड (Front)</h4>
-                                                {aFrontImg ? (
-                                                    <div>
-                                                        <img src={aFrontImg} className="mx-auto rounded-lg w-full max-w-[200px] border-2 border-indigo-500 shadow-md" />
-                                                        <div className="flex justify-center gap-2 mt-2">
-                                                            <button type="button" onClick={()=>startCamera("aFront", "environment")} className="bg-slate-700 px-3 py-1 rounded text-[10px] font-bold text-white">Retake</button>
-                                                            <label className="bg-slate-700 px-3 py-1 rounded text-[10px] font-bold text-white cursor-pointer">Upload<input type="file" accept="image/*" hidden onChange={(e)=>{let r=new FileReader();r.onload=()=>setAFrontImg(r.result);r.readAsDataURL(e.target.files[0]);}} /></label>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex justify-center gap-2">
-                                                        <button type="button" onClick={()=>startCamera("aFront", "environment")} className="bg-indigo-600 px-3 py-2 rounded-lg text-xs font-bold text-white flex-1"><i className="fa-solid fa-camera"></i> Scan Front</button>
-                                                        <label className="bg-slate-700 px-3 py-2 rounded-lg text-xs font-bold text-white cursor-pointer flex-1"><i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>{let r=new FileReader();r.onload=()=>setAFrontImg(r.result);r.readAsDataURL(e.target.files[0]);}} /></label>
-                                                    </div>
-                                                )}
+                                    {/* 📦 3. NATIVE AADHAAR BACK 📦 */}
+                                    <div className="bg-black/40 p-5 rounded-xl border border-dashed border-indigo-500 text-center">
+                                        <h4 className="text-indigo-400 font-black mb-3 text-sm"><i className="fa-regular fa-id-card"></i> 3. आधार कार्ड (Back)</h4>
+                                        {aBackImg ? (
+                                            <div>
+                                                <img src={aBackImg} className="mx-auto rounded-lg w-full max-w-[250px] border-2 border-indigo-500 shadow-md" />
+                                                <div className="flex justify-center gap-2 mt-3">
+                                                    <button type="button" onClick={()=>setEnlargedImg(aBackImg)} className="bg-blue-600 px-4 py-1.5 rounded-lg text-xs font-bold text-white btn-press">View</button>
+                                                    <label className="bg-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer btn-press">Retake<input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} /></label>
+                                                </div>
                                             </div>
-
-                                            {/* 📦 BOX 3: AADHAAR BACK 📦 */}
-                                            <div className="bg-black/40 p-4 rounded-xl border border-dashed border-indigo-500 text-center">
-                                                <h4 className="text-indigo-400 font-black mb-2 text-sm"><i className="fa-regular fa-id-card"></i> 3. आधार कार्ड (Back)</h4>
-                                                {aBackImg ? (
-                                                    <div>
-                                                        <img src={aBackImg} className="mx-auto rounded-lg w-full max-w-[200px] border-2 border-indigo-500 shadow-md" />
-                                                        <div className="flex justify-center gap-2 mt-2">
-                                                            <button type="button" onClick={()=>startCamera("aBack", "environment")} className="bg-slate-700 px-3 py-1 rounded text-[10px] font-bold text-white">Retake</button>
-                                                            <label className="bg-slate-700 px-3 py-1 rounded text-[10px] font-bold text-white cursor-pointer">Upload<input type="file" accept="image/*" hidden onChange={(e)=>{let r=new FileReader();r.onload=()=>setABackImg(r.result);r.readAsDataURL(e.target.files[0]);}} /></label>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex justify-center gap-2">
-                                                        <button type="button" onClick={()=>startCamera("aBack", "environment")} className="bg-indigo-600 px-3 py-2 rounded-lg text-xs font-bold text-white flex-1"><i className="fa-solid fa-camera"></i> Scan Back</button>
-                                                        <label className="bg-slate-700 px-3 py-2 rounded-lg text-xs font-bold text-white cursor-pointer flex-1"><i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>{let r=new FileReader();r.onload=()=>setABackImg(r.result);r.readAsDataURL(e.target.files[0]);}} /></label>
-                                                    </div>
-                                                )}
+                                        ) : (
+                                            <div className="flex justify-center gap-3">
+                                                <label className="bg-indigo-600 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                                    <i className="fa-solid fa-camera mb-1 block text-lg"></i> Scan Back
+                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} />
+                                                </label>
+                                                <label className="bg-slate-700 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                                    <i className="fa-solid fa-upload mb-1 block text-lg"></i> Upload
+                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} />
+                                                </label>
                                             </div>
+                                        )}
+                                    </div>
 
-                                            {/* 📦 BOX 4: PAN CARD 📦 */}
-                                            <div className="bg-black/40 p-4 rounded-xl border border-dashed border-red-500 text-center">
-                                                <h4 className="text-red-400 font-black mb-2 text-sm"><i className="fa-solid fa-credit-card"></i> 4. पैन कार्ड (PAN Card)</h4>
-                                                {panImg ? (
-                                                    <div>
-                                                        <img src={panImg} className="mx-auto rounded-lg w-full max-w-[200px] border-2 border-red-500 shadow-md" />
-                                                        <div className="flex justify-center gap-2 mt-2">
-                                                            <button type="button" onClick={()=>startCamera("pan", "environment")} className="bg-slate-700 px-3 py-1 rounded text-[10px] font-bold text-white">Retake</button>
-                                                            <label className="bg-slate-700 px-3 py-1 rounded text-[10px] font-bold text-white cursor-pointer">Upload<input type="file" accept="image/*" hidden onChange={(e)=>{let r=new FileReader();r.onload=()=>setPanImg(r.result);r.readAsDataURL(e.target.files[0]);}} /></label>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex justify-center gap-2">
-                                                        <button type="button" onClick={()=>startCamera("pan", "environment")} className="bg-red-600 px-3 py-2 rounded-lg text-xs font-bold text-white flex-1"><i className="fa-solid fa-camera"></i> Scan PAN</button>
-                                                        <label className="bg-slate-700 px-3 py-2 rounded-lg text-xs font-bold text-white cursor-pointer flex-1"><i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>{let r=new FileReader();r.onload=()=>setPanImg(r.result);r.readAsDataURL(e.target.files[0]);}} /></label>
-                                                    </div>
-                                                )}
+                                    {/* 📦 4. NATIVE PAN CARD 📦 */}
+                                    <div className="bg-black/40 p-5 rounded-xl border border-dashed border-red-500 text-center">
+                                        <h4 className="text-red-400 font-black mb-3 text-sm"><i className="fa-solid fa-credit-card"></i> 4. पैन कार्ड (PAN Card)</h4>
+                                        {panImg ? (
+                                            <div>
+                                                <img src={panImg} className="mx-auto rounded-lg w-full max-w-[250px] border-2 border-red-500 shadow-md" />
+                                                <div className="flex justify-center gap-2 mt-3">
+                                                    <button type="button" onClick={()=>setEnlargedImg(panImg)} className="bg-blue-600 px-4 py-1.5 rounded-lg text-xs font-bold text-white btn-press">View</button>
+                                                    <label className="bg-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer btn-press">Retake<input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} /></label>
+                                                </div>
                                             </div>
-                                        </>
-                                    )}
+                                        ) : (
+                                            <div className="flex justify-center gap-3">
+                                                <label className="bg-red-600 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                                    <i className="fa-solid fa-camera mb-1 block text-lg"></i> Scan PAN
+                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} />
+                                                </label>
+                                                <label className="bg-slate-700 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                                    <i className="fa-solid fa-upload mb-1 block text-lg"></i> Upload
+                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} />
+                                                </label>
+                                            </div>
+                                        )}
+                                    </div>
 
+                                    {/* FORM DETAILS */}
                                     <div><label className="text-xs font-bold text-slate-400 ml-1">पूरा नाम (Full Name) *</label><input name="Customer_Name" required className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none" /></div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div><label className="text-xs font-bold text-slate-400 ml-1">मोबाइल (Mobile) *</label><input name="Mobile" type="tel" pattern="[0-9]{10}" required className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none" /></div>
@@ -1005,7 +965,7 @@
                                         </>
                                     ) : (
                                         <>
-                                            <p className="text-xs text-slate-400 mb-4 font-bold">ओनर की ईमेल (Chanchalbaisa...) पर 6 अंकों का सुरक्षा कोड भेजा गया है।</p>
+                                            <p className="text-xs text-slate-400 mb-4 font-bold">ओनर की ईमेल पर 6 अंकों का सुरक्षा कोड भेजा गया है।</p>
                                             <input value={otpValue} onChange={(e)=>setOtpValue(e.target.value)} placeholder="6 Digit OTP" maxLength="6" className="w-full bg-black p-4 rounded-xl border-2 border-green-500 mb-6 text-green-400 text-center font-black tracking-[0.5em] text-2xl outline-none" />
                                             <button onClick={handleOtpVerify} className="w-full bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-xl btn-press text-lg shadow-lg">
                                                 <i className="fa-solid fa-check-double"></i> VERIFY OTP & ENTER
