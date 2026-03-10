@@ -37,6 +37,14 @@
         .red-alert-dp { border: 8px dashed #ef4444; box-shadow: 0 0 20px #ef4444; }
         .btn-press:active { transform: scale(0.92) !important; filter: brightness(0.8); }
         .btn-press:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+        
+        .neon-btn {
+            background: rgba(0,0,0,0.6); border: 2px solid #fbbf24; color: #fbbf24;
+            box-shadow: 0 0 10px #fbbf24, inset 0 0 5px #fbbf24;
+            animation: neonPulse 1.5s infinite alternate;
+        }
+        @keyframes neonPulse { from { box-shadow: 0 0 5px #fbbf24; } to { box-shadow: 0 0 20px #fbbf24; } }
+        .stock-ticker { background: #7f1d1d; color: white; padding: 10px; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid #fbbf24; letter-spacing: 1px;}
     </style>
 </head>
 <body>
@@ -45,7 +53,7 @@
         const { useState, useEffect, useRef } = React;
         
         // 🚀 आपकी नई फ्रेश लिंक यहाँ 1000% सेट कर दी गई है
-        const APP_URL = "https://script.google.com/macros/s/AKfycbzA3g5I1fK1Uf3AKZU8Xx3CR38TUEUd6zU39u5zZrN5q2tGmC3AjroN2BS5j7mjjWdZIQ/exec";
+        const APP_URL = "https://script.google.com/macros/s/AKfycbwRXZKI8dIb_c8LCvQTNrBnxkfIX9QsHO68agcM9k_t6-kA_K0kKKg5lrvLxMiTfYRGrA/exec";
         
         const COMPANY = "Digital Problem Solution Group";
         const SLOGAN = "समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा";
@@ -144,10 +152,17 @@
             
             const [capturedImg, setCapturedImg] = useState(null);
             const [showCamera, setShowCamera] = useState(false);
-            const [facingMode, setFacingMode] = useState("user"); 
+            const [facingMode, setFacingMode] = useState("environment"); 
             const videoRef = useRef(null);
             const [enlargedImg, setEnlargedImg] = useState(null);
             const [showLogin, setShowLogin] = useState(false);
+            
+            const [showSalesBoard, setShowSalesBoard] = useState(false);
+            const [soldListData, setSoldListData] = useState([]);
+            const [otpStep, setOtpStep] = useState(false);
+            const [otpValue, setOtpValue] = useState("");
+            const [generatedOtp, setGeneratedOtp] = useState("");
+            const [staffTempCreds, setStaffTempCreds] = useState(null);
 
             const loadData = async () => {
                 try {
@@ -161,7 +176,7 @@
                             let s = 'Available';
                             if(rD) {
                                let rawS = (rD[4] || 'Available').toString().trim().toLowerCase();
-                               if(rawS.includes("sold")) s = "Sold";
+                               if(rawS.includes("sold") || rawS.includes("success") || rawS.includes("verified")) s = "Sold";
                                else if(rawS.includes("pending")) s = "Pending";
                                else if(rawS.includes("reject")) s = "Rejected"; 
                             }
@@ -192,6 +207,15 @@
 
             useEffect(() => { loadData(); const itvl = setInterval(loadData, 10000); return () => clearInterval(itvl); }, []);
 
+            const fetchSoldList = async () => {
+                try {
+                    const res = await fetch(APP_URL + "?action=GET_SOLD_LIST&_cb=" + new Date().getTime());
+                    const data = await res.json();
+                    setSoldListData(data);
+                    setShowSalesBoard(true);
+                } catch(e) { alert("Data load error!"); }
+            };
+
             const startCamera = async (mode = facingMode) => {
                 if(videoRef.current && videoRef.current.srcObject) { videoRef.current.srcObject.getTracks().forEach(t => t.stop()); }
                 setShowCamera(true); setFacingMode(mode);
@@ -204,10 +228,43 @@
             const switchCamera = () => { startCamera(facingMode === "user" ? "environment" : "user"); };
 
             const capture = () => {
-                const c = document.createElement("canvas"); c.width = 250; c.height = 250;
-                const ctx = c.getContext("2d"); ctx.drawImage(videoRef.current, 0, 0, 250, 250);
+                const c = document.createElement("canvas"); c.width = 640; c.height = 480;
+                const ctx = c.getContext("2d"); ctx.drawImage(videoRef.current, 0, 0, 640, 480);
                 setCapturedImg(c.toDataURL("image/jpeg", 0.6));
                 videoRef.current.srcObject.getTracks().forEach(t => t.stop()); setShowCamera(false);
+            };
+
+            const handleLoginAttempt = async () => {
+                let u = document.getElementById('l_id').value;
+                let p = document.getElementById('l_pass').value;
+                if(ADMINS[u] === p) {
+                    setProcessingId("OTP_SENDING");
+                    setStaffTempCreds({id: u, pass: p});
+                    try {
+                        const res = await fetch(APP_URL + "?action=SEND_OTP&staffEmail=Chanchalbaisa722@gmail.com");
+                        const data = await res.json();
+                        setGeneratedOtp(data.otp);
+                        setOtpStep(true);
+                        setProcessingId(null);
+                        alert("सुरक्षा अलर्ट: ओनर की ईमेल (Chanchalbaisa...) पर OTP भेज दिया गया है।");
+                    } catch(e) {
+                        setProcessingId(null);
+                        alert("OTP भेजने में तकनीकी समस्या आई।");
+                    }
+                } else {
+                    alert("Access Denied: Wrong ID or Password!");
+                }
+            };
+
+            const handleOtpVerify = () => {
+                if(otpValue == generatedOtp) {
+                    sessionStorage.setItem('dps_session', JSON.stringify(staffTempCreds));
+                    setStaff(staffTempCreds);
+                    setShowLogin(false);
+                    setOtpStep(false);
+                } else {
+                    alert("गलत OTP! कृपया ईमेल चेक करें।");
+                }
             };
 
             const bookCard = async (e) => {
@@ -218,15 +275,14 @@
                 const params = new URLSearchParams(Object.fromEntries(fd));
                 params.append("action", "BOOK"); params.append("S_No", n.toString());
                 params.append("Category", selected.cat); params.append("Base_Price", selected.price);
-                if(capturedImg) params.append("DP_Link", capturedImg);
+                if(capturedImg) params.append("selfie", capturedImg); 
 
-                const fileInput = document.getElementById('file_upload_gallery');
-                if (fileInput && fileInput.files.length > 0) {
-                    const file = fileInput.files[0];
+                const docUploads = document.getElementById('file_upload_gallery');
+                if (docUploads && docUploads.files.length > 0) {
+                    const file = docUploads.files[0];
                     const reader = new FileReader();
                     reader.onloadend = async () => {
-                        params.append("File_Data", reader.result.replace("data:", "").replace(/^.+,/, "")); 
-                        params.append("File_Name", file.name);
+                        params.append("aFront", reader.result);
                         try { await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' }); } catch(err){}
                         finishBooking(fd, n);
                     };
@@ -281,7 +337,24 @@
                     Customer_Name: sName, Mobile: sMob, Aadhaar: sAdhar, PAN: sPan,
                     Payment_Mode: sPay, Payment_Ref: sRef, Paid: sPaid, Discount: finalDisc
                 });
-                if(capturedImg) params.append("DP_Link", capturedImg);
+
+                let billBase64 = null, ecardBase64 = null;
+                if(isInsideForm) {
+                    const billInput = document.getElementById('staff_bill_upload');
+                    const cardInput = document.getElementById('staff_card_upload');
+                    
+                    const getBase64 = (file) => new Promise((resolve) => {
+                        let reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.readAsDataURL(file);
+                    });
+
+                    if(billInput && billInput.files[0]) billBase64 = await getBase64(billInput.files[0]);
+                    if(cardInput && cardInput.files[0]) ecardBase64 = await getBase64(cardInput.files[0]);
+                    
+                    if(billBase64) params.append("bill", billBase64);
+                    if(ecardBase64) params.append("ecard", ecardBase64);
+                }
 
                 try { await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' }); } catch(error) { console.error(error); }
                 
@@ -307,7 +380,7 @@
 
             const sendToGroupCopy = (text) => {
                 navigator.clipboard.writeText(text).then(() => {
-                    alert("✅ ग्रुप में भेजने के लिए मैसेज कॉपी हो गया है! व्हाट्सएप ग्रुप खुलने पर मैसेज बॉक्स में 'Paste' (पेस्ट) करके सेंड कर दें।");
+                    alert("✅ ग्रुप में भेजने के लिए मैसेज कॉपी हो गया है! व्हाट्सएप ग्रुप खुलने पर 'Paste' (पेस्ट) करके सेंड कर दें।");
                     window.open("https://chat.whatsapp.com/DOFkpAfbugQ2ATQxr4m6L2", "_blank");
                 });
             };
@@ -511,9 +584,15 @@
                                     <div className="grid md:grid-cols-2 gap-8">
                                         <div className="flex flex-col items-center justify-center bg-black/40 p-5 rounded-2xl border border-slate-800 shadow-inner">
                                             {showCamera ? (
-                                                <div className="relative mb-4">
-                                                    <video ref={videoRef} autoPlay playsInline className="w-[200px] h-[200px] rounded-full object-cover border-4 border-blue-500" />
-                                                    <div className="flex gap-2 mt-2 justify-center"><button onClick={switchCamera} className="bg-slate-700 text-white px-3 py-1 rounded text-xs btn-press">Flip</button><button onClick={capture} className="bg-amber-500 text-black px-4 py-1 rounded text-xs font-black btn-press">Click</button></div>
+                                                <div className="relative mb-4 w-full h-[300px] overflow-hidden rounded-xl border-4 border-amber-500">
+                                                    <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+                                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[80%] h-[70%] border-4 border-dashed border-white rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] pointer-events-none flex items-center justify-center">
+                                                        <span className="text-white/50 font-black tracking-widest text-xl">DPSG SCAN</span>
+                                                    </div>
+                                                    <div className="absolute bottom-4 left-0 w-full flex gap-2 justify-center z-10">
+                                                        <button onClick={switchCamera} className="bg-slate-700 text-white px-3 py-1 rounded text-xs btn-press">Flip</button>
+                                                        <button onClick={capture} className="bg-amber-500 text-black px-4 py-1 rounded text-xs font-black btn-press">Click</button>
+                                                    </div>
                                                 </div>
                                             ) : (capturedImg || selected.d.dp) ? (
                                                 <div className="relative mb-4 text-center">
@@ -533,7 +612,6 @@
                                                 </div>
                                             )}
                                             
-                                            {/* 👁️ VIEW UPLOADED DOCUMENT BUTTON FOR STAFF */}
                                             {selected.d.link && selected.d.link.trim() !== "" && (
                                                 <a href={selected.d.link} target="_blank" className="bg-blue-900/30 border border-blue-500 text-blue-400 px-6 py-3 rounded-lg font-black text-sm mt-2 hover:bg-blue-600 hover:text-white transition-colors btn-press shadow-lg w-full text-center block">
                                                     <i className="fa-solid fa-file-video"></i> View Uploaded Document
@@ -557,6 +635,12 @@
                                                 <div><label className="text-[10px] text-slate-400 font-bold">Pay Mode</label><select id="s_pay" defaultValue={selected.d.pay} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm"><option value="Cash">Cash</option><option value="PhonePe/GPay">UPI / App</option><option value="Airtel Payment Bank">Airtel Bank</option></select></div>
                                                 <div><label className="text-[10px] text-green-400 font-bold">Txn ID/Ref</label><input id="s_ref" defaultValue={selected.d.ref} className="w-full bg-black p-2 rounded-lg border border-green-800 text-green-400 font-bold text-sm" /></div>
                                             </div>
+                                            
+                                            <div className="grid grid-cols-2 gap-3 mt-4 bg-slate-900/50 p-3 rounded-lg border border-indigo-900 border-dashed">
+                                                <div><label className="text-[10px] text-indigo-400 font-bold"><i className="fa-solid fa-file-invoice"></i> Upload Bill (AE)</label><input type="file" id="staff_bill_upload" accept="image/*,.pdf" className="w-full bg-slate-900 p-1.5 rounded-lg border border-slate-700 text-white font-bold text-[10px] file:bg-indigo-600 file:border-0 file:rounded file:text-white file:px-2 file:cursor-pointer" /></div>
+                                                <div><label className="text-[10px] text-amber-400 font-bold"><i className="fa-solid fa-id-card"></i> Upload E-Card (AF)</label><input type="file" id="staff_card_upload" accept="image/*,.pdf" className="w-full bg-slate-900 p-1.5 rounded-lg border border-slate-700 text-white font-bold text-[10px] file:bg-amber-600 file:border-0 file:rounded file:text-white file:px-2 file:cursor-pointer" /></div>
+                                            </div>
+
                                             <div className="grid grid-cols-2 gap-3 mt-2">
                                                 <div><label className="text-[10px] text-red-400 font-bold">Discount (₹)</label><input type="number" value={discount} onChange={(e)=>setDiscount(parseInt(e.target.value)||0)} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-red-400 font-bold text-sm outline-none" /></div>
                                                 <div><label className="text-[10px] text-green-400 font-bold">Final Paid (₹)</label><input id="s_paid" type="number" value={selected.price - discount} readOnly className="w-full bg-green-900/30 p-2 rounded-lg border border-green-700 text-green-400 font-black text-sm outline-none" /></div>
@@ -576,7 +660,7 @@
                             </div>
                         )}
 
-                        {/* 📍 STAFF SUCCESS POPUP (WITH ALL 3 BUTTONS) 📍 */}
+                        {/* 📍 STAFF SUCCESS POPUP 📍 */}
                         {staffSuccessModal && (
                             <div className="fixed inset-0 z-[300] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md pb-safe">
                                 <div className={`glass p-6 md:p-8 max-w-md w-full text-center border-t-8 rounded-3xl bg-[#0a0a0a] shadow-[0_0_30px_rgba(59,130,246,0.3)] ${staffSuccessModal.isReject ? 'border-red-500' : 'border-blue-500'}`}>
@@ -589,9 +673,9 @@
                                             <i className="fa-solid fa-user-tie text-xl"></i> 1. OWNER REPORT (FULL)
                                         </a>
 
-                                        {/* 2. CUSTOMER REPORT BUTTON */}
+                                        {/* 2. CUSTOMER REPORT BUTTON (अब नए बदलाव के साथ) */}
                                         {!staffSuccessModal.isReject && (
-                                            <a href={`whatsapp://send?phone=91${staffSuccessModal.finalMob}&text=${encodeURIComponent(`🔱 *DIGITAL PROBLEM SOLUTION GROUP (DPSG)* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\nआदरणीय *${staffSuccessModal.finalName}* जी,\n🙏 *जय माता दी! DPSG परिवार में आपका हार्दिक स्वागत है।*\n\nहमें आपको यह सूचित करते हुए अत्यंत हर्ष हो रहा है कि आपने हमारी संस्था पर जो विश्वास जताया है, उसके तहत आपकी DPSG सदस्यता सफलतापूर्वक सक्रिय (Activate) कर दी गई है।\n\n🔖 *आपकी सदस्यता का विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *टोकन संख्या:* ${staffSuccessModal.token}\n• *भुगतान राशि:* ₹${staffSuccessModal.finalPaid} \n🎁 *51 मेगा प्राइज़ लकी ड्रॉ (विशेष अवसर):*\nDPSG का सम्मानित सदस्य बनने के साथ ही, अब आप हमारे बहुचर्चित "51 मेगा प्राइज़" के लकी ड्रॉ में आधिकारिक रूप से शामिल हो चुके हैं!\n\n📞 *हेल्पलाइन:* +91 7229874128\n🙏 *आपका दिन शुभ एवं मंगलमय हो!*\n━━━━━━━━━━━━━━━━━━━━━━`)}`} target="_blank" className="flex items-center justify-center gap-3 w-full bg-[#25D366] hover:bg-[#20b858] text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
+                                            <a href={`whatsapp://send?phone=91${staffSuccessModal.finalMob}&text=${encodeURIComponent(`🔱 *DIGITAL PROBLEM SOLUTION GROUP (DPSG)* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\nआदरणीय *${staffSuccessModal.finalName}* जी,\n🙏 *जय माता दी! DPSG परिवार में आपका हार्दिक स्वागत है और लकी ड्रॉ में भाग लेने के लिए धन्यवाद।*\n\nहमें आपको यह सूचित करते हुए अत्यंत हर्ष हो रहा है कि आपने हमारी संस्था पर जो विश्वास जताया है, उसके तहत आपकी DPSG सदस्यता स्वीकार कर ली गई है।\n\n🔖 *आपकी सदस्यता का विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *टोकन संख्या:* ${staffSuccessModal.token}\n• *भुगतान राशि:* ₹${staffSuccessModal.finalPaid} \n\n🎁 *महत्वपूर्ण सूचना:*\nआपका कार्ड जल्दी ही लकी ड्रॉ के बाद सक्रिय (Activate) किया जाएगा।\nDPSG का सम्मानित सदस्य बनने के साथ ही, अब आप हमारे बहुचर्चित "51 मेगा प्राइज़" के लकी ड्रॉ में आधिकारिक रूप से शामिल हो चुके हैं!\n\n📞 *हेल्पलाइन:* +91 7229874128\n🙏 *आपका दिन शुभ एवं मंगलमय हो!*\n━━━━━━━━━━━━━━━━━━━━━━`)}`} target="_blank" className="flex items-center justify-center gap-3 w-full bg-[#25D366] hover:bg-[#20b858] text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
                                                 <i className="fa-brands fa-whatsapp text-xl"></i> 2. VIP MSG TO CUSTOMER
                                             </a>
                                         )}
@@ -601,8 +685,8 @@
                                             </a>
                                         )}
 
-                                        {/* 3. WHATSAPP GROUP BUTTON */}
-                                        <button onClick={()=>sendToGroupCopy(`🔱 *DPSG STAFF VERIFICATION REPORT* 🔱\nCard #${staffSuccessModal.n} has been ${staffSuccessModal.isReject ? 'REJECTED' : 'VERIFIED'} by ${staff.id}.\nCustomer: ${staffSuccessModal.finalName}`)} className="flex items-center justify-center gap-3 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
+                                        {/* 3. WHATSAPP GROUP BUTTON (अब पूरी डिटेल के साथ) */}
+                                        <button onClick={()=>sendToGroupCopy(`🔱 *DPSG VERIFICATION ALERT (GROUP)* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\nस्थिति: *${staffSuccessModal.isReject ? 'REJECTED ❌' : 'VERIFIED ✅'}*\n\n📋 *ग्राहक विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *नाम:* ${staffSuccessModal.finalName || 'N/A'}\n• *मोबाइल:* ${staffSuccessModal.finalMob || 'N/A'}\n• *आधार:* ${staffSuccessModal.finalAdhar || 'N/A'}\n• *निवास:* ${staffSuccessModal.finalVill || 'N/A'}\n${!staffSuccessModal.isReject ? `• *पैन:* ${staffSuccessModal.finalPan || 'N/A'}\n` : ''}💰 *वित्तीय विवरण:*\n• *अंतिम भुगतान:* ₹${staffSuccessModal.finalPaid} (${staffSuccessModal.finalPayMode || 'N/A'})\n\n👨‍💼 *सत्यापन कर्ता:* ${staff.id}\n━━━━━━━━━━━━━━━━━━━━━━`)} className="flex items-center justify-center gap-3 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
                                             <i className="fa-solid fa-users text-xl"></i> 3. SEND TO WHATSAPP GROUP
                                         </button>
                                         
@@ -626,8 +710,21 @@
             // 🌐 CUSTOMER UI (WEBSITE MODE) 🌐
             // ==========================================
             return (
-                <div className="max-w-[1600px] mx-auto p-4 py-10">
-                    <header className="text-center mb-16">
+                <div className="max-w-[1600px] mx-auto p-4 pt-0">
+                    
+                    <div className="stock-ticker w-full absolute top-0 left-0 z-50">
+                        <marquee scrollamount="8">
+                            🔥 जल्दी करें! 1000 में से {cards.filter(c=>c.status==='Sold').length} कार्ड बिक चुके हैं, केवल {cards.filter(c=>c.status==='Available').length} शेष! 51 मेगा प्राइज़ जीतने का मौका पाएं! 🚩
+                        </marquee>
+                    </div>
+
+                    <header className="text-center mb-16 mt-16 relative">
+                        <div className="absolute top-0 right-0 md:top-4 md:right-4 z-40">
+                            <button onClick={fetchSoldList} className="neon-btn px-4 py-2 md:px-6 md:py-3 rounded-full font-black text-sm md:text-base btn-press shadow-2xl flex items-center gap-2">
+                                <i className="fa-solid fa-list-check"></i> बिक्री बोर्ड
+                            </button>
+                        </div>
+
                         <h1 className="text-6xl md:text-8xl font-black italic text-white rajdhani tracking-tighter drop-shadow-lg">{COMPANY}</h1>
                         <p className="text-amber-500 text-xl md:text-2xl font-bold mt-4 italic">" {SLOGAN} "</p>
                         <div className="banner-row mt-10">
@@ -665,6 +762,33 @@
                         </div>
                     </div>
 
+                    {showSalesBoard && (
+                        <div className="fixed inset-0 z-[400] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md">
+                            <div className="glass p-6 md:p-10 w-full max-w-4xl border border-amber-500 rounded-3xl bg-[#0a0a0a] shadow-[0_0_50px_rgba(251,191,36,0.2)] relative max-h-[90vh] flex flex-col">
+                                <button onClick={() => setShowSalesBoard(false)} className="absolute top-4 right-6 text-4xl text-slate-400 hover:text-white btn-press">&times;</button>
+                                <h3 className="text-3xl md:text-4xl font-black text-amber-500 mb-6 text-center italic tracking-widest uppercase border-b border-slate-800 pb-4"><i className="fa-solid fa-trophy text-yellow-400"></i> DPSG लाइव बिक्री बोर्ड</h3>
+                                <div className="overflow-y-auto flex-1 custom-scroll bg-black/50 rounded-xl p-2 md:p-4 border border-slate-800">
+                                    <table className="w-full text-left text-sm md:text-base border-collapse">
+                                        <thead className="sticky top-0 bg-black/90 backdrop-blur-sm z-10 border-b-2 border-amber-500">
+                                            <tr className="text-amber-500"><th className="p-3">S.No</th><th className="p-3">Member ID</th><th className="p-3">Customer Name</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            {soldListData.length === 0 ? <tr><td colSpan="3" className="text-center py-10 font-bold text-slate-500 italic">लोड हो रहा है...</td></tr> : 
+                                            soldListData.map((r, i) => (
+                                                <tr key={i} className="border-b border-slate-800 hover:bg-slate-900/80 transition-colors">
+                                                    <td className="p-3 font-black text-white">{r.SNo}</td>
+                                                    <td className="p-3 font-bold text-indigo-400">{r.ID}</td>
+                                                    <td className="p-3 font-black text-green-400 uppercase">{r.Name}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <button onClick={()=>setShowSalesBoard(false)} className="mt-6 w-full bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl font-black btn-press border border-slate-600">बंद करें (CLOSE)</button>
+                            </div>
+                        </div>
+                    )}
+
                     {selected && !staff && (
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <form onSubmit={bookCard} className="glass p-6 md:p-10 w-full max-w-3xl border border-amber-500 rounded-3xl shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
@@ -675,11 +799,14 @@
                                     <div className="bg-black/50 p-6 rounded-2xl border border-dashed border-amber-500 text-center">
                                         <h4 className="text-amber-400 font-black mb-4"><i className="fa-solid fa-camera"></i> अपनी लाइव फोटो लें या अपलोड करें (Live DP) *</h4>
                                         {showCamera ? (
-                                            <div className="relative max-w-xs mx-auto">
-                                                <video ref={videoRef} autoPlay playsInline className="w-[200px] h-[200px] mx-auto rounded-full object-cover border-4 border-blue-500" />
-                                                <div className="flex gap-2 mt-4 justify-center">
-                                                    <button type="button" onClick={switchCamera} className="bg-slate-700 text-white px-4 py-2 rounded-lg font-bold text-sm btn-press"><i className="fa-solid fa-camera-rotate"></i> Flip Camera</button>
-                                                    <button type="button" onClick={capture} className="bg-amber-500 text-black px-8 py-2 rounded-lg font-black shadow-lg btn-press">CLICK 📸</button>
+                                            <div className="relative mx-auto w-full h-[300px] overflow-hidden rounded-xl border-4 border-blue-500">
+                                                <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+                                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[80%] h-[70%] border-4 border-dashed border-white rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] pointer-events-none flex items-center justify-center">
+                                                    <span className="text-white/50 font-black tracking-widest text-2xl">DPSG SCAN</span>
+                                                </div>
+                                                <div className="absolute bottom-4 left-0 w-full flex gap-2 justify-center z-10">
+                                                    <button type="button" onClick={switchCamera} className="bg-slate-700 text-white px-4 py-2 rounded-lg font-bold text-sm btn-press shadow-lg border border-slate-500"><i className="fa-solid fa-camera-rotate"></i> Flip</button>
+                                                    <button type="button" onClick={capture} className="bg-amber-500 text-black px-8 py-2 rounded-lg font-black shadow-lg btn-press border-2 border-white">CLICK 📸</button>
                                                 </div>
                                             </div>
                                         ) : capturedImg ? (
@@ -712,7 +839,7 @@
                                         {payMode === 'Airtel Payment Bank' && <div><label className="text-xs font-black text-red-500 ml-1">PAN CARD *</label><input name="PAN" required pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" placeholder="ABCDE1234F" className="w-full bg-black p-3 rounded-xl font-black border-2 border-red-600 text-white text-base uppercase shadow-inner" /></div>}
                                     </div>
                                     <div className="grid md:grid-cols-2 gap-4">
-                                        <div><label className="text-xs font-bold text-amber-400 ml-1"><i className="fa-solid fa-file-arrow-up"></i> स्क्रीनशॉट या वीडियो (Option)</label><input type="file" id="file_upload_gallery" accept="image/*,video/*,.pdf" multiple className="w-full bg-slate-900 p-2 rounded-xl font-bold border border-slate-700 text-white file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-black cursor-pointer text-sm" /></div>
+                                        <div><label className="text-xs font-bold text-amber-400 ml-1"><i className="fa-solid fa-file-arrow-up"></i> डॉक्यूमेंट अपलोड (Aadhaar/PAN)</label><input type="file" id="file_upload_gallery" accept="image/*" className="w-full bg-slate-900 p-2 rounded-xl font-bold border border-slate-700 text-white file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-black cursor-pointer text-sm" /></div>
                                         <div><label className="text-xs font-bold text-green-400 ml-1"><i className="fa-solid fa-hashtag"></i> Txn ID (रेफरेंस) *</label><input name="Payment_Ref" required placeholder="UTR Number" className="w-full bg-black p-3 rounded-xl font-black border border-green-500 text-green-400 text-base focus:border-amber-500 outline-none shadow-inner" /></div>
                                     </div>
                                     <button type="submit" disabled={processingId === "BOOKING" || !capturedImg} className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black py-4 rounded-xl text-xl md:text-2xl uppercase italic shadow-lg mt-2 disabled:opacity-50 btn-press flex items-center justify-center gap-2">
@@ -733,13 +860,12 @@
                                 <div className="bg-green-600/20 p-3 rounded-xl border border-green-500 mb-6 font-black text-xl text-green-400">TOKEN: {successModal.token}</div>
                                 
                                 <div className="space-y-3">
-                                    {/* 1. OWNER REPORT BUTTON */}
                                     <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *DIGITAL PROBLEM SOLUTION GROUP (DPSG)* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी! हुकुम जोरावर बना* 🚩\n\nसंस्था के पोर्टल पर एक नया आवेदन (Booking) सफलतापूर्वक दर्ज किया गया है। कृपया निम्नलिखित विवरण की समीक्षा करें:\n\n📋 *आवेदक का संपूर्ण विवरण:*\n• *टोकन संख्या:* ${successModal.token}\n• *कार्ड क्रमांक:* #${successModal.n} (${successModal.cat})\n• *आवेदक का नाम:* ${successModal.name}\n• *पंजीकृत मोबाइल:* ${successModal.mob}\n• *आधार नंबर:* ${successModal.adhar}\n• *निवास स्थान (पता):* ${successModal.vill}\n${successModal.pan && successModal.pan !== "N/A" ? `• *पैन कार्ड संख्या:* ${successModal.pan}\n` : ""}💳 *भुगतान का विवरण:*\n• *भुगतान का माध्यम:* ${successModal.pay}\n• *ट्रांजेक्शन आईडी:* ${successModal.ref} \n━━━━━━━━━━━━━━━━━━━━━━\n📞 *हेल्पलाइन:* +91 7229874128\n🌐 *DPSG ऑटोमेटेड सिस्टम*`)}`} onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-3 w-full bg-[#25D366] hover:bg-[#20b858] text-white font-black py-3 rounded-xl text-lg shadow-lg btn-press">
                                         <i className="fa-solid fa-user-tie text-2xl"></i> 1. SEND REPORT TO OWNER
                                     </a>
                                     
-                                    {/* 2. WHATSAPP GROUP BUTTON */}
-                                    <button onClick={()=>sendToGroupCopy(`🔱 DPSG NEW BOOKING 🔱\nToken: ${successModal.token}\nCard #${successModal.n}\nName: ${successModal.name}`)} className="flex items-center justify-center gap-3 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl text-lg shadow-lg btn-press">
+                                    {/* 2. WHATSAPP GROUP BUTTON (अब पूरी डिटेल के साथ) */}
+                                    <button onClick={()=>sendToGroupCopy(`🔱 *DPSG NEW BOOKING (GROUP ALERT)* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n📋 *आवेदक का संपूर्ण विवरण:*\n• *टोकन संख्या:* ${successModal.token}\n• *कार्ड क्रमांक:* #${successModal.n} (${successModal.cat})\n• *आवेदक का नाम:* ${successModal.name}\n• *पंजीकृत मोबाइल:* ${successModal.mob}\n• *आधार नंबर:* ${successModal.adhar}\n• *निवास स्थान:* ${successModal.vill}\n${successModal.pan && successModal.pan !== "N/A" ? `• *पैन कार्ड:* ${successModal.pan}\n` : ""}💳 *भुगतान का विवरण:*\n• *भुगतान का माध्यम:* ${successModal.pay}\n• *Txn ID:* ${successModal.ref}\n━━━━━━━━━━━━━━━━━━━━━━`)} className="flex items-center justify-center gap-3 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl text-lg shadow-lg btn-press">
                                         <i className="fa-solid fa-users text-2xl"></i> 2. SEND TO WHATSAPP GROUP
                                     </button>
                                 </div>
@@ -760,11 +886,30 @@
                         <div className="mt-20 mb-10 text-center">
                             {showLogin ? (
                                 <div className="glass p-6 max-w-sm mx-auto rounded-3xl border border-indigo-500 bg-[#0a0a0a] shadow-xl">
-                                    <h4 className="text-2xl font-black text-indigo-400 mb-6 tracking-widest uppercase">STAFF LOGIN</h4>
-                                    <input id="l_id" placeholder="Staff ID (e.g. Jorawar@DPS)" className="w-full bg-slate-900 p-4 rounded-xl border border-slate-700 mb-4 text-white text-center font-bold focus:border-indigo-500 outline-none" />
-                                    <input id="l_pass" type="password" placeholder="Password" className="w-full bg-slate-900 p-4 rounded-xl border border-slate-700 mb-6 text-white text-center font-bold focus:border-indigo-500 outline-none" />
-                                    <button onClick={()=>{let u=document.getElementById('l_id').value; let p=document.getElementById('l_pass').value; if(ADMINS[u]===p){sessionStorage.setItem('dps_session',JSON.stringify({id:u,pass:p})); setStaff({id:u,pass:p}); setShowLogin(false);}else alert("Access Denied: Wrong ID or Password!");}} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-xl btn-press text-lg shadow-lg">LOGIN SECURELY</button>
-                                    <button onClick={()=>setShowLogin(false)} className="mt-4 text-slate-500 hover:text-white text-sm font-bold underline transition-colors">Cancel</button>
+                                    <h4 className="text-2xl font-black text-indigo-400 mb-6 tracking-widest uppercase">
+                                        {otpStep ? "सुरक्षा जांच (OTP)" : "STAFF LOGIN"}
+                                    </h4>
+                                    
+                                    {!otpStep ? (
+                                        <>
+                                            <input id="l_id" placeholder="Staff ID (e.g. Jorawar@DPS)" className="w-full bg-slate-900 p-4 rounded-xl border border-slate-700 mb-4 text-white text-center font-bold focus:border-indigo-500 outline-none" />
+                                            <input id="l_pass" type="password" placeholder="Password" className="w-full bg-slate-900 p-4 rounded-xl border border-slate-700 mb-6 text-white text-center font-bold focus:border-indigo-500 outline-none" />
+                                            <button onClick={handleLoginAttempt} disabled={processingId === "OTP_SENDING"} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-xl btn-press text-lg shadow-lg flex items-center justify-center gap-2">
+                                                {processingId === "OTP_SENDING" ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-shield-halved"></i>} 
+                                                {processingId === "OTP_SENDING" ? "Verifying..." : "LOGIN SECURELY"}
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p className="text-xs text-slate-400 mb-4 font-bold">ओनर की ईमेल (Chanchalbaisa...) पर 6 अंकों का सुरक्षा कोड भेजा गया है।</p>
+                                            <input value={otpValue} onChange={(e)=>setOtpValue(e.target.value)} placeholder="6 Digit OTP" maxLength="6" className="w-full bg-black p-4 rounded-xl border-2 border-green-500 mb-6 text-green-400 text-center font-black tracking-[0.5em] text-2xl outline-none" />
+                                            <button onClick={handleOtpVerify} className="w-full bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-xl btn-press text-lg shadow-lg">
+                                                <i className="fa-solid fa-check-double"></i> VERIFY OTP & ENTER
+                                            </button>
+                                        </>
+                                    )}
+
+                                    <button onClick={()=>{setShowLogin(false); setOtpStep(false);}} className="mt-6 text-slate-500 hover:text-white text-sm font-bold underline transition-colors">Cancel</button>
                                 </div>
                             ) : (
                                 <button onClick={()=>setShowLogin(true)} className="text-slate-500 hover:text-amber-400 font-black tracking-widest text-sm uppercase transition-colors"><i className="fa-solid fa-lock"></i> 🔱 STAFF CONTROL CENTER 🔱</button>
