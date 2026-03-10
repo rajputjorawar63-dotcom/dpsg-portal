@@ -52,8 +52,8 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
         
-        // 🚀 आपकी नई फ्रेश लिंक यहाँ 1000% सेट कर दी गई है
-        const APP_URL = "https://script.google.com/macros/s/AKfycbx79NfIgxpnSocO3X4Yh5ZheePHI3xT56tcoD1AOxKejXSGghaMMZmPaRL89hKFvlZ4MQ/exec";
+        // 🚀 आपकी एकदम नई फ्रेश लिंक (1000% Confirm) 🚀
+        const APP_URL = "https://script.google.com/macros/s/AKfycbwvCfeNdYwUqOv7AJfH9NAenCzAPHo3mTzmHlrlFnEZkYQKEiLpd6JXe1GoMMJ7jrN88A/exec";
         
         const COMPANY = "Digital Problem Solution Group";
         const SLOGAN = "समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा";
@@ -99,7 +99,7 @@
             {r:37, n:"Water Bottle Set", d:"स्टाइलिश वॉटर बॉटल सेट।"},
             {r:38, n:"Lunch Box", d:"खाना रहेगा फ्रेश और गरम।"},
             {r:39, n:"Leather Belt", d:"मजबूत और टिकाऊ लेदर बेल्ट।"},
-            {r:40, n:"Woman's Purse", d:"ट्रेंडी और स्टाइलिश हैंड पर्स।"},
+            {r:40, n:"Woman's Purse", d:"ट्रेंडी और स्टाइलिश হ্যান্ড पर्स।"},
             {r:41, n:"Hair Dryer", d:"मनचाहा हेयरस्टाइल पाएं।"},
             {r:42, n:"Leather Bag", d:"मजबूत लेदर बैग।"},
             {r:43, n:"20L Water Bottle", d:"शुद्ध पानी का बड़ा स्टोरेज।"},
@@ -150,13 +150,19 @@
             const [discount, setDiscount] = useState(0);
             const [payVerified, setPayVerified] = useState(false);
             
-            const [capturedImg, setCapturedImg] = useState(null);
+            // 📸 4 अलग-अलग डिब्बों के लिए स्टेट (4 Different Boxes State) 📸
+            const [activeCameraBox, setActiveCameraBox] = useState(null); 
             const [showCamera, setShowCamera] = useState(false);
             const [facingMode, setFacingMode] = useState("environment"); 
             const videoRef = useRef(null);
             const [enlargedImg, setEnlargedImg] = useState(null);
-            const [showLogin, setShowLogin] = useState(false);
             
+            const [capturedImg, setCapturedImg] = useState(null);    // 1. Selfie
+            const [aFrontImg, setAFrontImg] = useState(null);        // 2. Aadhaar Front
+            const [aBackImg, setABackImg] = useState(null);          // 3. Aadhaar Back
+            const [panImg, setPanImg] = useState(null);              // 4. PAN Card
+
+            const [showLogin, setShowLogin] = useState(false);
             const [showSalesBoard, setShowSalesBoard] = useState(false);
             const [soldListData, setSoldListData] = useState([]);
             const [otpStep, setOtpStep] = useState(false);
@@ -182,17 +188,17 @@
                                let rawS = (rD[4] || 'Available').toString().trim().toLowerCase();
                                if(rawS.includes("sold") || rawS.includes("success") || rawS.includes("verified")) {
                                    s = "Sold";
-                                   if(currentLocks.has(i)) { currentLocks.delete(i); locksChanged = true; } // Remove false lock
+                                   if(currentLocks.has(i)) { currentLocks.delete(i); locksChanged = true; }
                                }
                                else if(rawS.includes("pending")) {
                                    s = "Pending";
                                }
                                else if(rawS.includes("reject") || rawS.includes("available")) {
                                    s = "Available";
-                                   if(currentLocks.has(i)) { currentLocks.delete(i); locksChanged = true; } // Remove false lock (THIS FIXES THE YELLOW BUG)
+                                   if(currentLocks.has(i)) { currentLocks.delete(i); locksChanged = true; }
                                } 
                             } else {
-                               if(currentLocks.has(i)) { currentLocks.delete(i); locksChanged = true; } // Remove false lock if empty row
+                               if(currentLocks.has(i)) { currentLocks.delete(i); locksChanged = true; }
                             }
                             temp.push({ 
                                 n: i, status: s, cat: i<=100?"VIP Card":i<=600?"Gold Card":"Silver Card",
@@ -207,7 +213,6 @@
                                 }
                             });
                         }
-                        // Update local storage only if backend says it's available/sold
                         if(locksChanged) {
                             localStorage.setItem('dps_locks', JSON.stringify([...currentLocks]));
                             setLocalLocks(currentLocks);
@@ -226,35 +231,45 @@
 
             useEffect(() => { loadData(); const itvl = setInterval(loadData, 10000); return () => clearInterval(itvl); }, []);
 
-            // 🌟 2. बिक्री बोर्ड का इलाज (Fresh Data Load) 🌟
             const fetchSoldList = async () => {
                 try {
                     const res = await fetch(APP_URL + "?action=GET_SOLD_LIST&_cb=" + new Date().getTime(), { cache: "no-store" });
                     const data = await res.json();
                     setSoldListData(data);
                     setShowSalesBoard(true);
-                } catch(e) { alert("Data load error!"); }
+                } catch(e) { alert("Bikri Board data load error!"); }
             };
 
-            const startCamera = async (mode = facingMode) => {
+            // 📸 4 डिब्बों के लिए स्मार्ट कैमरा इंजन 📸
+            const startCamera = async (boxType, mode = facingMode) => {
                 if(videoRef.current && videoRef.current.srcObject) { videoRef.current.srcObject.getTracks().forEach(t => t.stop()); }
-                setShowCamera(true); setFacingMode(mode);
+                setActiveCameraBox(boxType);
+                setShowCamera(true); 
+                setFacingMode(mode);
                 try {
                     const s = await navigator.mediaDevices.getUserMedia({video: { facingMode: mode }});
                     videoRef.current.srcObject = s;
                 } catch(err) { alert("Camera Error: " + err.message); }
             };
 
-            const switchCamera = () => { startCamera(facingMode === "user" ? "environment" : "user"); };
+            const switchCamera = () => { startCamera(activeCameraBox, facingMode === "user" ? "environment" : "user"); };
 
             const capture = () => {
                 const c = document.createElement("canvas"); c.width = 640; c.height = 480;
                 const ctx = c.getContext("2d"); ctx.drawImage(videoRef.current, 0, 0, 640, 480);
-                setCapturedImg(c.toDataURL("image/jpeg", 0.6));
-                videoRef.current.srcObject.getTracks().forEach(t => t.stop()); setShowCamera(false);
+                const base64Data = c.toDataURL("image/jpeg", 0.6);
+                
+                if (activeCameraBox === "selfie") setCapturedImg(base64Data);
+                else if (activeCameraBox === "aFront") setAFrontImg(base64Data);
+                else if (activeCameraBox === "aBack") setABackImg(base64Data);
+                else if (activeCameraBox === "pan") setPanImg(base64Data);
+                
+                videoRef.current.srcObject.getTracks().forEach(t => t.stop()); 
+                setShowCamera(false);
+                setActiveCameraBox(null);
             };
 
-            // 🌟 3. OTP का पक्का इलाज 🌟
+            // 🌟 3. OTP और इंटरनेट कनेक्शन की एरर का पक्का इलाज 🌟
             const handleLoginAttempt = async () => {
                 let u = document.getElementById('l_id').value;
                 let p = document.getElementById('l_pass').value;
@@ -262,19 +277,25 @@
                     setProcessingId("OTP_SENDING");
                     setStaffTempCreds({id: u, pass: p});
                     try {
-                        const res = await fetch(APP_URL + "?action=SEND_OTP&staffEmail=Chanchalbaisa722@gmail.com&_cb=" + new Date().getTime(), { cache: "no-store" });
+                        // POST Request to strictly bypass opaque CORS issues
+                        const params = new URLSearchParams({ action: 'SEND_OTP', staffEmail: 'Chanchalbaisa722@gmail.com' });
+                        const res = await fetch(APP_URL, {
+                            method: 'POST',
+                            body: params
+                        });
                         const data = await res.json();
+                        
                         if(data.status === "SUCCESS") {
                             setGeneratedOtp(data.otp);
                             setOtpStep(true);
                             setProcessingId(null);
                             alert("सुरक्षा अलर्ट: ओनर की ईमेल (Chanchalbaisa...) पर OTP भेज दिया गया है।");
                         } else {
-                            throw new Error("OTP Failed");
+                            throw new Error("OTP Failed Server Side");
                         }
                     } catch(e) {
                         setProcessingId(null);
-                        alert("OTP भेजने में तकनीकी समस्या आई। कृपया इंटरनेट कनेक्शन जाँचें।");
+                        alert("OTP भेजने में तकनीकी समस्या आई। (नेटवर्क त्रुटि या सर्वर उपलब्ध नहीं है)");
                     }
                 } else {
                     alert("Access Denied: Wrong ID or Password!");
@@ -300,22 +321,15 @@
                 const params = new URLSearchParams(Object.fromEntries(fd));
                 params.append("action", "BOOK"); params.append("S_No", n.toString());
                 params.append("Category", selected.cat); params.append("Base_Price", selected.price);
+                
+                // 📸 चारों डिब्बों की फोटो एक साथ भेजना 📸
                 if(capturedImg) params.append("selfie", capturedImg); 
+                if(aFrontImg) params.append("aFront", aFrontImg); 
+                if(aBackImg) params.append("aBack", aBackImg); 
+                if(panImg) params.append("pan", panImg); 
 
-                const docUploads = document.getElementById('file_upload_gallery');
-                if (docUploads && docUploads.files.length > 0) {
-                    const file = docUploads.files[0];
-                    const reader = new FileReader();
-                    reader.onloadend = async () => {
-                        params.append("aFront", reader.result);
-                        try { await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' }); } catch(err){}
-                        finishBooking(fd, n);
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    try { await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' }); } catch(err){}
-                    finishBooking(fd, n);
-                }
+                try { await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' }); } catch(err){}
+                finishBooking(fd, n);
             };
 
             const finishBooking = (fd, n) => {
@@ -325,7 +339,9 @@
                     adhar: fd.get("Aadhaar"), pay: fd.get("Payment_Mode"), pan: fd.get("PAN") || "N/A",
                     vill: fd.get("Village") || "N/A", ref: fd.get("Payment_Ref") || "N/A", token: `DPSG-TK-${n.toString().padStart(3,'0')}`
                 });
-                setSelected(null); setCapturedImg(null); setProcessingId(null); setTimeout(loadData, 1500);
+                setSelected(null); 
+                setCapturedImg(null); setAFrontImg(null); setABackImg(null); setPanImg(null);
+                setProcessingId(null); setTimeout(loadData, 1500);
             };
 
             const masterUpdate = async (c, status, isInsideForm = false) => {
@@ -623,7 +639,7 @@
                                                 <div className="relative mb-4 text-center">
                                                     <img src={capturedImg || selected.d.dp} onClick={() => setEnlargedImg(capturedImg || selected.d.dp)} className="w-[200px] h-[200px] rounded-full object-cover glow-dp-huge cursor-pointer" alt="Customer DP" title="बड़ा करने के लिए क्लिक करें" />
                                                     <div className="flex gap-2 justify-center mt-4">
-                                                        <button onClick={()=>startCamera()} className="bg-slate-800 text-white px-4 py-2 rounded-full text-xs font-bold border border-slate-600 btn-press"><i className="fa-solid fa-camera"></i> Update DP</button>
+                                                        <button onClick={()=>startCamera('selfie')} className="bg-slate-800 text-white px-4 py-2 rounded-full text-xs font-bold border border-slate-600 btn-press"><i className="fa-solid fa-camera"></i> Update DP</button>
                                                         <label className="bg-slate-800 text-white px-4 py-2 rounded-full text-xs font-bold border border-slate-600 btn-press cursor-pointer"><i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>{if(e.target.files[0]){let r=new FileReader();r.onload=()=>setCapturedImg(r.result);r.readAsDataURL(e.target.files[0]);}}} /></label>
                                                     </div>
                                                 </div>
@@ -631,7 +647,7 @@
                                                 <div className="text-center mb-4">
                                                     <div className="w-[200px] h-[200px] bg-slate-900 rounded-full flex flex-col items-center justify-center text-slate-500 font-black mb-2 red-alert-dp"><i className="fa-solid fa-image-portrait text-4xl mb-2 text-red-500/50"></i><span className="text-xl text-red-500">NO DP</span></div>
                                                     <div className="flex gap-2 justify-center mt-4">
-                                                        <button onClick={()=>startCamera()} className="bg-amber-500 text-black px-4 py-2 rounded-full text-xs font-bold btn-press"><i className="fa-solid fa-camera"></i> Take Photo</button>
+                                                        <button onClick={()=>startCamera('selfie')} className="bg-amber-500 text-black px-4 py-2 rounded-full text-xs font-bold btn-press"><i className="fa-solid fa-camera"></i> Take Photo</button>
                                                         <label className="bg-amber-500 text-black px-4 py-2 rounded-full text-xs font-bold btn-press cursor-pointer"><i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>{if(e.target.files[0]){let r=new FileReader();r.onload=()=>setCapturedImg(r.result);r.readAsDataURL(e.target.files[0]);}}} /></label>
                                                     </div>
                                                 </div>
@@ -814,38 +830,106 @@
                     {selected && !staff && (
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <form onSubmit={bookCard} className="glass p-6 md:p-10 w-full max-w-3xl border border-amber-500 rounded-3xl shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
-                                <button type="button" onClick={() => setSelected(null)} className="absolute top-4 right-6 text-4xl text-slate-400 hover:text-white btn-press">&times;</button>
+                                <button type="button" onClick={() => {
+                                    setSelected(null); setShowCamera(false); setCapturedImg(null); setAFrontImg(null); setABackImg(null); setPanImg(null);
+                                }} className="absolute top-4 right-6 text-4xl text-slate-400 hover:text-white btn-press">&times;</button>
                                 <div className="text-center mb-6"><h3 className="text-3xl md:text-5xl font-black text-amber-500 mb-1 uppercase">CARD #{selected.n}</h3><span className="bg-amber-500 text-black px-4 py-1 rounded-full text-sm font-black">{selected.cat} | ₹{selected.price}</span></div>
                                 
                                 <div className="space-y-5">
-                                    <div className="bg-black/50 p-6 rounded-2xl border border-dashed border-amber-500 text-center">
-                                        <h4 className="text-amber-400 font-black mb-4"><i className="fa-solid fa-camera"></i> अपनी लाइव फोटो लें या अपलोड करें (Live DP) *</h4>
-                                        {showCamera ? (
+                                    {showCamera ? (
+                                        <div className="bg-black/50 p-6 rounded-2xl border border-dashed border-amber-500 text-center">
+                                            <h4 className="text-amber-400 font-black mb-4"><i className="fa-solid fa-camera"></i> कैमरा चालू है...</h4>
                                             <div className="relative mx-auto w-full h-[300px] overflow-hidden rounded-xl border-4 border-blue-500">
                                                 <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
                                                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[80%] h-[70%] border-4 border-dashed border-white rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] pointer-events-none flex items-center justify-center">
-                                                    <span className="text-white/50 font-black tracking-widest text-2xl">DPSG SCAN</span>
+                                                    <span className="text-white/50 font-black tracking-widest text-2xl uppercase">{activeCameraBox === 'selfie' ? 'चेहरा (Face)' : 'DPSG SCAN'}</span>
                                                 </div>
                                                 <div className="absolute bottom-4 left-0 w-full flex gap-2 justify-center z-10">
                                                     <button type="button" onClick={switchCamera} className="bg-slate-700 text-white px-4 py-2 rounded-lg font-bold text-sm btn-press shadow-lg border border-slate-500"><i className="fa-solid fa-camera-rotate"></i> Flip</button>
                                                     <button type="button" onClick={capture} className="bg-amber-500 text-black px-8 py-2 rounded-lg font-black shadow-lg btn-press border-2 border-white">CLICK 📸</button>
                                                 </div>
                                             </div>
-                                        ) : capturedImg ? (
-                                            <div className="relative">
-                                                <img src={capturedImg} onClick={() => setEnlargedImg(capturedImg)} className="mx-auto rounded-full w-[200px] h-[200px] border-4 border-amber-500 object-cover shadow-lg cursor-pointer" title="बड़ा करने के लिए क्लिक करें" />
-                                                <div className="flex gap-2 justify-center mt-4">
-                                                    <button type="button" onClick={()=>startCamera(facingMode)} className="bg-slate-700 text-white px-4 py-2 rounded-full text-xs font-bold btn-press">Retake Photo</button>
-                                                    <label className="bg-slate-700 text-white px-4 py-2 rounded-full text-xs font-bold btn-press cursor-pointer">Upload Photo<input type="file" accept="image/*" hidden onChange={(e)=>{if(e.target.files[0]){let r=new FileReader();r.onload=()=>setCapturedImg(r.result);r.readAsDataURL(e.target.files[0]);}}} /></label>
-                                                </div>
+                                            <button type="button" onClick={()=>{setShowCamera(false); setActiveCameraBox(null);}} className="mt-4 text-slate-400 underline">कैमरा बंद करें</button>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {/* 📦 BOX 1: SELFIE 📦 */}
+                                            <div className="bg-black/40 p-5 rounded-2xl border-2 border-dashed border-amber-500 text-center">
+                                                <h4 className="text-amber-400 font-black mb-3 text-sm"><i className="fa-solid fa-user-circle"></i> 1. लाइव सेल्फी (Live Photo) *</h4>
+                                                {capturedImg ? (
+                                                    <div>
+                                                        <img src={capturedImg} className="mx-auto rounded-full w-[120px] h-[120px] border-4 border-amber-500 object-cover shadow-lg" />
+                                                        <div className="flex justify-center gap-2 mt-3">
+                                                            <button type="button" onClick={()=>startCamera("selfie", "user")} className="bg-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold text-white"><i className="fa-solid fa-camera"></i> Retake</button>
+                                                            <label className="bg-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer"><i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>{let r=new FileReader();r.onload=()=>setCapturedImg(r.result);r.readAsDataURL(e.target.files[0]);}} /></label>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex justify-center gap-3">
+                                                        <button type="button" onClick={()=>startCamera("selfie", "user")} className="bg-indigo-600 px-4 py-2 rounded-xl text-sm font-black text-white shadow-lg btn-press flex-1"><i className="fa-solid fa-camera"></i> TAKE SELFIE</button>
+                                                        <label className="bg-slate-700 px-4 py-2 rounded-xl text-sm font-black text-white shadow-lg btn-press cursor-pointer flex-1"><i className="fa-solid fa-upload"></i> UPLOAD<input type="file" accept="image/*" hidden onChange={(e)=>{let r=new FileReader();r.onload=()=>setCapturedImg(r.result);r.readAsDataURL(e.target.files[0]);}} /></label>
+                                                    </div>
+                                                )}
                                             </div>
-                                        ) : (
-                                            <div className="flex gap-2 justify-center">
-                                                <button type="button" onClick={()=>startCamera()} className="bg-indigo-600 w-full max-w-xs py-3 rounded-xl font-black text-white text-lg shadow-lg hover:bg-indigo-500 btn-press"><i className="fa-solid fa-camera"></i> START CAMERA</button>
-                                                <label className="bg-slate-700 text-white px-4 py-3 rounded-xl font-black text-lg shadow-lg btn-press cursor-pointer flex items-center gap-2"><i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>{if(e.target.files[0]){let r=new FileReader();r.onload=()=>setCapturedImg(r.result);r.readAsDataURL(e.target.files[0]);}}} /></label>
+
+                                            {/* 📦 BOX 2: AADHAAR FRONT 📦 */}
+                                            <div className="bg-black/40 p-4 rounded-xl border border-dashed border-indigo-500 text-center">
+                                                <h4 className="text-indigo-400 font-black mb-2 text-sm"><i className="fa-regular fa-id-card"></i> 2. आधार कार्ड (Front)</h4>
+                                                {aFrontImg ? (
+                                                    <div>
+                                                        <img src={aFrontImg} className="mx-auto rounded-lg w-full max-w-[200px] border-2 border-indigo-500 shadow-md" />
+                                                        <div className="flex justify-center gap-2 mt-2">
+                                                            <button type="button" onClick={()=>startCamera("aFront", "environment")} className="bg-slate-700 px-3 py-1 rounded text-[10px] font-bold text-white">Retake</button>
+                                                            <label className="bg-slate-700 px-3 py-1 rounded text-[10px] font-bold text-white cursor-pointer">Upload<input type="file" accept="image/*" hidden onChange={(e)=>{let r=new FileReader();r.onload=()=>setAFrontImg(r.result);r.readAsDataURL(e.target.files[0]);}} /></label>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex justify-center gap-2">
+                                                        <button type="button" onClick={()=>startCamera("aFront", "environment")} className="bg-indigo-600 px-3 py-2 rounded-lg text-xs font-bold text-white flex-1"><i className="fa-solid fa-camera"></i> Scan Front</button>
+                                                        <label className="bg-slate-700 px-3 py-2 rounded-lg text-xs font-bold text-white cursor-pointer flex-1"><i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>{let r=new FileReader();r.onload=()=>setAFrontImg(r.result);r.readAsDataURL(e.target.files[0]);}} /></label>
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                    </div>
+
+                                            {/* 📦 BOX 3: AADHAAR BACK 📦 */}
+                                            <div className="bg-black/40 p-4 rounded-xl border border-dashed border-indigo-500 text-center">
+                                                <h4 className="text-indigo-400 font-black mb-2 text-sm"><i className="fa-regular fa-id-card"></i> 3. आधार कार्ड (Back)</h4>
+                                                {aBackImg ? (
+                                                    <div>
+                                                        <img src={aBackImg} className="mx-auto rounded-lg w-full max-w-[200px] border-2 border-indigo-500 shadow-md" />
+                                                        <div className="flex justify-center gap-2 mt-2">
+                                                            <button type="button" onClick={()=>startCamera("aBack", "environment")} className="bg-slate-700 px-3 py-1 rounded text-[10px] font-bold text-white">Retake</button>
+                                                            <label className="bg-slate-700 px-3 py-1 rounded text-[10px] font-bold text-white cursor-pointer">Upload<input type="file" accept="image/*" hidden onChange={(e)=>{let r=new FileReader();r.onload=()=>setABackImg(r.result);r.readAsDataURL(e.target.files[0]);}} /></label>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex justify-center gap-2">
+                                                        <button type="button" onClick={()=>startCamera("aBack", "environment")} className="bg-indigo-600 px-3 py-2 rounded-lg text-xs font-bold text-white flex-1"><i className="fa-solid fa-camera"></i> Scan Back</button>
+                                                        <label className="bg-slate-700 px-3 py-2 rounded-lg text-xs font-bold text-white cursor-pointer flex-1"><i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>{let r=new FileReader();r.onload=()=>setABackImg(r.result);r.readAsDataURL(e.target.files[0]);}} /></label>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* 📦 BOX 4: PAN CARD 📦 */}
+                                            <div className="bg-black/40 p-4 rounded-xl border border-dashed border-red-500 text-center">
+                                                <h4 className="text-red-400 font-black mb-2 text-sm"><i className="fa-solid fa-credit-card"></i> 4. पैन कार्ड (PAN Card)</h4>
+                                                {panImg ? (
+                                                    <div>
+                                                        <img src={panImg} className="mx-auto rounded-lg w-full max-w-[200px] border-2 border-red-500 shadow-md" />
+                                                        <div className="flex justify-center gap-2 mt-2">
+                                                            <button type="button" onClick={()=>startCamera("pan", "environment")} className="bg-slate-700 px-3 py-1 rounded text-[10px] font-bold text-white">Retake</button>
+                                                            <label className="bg-slate-700 px-3 py-1 rounded text-[10px] font-bold text-white cursor-pointer">Upload<input type="file" accept="image/*" hidden onChange={(e)=>{let r=new FileReader();r.onload=()=>setPanImg(r.result);r.readAsDataURL(e.target.files[0]);}} /></label>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex justify-center gap-2">
+                                                        <button type="button" onClick={()=>startCamera("pan", "environment")} className="bg-red-600 px-3 py-2 rounded-lg text-xs font-bold text-white flex-1"><i className="fa-solid fa-camera"></i> Scan PAN</button>
+                                                        <label className="bg-slate-700 px-3 py-2 rounded-lg text-xs font-bold text-white cursor-pointer flex-1"><i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>{let r=new FileReader();r.onload=()=>setPanImg(r.result);r.readAsDataURL(e.target.files[0]);}} /></label>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
 
                                     <div><label className="text-xs font-bold text-slate-400 ml-1">पूरा नाम (Full Name) *</label><input name="Customer_Name" required className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none" /></div>
                                     <div className="grid grid-cols-2 gap-4">
@@ -860,14 +944,14 @@
                                         <div><label className="text-xs font-bold text-slate-400 ml-1">पेमेंट मोड (Payment Mode) *</label><select name="Payment_Mode" required onChange={(e)=>setPayMode(e.target.value)} className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none"><option value="" disabled>चुनें (Select)</option><option value="Cash">नकद (Cash)</option><option value="PhonePe/GPay">UPI / App</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select></div>
                                         {payMode === 'Airtel Payment Bank' && <div><label className="text-xs font-black text-red-500 ml-1">PAN CARD *</label><input name="PAN" required pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" placeholder="ABCDE1234F" className="w-full bg-black p-3 rounded-xl font-black border-2 border-red-600 text-white text-base uppercase shadow-inner" /></div>}
                                     </div>
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        <div><label className="text-xs font-bold text-amber-400 ml-1"><i className="fa-solid fa-file-arrow-up"></i> डॉक्यूमेंट अपलोड (Aadhaar/PAN)</label><input type="file" id="file_upload_gallery" accept="image/*" className="w-full bg-slate-900 p-2 rounded-xl font-bold border border-slate-700 text-white file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-black cursor-pointer text-sm" /></div>
-                                        <div><label className="text-xs font-bold text-green-400 ml-1"><i className="fa-solid fa-hashtag"></i> Txn ID (रेफरेंस) *</label><input name="Payment_Ref" required placeholder="UTR Number" className="w-full bg-black p-3 rounded-xl font-black border border-green-500 text-green-400 text-base focus:border-amber-500 outline-none shadow-inner" /></div>
+                                    <div className="grid md:grid-cols-1 gap-4">
+                                        <div><label className="text-xs font-bold text-green-400 ml-1"><i className="fa-solid fa-hashtag"></i> Txn ID (रेफरेंस) *</label><input name="Payment_Ref" required placeholder="UTR Number / Payment ID" className="w-full bg-black p-3 rounded-xl font-black border border-green-500 text-green-400 text-base focus:border-amber-500 outline-none shadow-inner" /></div>
                                     </div>
+                                    
                                     <button type="submit" disabled={processingId === "BOOKING" || !capturedImg} className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black py-4 rounded-xl text-xl md:text-2xl uppercase italic shadow-lg mt-2 disabled:opacity-50 btn-press flex items-center justify-center gap-2">
                                         {processingId === "BOOKING" ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-paper-plane"></i>} {processingId === "BOOKING" ? "UPLOADING... ⏳" : "CONFIRM BOOKING 🔱"}
                                     </button>
-                                    {!capturedImg && <p className="text-red-500 text-center font-bold text-[10px] mt-1">बुकिंग के लिए लाइव फोटो लेना अनिवार्य है।</p>}
+                                    {!capturedImg && <p className="text-red-500 text-center font-bold text-[10px] mt-1">बुकिंग के लिए लाइव सेल्फी लेना अनिवार्य है।</p>}
                                 </div>
                             </form>
                         </div>
