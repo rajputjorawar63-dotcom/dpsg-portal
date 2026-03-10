@@ -108,7 +108,6 @@
             const [activeTab, setActiveTab] = useState('ALL'); 
             const [selected, setSelected] = useState(null);
             
-            // 🛡️ AUTO-LOGOUT SECURITY: sessionStorage use (Tab band hote hi logout)
             const [staff, setStaff] = useState(() => {
                 try { return JSON.parse(sessionStorage.getItem('dps_session')) || null; } catch(e) { return null; }
             });
@@ -146,11 +145,12 @@
             const [facingMode, setFacingMode] = useState("user"); 
             const videoRef = useRef(null);
             const [enlargedImg, setEnlargedImg] = useState(null);
+            const [showLogin, setShowLogin] = useState(false);
 
             // 🛠️ BUG FIX: Cache Buster & Anti-Crash Handling
             const loadData = async () => {
                 try {
-                    const res = await fetch(APP_URL + "?action=GET_DATA&_cb=" + new Date().getTime());
+                    const res = await fetch(APP_URL + "?action=GET_DATA&_cb=" + new Date().getTime(), { cache: "no-store" });
                     const rows = await res.json();
                     
                     if(rows && Array.isArray(rows)) {
@@ -162,6 +162,7 @@
                                let rawS = (rD[4] || 'Available').toString().trim().toLowerCase();
                                if(rawS.includes("sold")) s = "Sold";
                                else if(rawS.includes("pending")) s = "Pending";
+                               else if(rawS.includes("reject")) s = "Rejected"; 
                             }
                             temp.push({ 
                                 n: i, status: s, cat: i<=100?"VIP Card":i<=600?"Gold Card":"Silver Card",
@@ -210,7 +211,7 @@
 
             const bookCard = async (e) => {
                 e.preventDefault(); 
-                setProcessingId("BOOKING");
+                setProcessingId("BOOKING"); // 🛡️ Double Click Security
                 const fd = new FormData(e.target); 
                 const n = selected.n;
                 const params = new URLSearchParams(Object.fromEntries(fd));
@@ -245,12 +246,11 @@
                 setSelected(null); setCapturedImg(null); setProcessingId(null); setTimeout(loadData, 1500);
             };
 
-            // 🛠️ INSTANT HIDE & WHATSAPP GUARANTEE
             const masterUpdate = async (c, status, isInsideForm = false) => {
                 setProcessingId(c.n);
                 setCards(prev => prev.map(card => card.n === c.n ? { ...card, status: status === 'Sold' ? 'Sold' : 'Available' } : card));
                 
-                if(status === 'Available') { 
+                if(status === 'Available' || status === 'Rejected') { 
                     setLocalLocks(p => { const ns = new Set(p); ns.delete(c.n); localStorage.setItem('dps_locks', JSON.stringify([...ns])); return ns; }); 
                 }
 
@@ -286,7 +286,6 @@
                 
                 setProcessingId(null); setSelected(null); setVerifyOutsideModal(null); setPayVerified(false); setCapturedImg(null);
                 
-                // 🚀 PASS AADHAAR TO POPUP STATE
                 if(status === 'Sold') {
                     setSessionStats(prev => {
                         const nState = { ...prev, verified: [{n: c.n, name: sName || "Unknown"}, ...prev.verified] };
@@ -308,9 +307,11 @@
             const renderCard = (c) => {
                 const isLocked = localLocks.has(c.n) || c.status === 'Pending';
                 let s = c.status === 'Sold' ? 'Sold' : isLocked ? 'Pending' : 'Available';
-                const color = s === 'Sold' ? 'sold-card' : s === 'Pending' ? 'pending-card' : `card-${c.cat.split(' ')[0]}`;
                 
-                if(c.status === 'Processing_Hide') return null;
+                // 🗑️ कचरा साफ़ - रिजेक्टेड और सोल्ड वाले कार्ड पेंडिंग में नहीं दिखेंगे
+                if(c.status === 'Rejected' || c.status === 'Processing_Hide') return null;
+
+                const color = s === 'Sold' ? 'sold-card' : s === 'Pending' ? 'pending-card' : `card-${c.cat.split(' ')[0]}`;
 
                 return (
                     <div key={c.n} onClick={() => {
@@ -326,11 +327,10 @@
                 );
             };
 
-            // 💰 FINANCE REPORT CALCULATION (Front-End logic)
             const getFinanceStats = () => {
                 const soldCards = cards.filter(c => c.status === 'Sold');
-                const pendingCards = cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Processing_Hide');
-                const availableCards = cards.filter(c => c.status === 'Available' && !localLocks.has(c.n) && c.status !== 'Processing_Hide');
+                const pendingCards = cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Rejected');
+                const availableCards = cards.filter(c => c.status === 'Available' && !localLocks.has(c.n) && c.status !== 'Rejected');
                 
                 let totalRev = 0, upiC = 0, cashC = 0, airtelC = 0, totalDisc = 0;
                 soldCards.forEach(c => {
@@ -351,7 +351,6 @@
 
             if(loading) return <div className="h-screen flex items-center justify-center font-black text-amber-500 text-6xl animate-pulse bg-[#050505]">DPSG Loading...</div>;
 
-            // 📱 STAFF APP UI (WHATSAPP-LIKE FULL SCREEN) 📱
             if(staff) {
                 const stats = getFinanceStats();
                 const reportText = `🔱 *DPSG DAILY FINANCE REPORT* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n📊 *TODAY'S STOCK (बचे कार्ड)*\n• *कुल कार्ड:* 1000\n• *बिक चुके (Sold):* ${stats.soldCards.length}\n• *पेंडिंग (Pending):* ${stats.pendingCards.length}\n• *बचे हुए (Available):* ${stats.availableCards.length}\n  (VIP: ${stats.vipA} | Gold: ${stats.goldA} | Silver: ${stats.silverA})\n\n💰 *FINANCE & SALES (अनुमानित)*\n• *कुल सेल (Revenue):* ₹${stats.totalRev}\n• *कुल डिस्काउंट दिया:* ₹${stats.totalDisc}\n\n💳 *PAYMENT MODE:*\n• *UPI / App:* ${stats.upiC} कार्ड\n• *Cash (नकद):* ${stats.cashC} कार्ड\n• *Airtel Bank:* ${stats.airtelC} कार्ड\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 जय माता दी! 🚩`;
@@ -376,11 +375,11 @@
                                     
                                     <div className="flex items-center justify-between border-b border-slate-800 pb-2 mt-4">
                                         <h3 className="text-xl font-black text-amber-400">Live Requests</h3>
-                                        <span className="bg-amber-500 text-black px-2 py-1 rounded text-xs font-black">{cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Processing_Hide').length} Pending</span>
+                                        <span className="bg-amber-500 text-black px-2 py-1 rounded text-xs font-black">{cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Rejected').length} Pending</span>
                                     </div>
 
-                                    {cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Processing_Hide').length === 0 ? <p className="text-slate-500 text-center font-bold italic py-10">कोई पेंडिंग रिक्वेस्ट नहीं है...</p> : 
-                                    cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Processing_Hide').map(c => (
+                                    {cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Rejected').length === 0 ? <p className="text-slate-500 text-center font-bold italic py-10">कोई पेंडिंग रिक्वेस्ट नहीं है...</p> : 
+                                    cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Rejected').map(c => (
                                         <div key={c.n} className="bg-slate-900/90 p-4 rounded-2xl border-l-[6px] border-amber-500 shadow-lg flex flex-col gap-4">
                                             <div className="flex items-center gap-4">
                                                 {c.d.dp ? <img src={c.d.dp} onClick={() => setEnlargedImg(c.d.dp)} className="w-16 h-16 rounded-full border-2 border-amber-500 object-cover cursor-pointer" alt="DP" title="बड़ा करें" /> : <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black border border-dashed border-slate-600 text-slate-500">NO DP</div>}
@@ -395,7 +394,7 @@
                                                 <button onClick={() => handleOutsideVerify(c)} disabled={processingId === c.n} className="bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">
                                                     {processingId === c.n ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-check"></i>} {processingId === c.n ? "Wait..." : "Verify"}
                                                 </button>
-                                                <button onClick={() => masterUpdate(c, 'Available', false)} disabled={processingId === c.n} className="bg-red-700 hover:bg-red-600 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">
+                                                <button onClick={() => masterUpdate(c, 'Rejected', false)} disabled={processingId === c.n} className="bg-red-700 hover:bg-red-600 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">
                                                     {processingId === c.n ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-xmark"></i>} {processingId === c.n ? "Wait..." : "Reject"}
                                                 </button>
                                                 <button onClick={() => {if(!staffUpi){alert("Please add UPI ID first!");return;} setQuickQrCard(c);}} disabled={processingId === c.n} className="bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">
@@ -410,7 +409,6 @@
                                 </div>
                             )}
 
-                            {/* 📊 FINANCE & REPORTING TAB */}
                             {staffAppTab === 'ACTIVITY' && (
                                 <div className="max-w-3xl mx-auto space-y-4">
                                     <h3 className="text-2xl font-black text-amber-500 italic mb-4"><i className="fa-solid fa-chart-pie"></i> FINANCE DASHBOARD</h3>
@@ -440,7 +438,7 @@
                                         <p className="text-right text-[10px] text-slate-500 font-bold mt-2">VIP: {stats.vipA} | Gold: {stats.goldA} | Silver: {stats.silverA}</p>
                                     </div>
 
-                                    <a href={`whatsapp://send?text=${encodeURIComponent(reportText)}`} target="_blank" className="w-full bg-[#25D366] hover:bg-[#20b858] text-black font-black py-4 rounded-xl text-lg shadow-lg btn-press flex items-center justify-center gap-3">
+                                    <a href={`whatsapp://send?text=${encodeURIComponent(reportText)}`} className="w-full bg-[#25D366] hover:bg-[#20b858] text-black font-black py-4 rounded-xl text-lg shadow-lg btn-press flex items-center justify-center gap-3">
                                         <i className="fa-brands fa-whatsapp text-2xl"></i> GENERATE 9 PM REPORT
                                     </a>
                                 </div>
@@ -498,7 +496,6 @@
                             </div>
                         )}
 
-                        {/* ✏️ EDIT MODAL (STAFF) */}
                         {selected && (
                             <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto pb-24">
                                 <div className="glass p-6 md:p-10 w-full max-w-5xl border border-amber-500 rounded-3xl bg-[#0a0a0a] shadow-2xl relative my-auto mt-20 md:mt-auto">
@@ -561,7 +558,7 @@
                                                 <button onClick={()=>masterUpdate(selected, 'Sold', true)} disabled={!payVerified || processingId === selected.n} className={`flex-1 font-black py-3 rounded-xl text-lg shadow-lg btn-press flex items-center justify-center gap-2 ${payVerified ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-600'}`}>
                                                     {processingId === selected.n ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-check"></i>} {processingId === selected.n ? "Please Wait..." : "VERIFY"}
                                                 </button>
-                                                <button onClick={()=>masterUpdate(selected, 'Available', true)} disabled={processingId === selected.n} className="flex-1 bg-red-800 text-white font-black py-3 rounded-xl text-lg shadow-lg btn-press flex items-center justify-center gap-2">
+                                                <button onClick={()=>masterUpdate(selected, 'Rejected', true)} disabled={processingId === selected.n} className="flex-1 bg-red-800 text-white font-black py-3 rounded-xl text-lg shadow-lg btn-press flex items-center justify-center gap-2">
                                                     {processingId === selected.n ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-xmark"></i>} REJECT
                                                 </button>
                                             </div>
@@ -571,21 +568,19 @@
                             </div>
                         )}
 
-                        {/* 📍 STAFF WHATSAPP SUCCESS POPUP 📍 */}
                         {staffSuccessModal && (
                             <div className="fixed inset-0 z-[300] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md pb-safe">
                                 <div className={`glass p-6 md:p-8 max-w-md w-full text-center border-t-8 rounded-3xl bg-[#0a0a0a] shadow-[0_0_30px_rgba(59,130,246,0.3)] ${staffSuccessModal.isReject ? 'border-red-500' : 'border-blue-500'}`}>
                                     <i className={`fa-solid ${staffSuccessModal.isReject ? 'fa-circle-xmark text-red-500' : 'fa-shield-halved text-blue-500'} text-6xl mb-4`}></i>
-                                    <h3 className="text-2xl font-black mb-1 text-white uppercase">#{staffSuccessModal.n} {staffSuccessModal.isReject ? 'Rejected!' : 'Verified!'}</h3>
-                                    <p className="text-amber-400 font-bold text-xs mb-6 px-4">नोट: मैसेज भेजने के बाद यह बॉक्स अपने आप बंद नहीं होगा। आपको खुद 'Close' दबाना पड़ेगा।</p>
+                                    <h3 className="text-2xl font-black mb-6 text-white uppercase">#{staffSuccessModal.n} {staffSuccessModal.isReject ? 'Rejected!' : 'Verified!'}</h3>
                                     
                                     <div className="space-y-3">
-                                        <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *DPSG STAFF VERIFICATION REPORT* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी हुकुम!* 🚩\n\nप्रबंधन को सूचित किया जाता है कि एक लंबित आवेदन को सफलतापूर्वक *${staffSuccessModal.isReject ? 'REJECT' : 'VERIFY'}* कर दिया गया है。\n\n📋 *ग्राहक विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *ग्राहक का नाम:* ${staffSuccessModal.finalName || 'N/A'}\n• *संपर्क सूत्र:* ${staffSuccessModal.finalMob || 'N/A'}\n• *आधार नंबर:* ${staffSuccessModal.finalAdhar || 'N/A'}\n• *निवास स्थान:* ${staffSuccessModal.finalVill || 'N/A'}\n${!staffSuccessModal.isReject ? `• *पैन कार्ड (PAN):* ${staffSuccessModal.finalPan || 'N/A'}\n\n💰 *वित्तीय विवरण:*\n• *कार्ड का मूल शुल्क:* ₹${staffSuccessModal.price}\n• *प्रदान की गई छूट:* ₹${staffSuccessModal.finalDisc || 0}\n• *प्राप्त अंतिम राशि:* ₹${staffSuccessModal.finalPaid}\n• *भुगतान का माध्यम:* ${staffSuccessModal.finalPayMode || 'N/A'}\n\n🛠️ *प्रशासनिक टिप्पणी:*\n• *किए गए सुधार/बदलाव:* ${staffSuccessModal.changesStr}\n` : ''}• *सत्यापन कर्ता (Staff ID):* ${staff.id}\n━━━━━━━━━━━━━━━━━━━━━━\n✅ *कार्य पूर्णता के साथ पोर्टल पर अपडेट कर दिया गया है।*`)}`} target="_blank" className="flex items-center justify-center gap-3 w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
-                                            <i className="fa-solid fa-user-tie text-xl"></i> 1. OWNER REPORT (FULL)
+                                        <a href={`whatsapp://send?text=${encodeURIComponent(`🔱 *DPSG STAFF VERIFICATION REPORT* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी हुकुम!* 🚩\n\nप्रबंधन को सूचित किया जाता है कि एक लंबित आवेदन को सफलतापूर्वक *${staffSuccessModal.isReject ? 'REJECT' : 'VERIFY'}* कर दिया गया है。\n\n📋 *ग्राहक विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *ग्राहक का नाम:* ${staffSuccessModal.finalName || 'N/A'}\n• *संपर्क सूत्र:* ${staffSuccessModal.finalMob || 'N/A'}\n• *आधार नंबर:* ${staffSuccessModal.finalAdhar || 'N/A'}\n• *निवास स्थान:* ${staffSuccessModal.finalVill || 'N/A'}\n${!staffSuccessModal.isReject ? `• *पैन कार्ड (PAN):* ${staffSuccessModal.finalPan || 'N/A'}\n\n💰 *वित्तीय विवरण:*\n• *कार्ड का मूल शुल्क:* ₹${staffSuccessModal.price}\n• *प्रदान की गई छूट:* ₹${staffSuccessModal.finalDisc || 0}\n• *प्राप्त अंतिम राशि:* ₹${staffSuccessModal.finalPaid}\n• *भुगतान का माध्यम:* ${staffSuccessModal.finalPayMode || 'N/A'}\n\n🛠️ *प्रशासनिक टिप्पणी:*\n• *किए गए सुधार/बदलाव:* ${staffSuccessModal.changesStr}\n` : ''}• *सत्यापन कर्ता (Staff ID):* ${staff.id}\n━━━━━━━━━━━━━━━━━━━━━━\n✅ *कार्य पूर्णता के साथ पोर्टल पर अपडेट कर दिया गया है।*`)}`} className="flex items-center justify-center gap-3 w-full bg-[#25D366] hover:bg-[#20b858] text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
+                                            <i className="fa-brands fa-whatsapp text-xl"></i> 1. SEND MSG TO WHATSAPP GROUP
                                         </a>
                                         
                                         {!staffSuccessModal.isReject && (
-                                            <a href={`whatsapp://send?phone=91${staffSuccessModal.finalMob}&text=${encodeURIComponent(`🔱 *DIGITAL PROBLEM SOLUTION GROUP (DPSG)* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\nआदरणीय *${staffSuccessModal.finalName}* जी,\n🙏 *जय माता दी! DPSG परिवार में आपका हार्दिक स्वागत है।*\n\nहमें आपको यह सूचित करते हुए अत्यंत हर्ष हो रहा है कि आपने हमारी संस्था पर जो विश्वास जताया है, उसके तहत आपकी DPSG सदस्यता सफलतापूर्वक सक्रिय (Activate) कर दी गई है।\n\n🔖 *आपकी सदस्यता का विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *टोकन संख्या:* ${staffSuccessModal.token}\n• *आधार नंबर:* ${staffSuccessModal.finalAdhar || 'N/A'}\n• *पंजीकृत पता:* ${staffSuccessModal.finalVill || 'N/A'}\n• *भुगतान राशि:* ₹${staffSuccessModal.finalPaid} (${staffSuccessModal.finalPayMode || ''} द्वारा)\n${staffSuccessModal.finalPan && staffSuccessModal.finalPan !== "N/A" ? `• *पैन कार्ड:* ${staffSuccessModal.finalPan}\n` : ""} \n🎁 *51 मेगा प्राइज़ लकी ड्रॉ (विशेष अवसर):*\nDPSG का सम्मानित सदस्य बनने के साथ ही, अब आप हमारे बहुचर्चित "51 मेगा प्राइज़" के लकी ड्रॉ में आधिकारिक रूप से शामिल हो चुके हैं! ईश्वर ने चाहा तो अगला बड़ा इनाम आपका हो सकता है।\n\n✨ *सदस्यता के लाभ:*\nअब से DPSG द्वारा प्रदान की जाने वाली सभी प्रीमियम ई-मित्र और डिजिटल सेवाएं आपको निरंतर मिलती रहेंगी।\n\n📞 *24/7 ग्राहक सहायता:*\nभविष्य में आपको किसी भी प्रकार की डिजिटल समस्या हो या किसी योजना की जानकारी चाहिए, तो कृपया बेझिझक हमारी हेल्पलाइन (+91 7229874128) पर संपर्क करें। \n\nDPSG परिवार का अभिन्न हिस्सा बनने और हमारा सहयोग करने के लिए आपका हृदय की गहराइयों से बहुत-बहुत धन्यवाद।\n🙏 *आपका दिन शुभ एवं मंगलमय हो!*\n━━━━━━━━━━━━━━━━━━━━━━`)}`} target="_blank" className="flex items-center justify-center gap-3 w-full bg-[#25D366] hover:bg-[#20b858] text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
+                                            <a href={`whatsapp://send?phone=91${staffSuccessModal.finalMob}&text=${encodeURIComponent(`🔱 *DIGITAL PROBLEM SOLUTION GROUP (DPSG)* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\nआदरणीय *${staffSuccessModal.finalName}* जी,\n🙏 *जय माता दी! DPSG परिवार में आपका हार्दिक स्वागत है।*\n\nहमें आपको यह सूचित करते हुए अत्यंत हर्ष हो रहा है कि आपने हमारी संस्था पर जो विश्वास जताया है, उसके तहत आपकी DPSG सदस्यता सफलतापूर्वक सक्रिय (Activate) कर दी गई है।\n\n🔖 *आपकी सदस्यता का विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *टोकन संख्या:* ${staffSuccessModal.token}\n• *आधार नंबर:* ${staffSuccessModal.finalAdhar || 'N/A'}\n• *पंजीकृत पता:* ${staffSuccessModal.finalVill || 'N/A'}\n• *भुगतान राशि:* ₹${staffSuccessModal.finalPaid} (${staffSuccessModal.finalPayMode || ''} द्वारा)\n${staffSuccessModal.finalPan && staffSuccessModal.finalPan !== "N/A" ? `• *पैन कार्ड:* ${staffSuccessModal.finalPan}\n` : ""} \n🎁 *51 मेगा प्राइज़ लकी ड्रॉ (विशेष अवसर):*\nDPSG का सम्मानित सदस्य बनने के साथ ही, अब आप हमारे बहुचर्चित "51 मेगा प्राइज़" के लकी ड्रॉ में आधिकारिक रूप से शामिल हो चुके हैं! ईश्वर ने चाहा तो अगला बड़ा इनाम आपका हो सकता है।\n\n✨ *सदस्यता के लाभ:*\nअब से DPSG द्वारा प्रदान की जाने वाली सभी प्रीमियम ई-मित्र और डिजिटल सेवाएं आपको निरंतर मिलती रहेंगी।\n\n📞 *24/7 ग्राहक सहायता:*\nभविष्य में आपको किसी भी प्रकार की डिजिटल समस्या हो या किसी योजना की जानकारी चाहिए, तो कृपया बेझिझक हमारी हेल्पलाइन (+91 7229874128) पर संपर्क करें। \n\nDPSG परिवार का अभिन्न हिस्सा बनने और हमारा सहयोग करने के लिए आपका हृदय की गहराइयों से बहुत-बहुत धन्यवाद।\n🙏 *आपका दिन शुभ एवं मंगलमय हो!*\n━━━━━━━━━━━━━━━━━━━━━━`)}`} target="_blank" className="flex items-center justify-center gap-3 w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
                                                 <i className="fa-brands fa-whatsapp text-xl"></i> 2. VIP MSG TO CUSTOMER
                                             </a>
                                         )}
@@ -611,9 +606,6 @@
                 );
             }
 
-            // ==========================================
-            // 🌐 CUSTOMER UI (WEBSITE MODE) 🌐
-            // ==========================================
             return (
                 <div className="max-w-[1600px] mx-auto p-4 py-10">
                     <header className="text-center mb-16">
@@ -701,7 +693,7 @@
                                         {payMode === 'Airtel Payment Bank' && <div><label className="text-xs font-black text-red-500 ml-1">PAN CARD *</label><input name="PAN" required pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" placeholder="ABCDE1234F" className="w-full bg-black p-3 rounded-xl font-black border-2 border-red-600 text-white text-base uppercase shadow-inner" /></div>}
                                     </div>
                                     <div className="grid md:grid-cols-2 gap-4">
-                                        <div><label className="text-xs font-bold text-amber-400 ml-1"><i className="fa-solid fa-file-arrow-up"></i> स्क्रीनशॉट या वीडियो (Option)</label><input type="file" id="file_upload_gallery" accept="image/*,video/*,.pdf" className="w-full bg-slate-900 p-2 rounded-xl font-bold border border-slate-700 text-white file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-black cursor-pointer text-sm" /></div>
+                                        <div><label className="text-xs font-bold text-amber-400 ml-1"><i className="fa-solid fa-file-arrow-up"></i> स्क्रीनशॉट या वीडियो (Option)</label><input type="file" id="file_upload_gallery" accept="image/*,video/*,.pdf" multiple className="w-full bg-slate-900 p-2 rounded-xl font-bold border border-slate-700 text-white file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-black cursor-pointer text-sm" /></div>
                                         <div><label className="text-xs font-bold text-green-400 ml-1"><i className="fa-solid fa-hashtag"></i> Txn ID (रेफरेंस) *</label><input name="Payment_Ref" required placeholder="UTR Number" className="w-full bg-black p-3 rounded-xl font-black border border-green-500 text-green-400 text-base focus:border-amber-500 outline-none shadow-inner" /></div>
                                     </div>
                                     <button type="submit" disabled={processingId === "BOOKING" || !capturedImg} className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black py-4 rounded-xl text-xl md:text-2xl uppercase italic shadow-lg mt-2 disabled:opacity-50 btn-press flex items-center justify-center gap-2">
@@ -713,14 +705,19 @@
                         </div>
                     )}
 
-                    {/* 📍 CUSTOMER BOOKING SUCCESS POPUP (WITH AADHAAR) 📍 */}
                     {successModal && (
                         <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4">
                             <div className="glass p-8 max-w-md w-full text-center border-t-8 border-green-500 rounded-3xl shadow-2xl">
                                 <i className="fa-regular fa-circle-check text-7xl text-green-500 mb-4 animate-bounce"></i>
                                 <h3 className="text-3xl font-black mb-2 text-white uppercase">बुकिंग सफल!</h3>
                                 <div className="bg-green-600/20 p-3 rounded-xl border border-green-500 mb-6 font-black text-xl text-green-400">TOKEN: {successModal.token}</div>
-                                <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *DIGITAL PROBLEM SOLUTION GROUP (DPSG)* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी! हुकुम जोरावर बना* 🚩\n\nसंस्था के पोर्टल पर एक नया आवेदन (Booking) सफलतापूर्वक दर्ज किया गया है। कृपया निम्नलिखित विवरण की समीक्षा करें:\n\n📋 *आवेदक का संपूर्ण विवरण:*\n• *टोकन संख्या:* ${successModal.token}\n• *कार्ड क्रमांक:* #${successModal.n} (${successModal.cat})\n• *आवेदक का नाम:* ${successModal.name}\n• *पंजीकृत मोबाइल:* ${successModal.mob}\n• *आधार नंबर:* ${successModal.adhar}\n• *निवास स्थान (पता):* ${successModal.vill}\n${successModal.pan && successModal.pan !== "N/A" ? `• *पैन कार्ड संख्या:* ${successModal.pan}\n` : ""}💳 *भुगतान का विवरण:*\n• *भुगतान का माध्यम:* ${successModal.pay}\n• *ट्रांजेक्शन आईडी:* ${successModal.ref} \n━━━━━━━━━━━━━━━━━━━━━━\n📞 *हेल्पलाइन:* +91 7229874128\n🌐 *DPSG ऑटोमेटेड सिस्टम*`)}`} onClick={()=>setSuccessModal(null)} className="flex items-center justify-center gap-3 w-full bg-[#25D366] hover:bg-[#20b858] text-white font-black py-3 rounded-xl text-lg shadow-lg btn-press"><i className="fa-brands fa-whatsapp text-2xl"></i> SEND REPORT (OWNER)</a>
+                                
+                                <div className="space-y-3">
+                                    <a href={`whatsapp://send?text=${encodeURIComponent(`🔱 *DIGITAL PROBLEM SOLUTION GROUP (DPSG)* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी! हुकुम* 🚩\n\nसंस्था के पोर्टल पर एक नया आवेदन (Booking) सफलतापूर्वक दर्ज किया गया है।\n\n📋 *आवेदक का संपूर्ण विवरण:*\n• *टोकन संख्या:* ${successModal.token}\n• *कार्ड क्रमांक:* #${successModal.n} (${successModal.cat})\n• *आवेदक का नाम:* ${successModal.name}\n• *पंजीकृत मोबाइल:* ${successModal.mob}\n• *आधार नंबर:* ${successModal.adhar}\n• *निवास स्थान (पता):* ${successModal.vill}\n${successModal.pan && successModal.pan !== "N/A" ? `• *पैन कार्ड संख्या:* ${successModal.pan}\n` : ""}💳 *भुगतान का विवरण:*\n• *भुगतान का माध्यम:* ${successModal.pay}\n• *ट्रांजेक्शन आईडी:* ${successModal.ref} \n━━━━━━━━━━━━━━━━━━━━━━\n📞 *हेल्पलाइन:* +91 7229874128\n🌐 *DPSG ऑटोमेटेड सिस्टम*`)}`} className="flex items-center justify-center gap-3 w-full bg-[#25D366] hover:bg-[#20b858] text-white font-black py-3 rounded-xl text-lg shadow-lg btn-press">
+                                        <i className="fa-brands fa-whatsapp text-2xl"></i> SEND MSG TO WHATSAPP GROUP
+                                    </a>
+                                </div>
+                                <button onClick={()=>setSuccessModal(null)} className="mt-4 text-slate-500 font-bold underline">Close</button>
                             </div>
                         </div>
                     )}
@@ -732,7 +729,21 @@
                         </div>
                     )}
 
-                    {!staff && <div className="mt-20 mb-10 text-center"><button onClick={()=>{let u=prompt("Staff ID:");let p=prompt("Pass:");if(ADMINS[u]===p){const sess={id:u,pass:p};sessionStorage.setItem('dps_session',JSON.stringify(sess));setStaff(sess);}else alert("Access Denied");}} className="text-slate-500 hover:text-indigo-400 font-black tracking-widest text-xs uppercase transition-colors">🔱 STAFF CONTROL CENTER 🔱</button></div>}
+                    {!staff && (
+                        <div className="mt-20 mb-10 text-center">
+                            {showLogin ? (
+                                <div className="glass p-6 max-w-sm mx-auto rounded-3xl border border-indigo-500 bg-[#0a0a0a]">
+                                    <h4 className="text-xl font-black text-indigo-400 mb-4">STAFF LOGIN</h4>
+                                    <input id="l_id" placeholder="Staff ID (e.g. Jorawar@DPS)" className="w-full bg-slate-900 p-3 rounded-lg border border-slate-700 mb-3 text-white text-center font-bold" />
+                                    <input id="l_pass" type="password" placeholder="Password" className="w-full bg-slate-900 p-3 rounded-lg border border-slate-700 mb-4 text-white text-center font-bold" />
+                                    <button onClick={()=>{let u=document.getElementById('l_id').value; let p=document.getElementById('l_pass').value; if(ADMINS[u]===p){sessionStorage.setItem('dps_session',JSON.stringify({id:u,pass:p})); setStaff({id:u,pass:p}); setShowLogin(false);}else alert("Wrong ID or Password!");}} className="w-full bg-indigo-600 text-white font-black py-3 rounded-lg btn-press">LOGIN SECURELY</button>
+                                    <button onClick={()=>setShowLogin(false)} className="mt-3 text-slate-500 text-sm font-bold underline">Cancel</button>
+                                </div>
+                            ) : (
+                                <button onClick={()=>setShowLogin(true)} className="text-slate-500 hover:text-indigo-400 font-black tracking-widest text-xs uppercase transition-colors">🔱 STAFF CONTROL CENTER 🔱</button>
+                            )}
+                        </div>
+                    )}
                 </div>
             );
         };
