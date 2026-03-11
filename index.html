@@ -53,7 +53,7 @@
         const { useState, useEffect } = React;
         
         // 🚀 आपकी न्यू और 100% वर्किंग मास्टर लिंक 🚀
-        const APP_URL = "https://script.google.com/macros/s/AKfycbwFfTPDWSZEb9AHFrLJeagXhQOfwTnG9S9J8be1fbI1q2E1F3EOJYgqdoR4G9he7cN0TA/exec";
+        const APP_URL = "https://script.google.com/macros/s/AKfycbxnN6sNDvXpOkgl1YRT_Yk4GlF2q1w0oyjg7Ct_I2uTJCX497E8zxvb3i4UTHsx3NWuNg/exec";
         
         const COMPANY = "Digital Problem Solution Group";
         const SLOGAN = "समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा";
@@ -217,7 +217,7 @@
                                else if(rawS.includes("pending")) {
                                    s = "Pending";
                                }
-                               else if(rawS.includes("reject") || rawS.includes("available")) {
+                               else if(rawS.includes("reject") || rawS.includes("available") || rawS.includes("अस्वीकृत")) {
                                    s = "Available";
                                    if(currentLocks.has(i)) { currentLocks.delete(i); locksChanged = true; }
                                } 
@@ -394,6 +394,7 @@
                 params.append("Paid", sPaid);
                 params.append("Discount", finalDisc);
 
+                // ✅ स्टाफ डाक्यूमेंट अपलोड फिक्स ✅
                 if(isInsideForm) {
                     const billInput = document.getElementById('staff_bill_upload');
                     const cardInput = document.getElementById('staff_card_upload');
@@ -522,7 +523,7 @@
                                                     <p className="text-xs text-slate-400 font-bold"><i className="fa-solid fa-phone"></i> {c.d.mob || "N/A"} | DOB: {c.d.dob || "N/A"} | {c.d.pay || "N/A"}</p>
                                                     <p className="text-[10px] text-green-400 font-bold mt-1">Tk: {c.token} {c.d.ref && `| Ref: ${c.d.ref}`}</p>
                                                     
-                                                    {/* ✅ VIEW BUTTONS FOR AADHAAR & PAN ✅ */}
+                                                    {/* ✅ VIEW BUTTONS FOR STAFF DASHBOARD ✅ */}
                                                     <div className="flex flex-wrap gap-2 mt-2">
                                                         {c.d.aF && c.d.aF.startsWith('http') && <button onClick={() => setEnlargedImg(c.d.aF)} className="bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1 rounded text-[10px] font-bold btn-press shadow-md"><i className="fa-regular fa-id-card"></i> Aadhaar F</button>}
                                                         {c.d.aB && c.d.aB.startsWith('http') && <button onClick={() => setEnlargedImg(c.d.aB)} className="bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1 rounded text-[10px] font-bold btn-press shadow-md"><i className="fa-regular fa-id-card"></i> Aadhaar B</button>}
@@ -636,6 +637,7 @@
                             </div>
                         )}
 
+                        {/* STAFF EDIT MODAL */}
                         {selected && (
                             <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto pb-24">
                                 <div className="glass p-6 md:p-10 w-full max-w-5xl border border-amber-500 rounded-3xl bg-[#0a0a0a] shadow-2xl relative my-auto mt-20 md:mt-auto">
@@ -659,6 +661,19 @@
                                                 {selected.d.aF && selected.d.aF.startsWith('http') && <button onClick={() => setEnlargedImg(selected.d.aF)} className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold btn-press shadow-md"><i className="fa-regular fa-id-card"></i> Aadhaar (Front)</button>}
                                                 {selected.d.aB && selected.d.aB.startsWith('http') && <button onClick={() => setEnlargedImg(selected.d.aB)} className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold btn-press shadow-md"><i className="fa-regular fa-id-card"></i> Aadhaar (Back)</button>}
                                                 {selected.d.pI && selected.d.pI.startsWith('http') && <button onClick={() => setEnlargedImg(selected.d.pI)} className="bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold btn-press shadow-md"><i className="fa-solid fa-credit-card"></i> PAN Card</button>}
+                                            </div>
+
+                                            {/* STAFF DOCUMENT UPLOAD */}
+                                            <div className="w-full mt-4 space-y-3 border-t border-slate-700 pt-4">
+                                                <h4 className="text-amber-500 font-bold text-sm text-center">Staff Uploads</h4>
+                                                <div className="bg-slate-900 p-3 rounded-lg border border-slate-700">
+                                                    <label className="text-[10px] text-slate-400 font-bold block mb-1">Upload Bill Receipt</label>
+                                                    <input type="file" id="staff_bill_upload" accept="image/*" className="w-full text-xs text-slate-300 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-black hover:file:bg-amber-400"/>
+                                                </div>
+                                                <div className="bg-slate-900 p-3 rounded-lg border border-slate-700">
+                                                    <label className="text-[10px] text-slate-400 font-bold block mb-1">Upload E-Card</label>
+                                                    <input type="file" id="staff_card_upload" accept="image/*" className="w-full text-xs text-slate-300 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500"/>
+                                                </div>
                                             </div>
                                             
                                         </div>
@@ -930,7 +945,6 @@
                                     {/* FORM DETAILS WITH DOB */}
                                     <div><label className="text-xs font-bold text-slate-400 ml-1">पूरा नाम (Full Name) *</label><input name="Customer_Name" required className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none" /></div>
                                     
-                                    {/* ✅ DOB Field Added Here ✅ */}
                                     <div className="grid grid-cols-2 gap-4">
                                         <div><label className="text-xs font-bold text-slate-400 ml-1">मोबाइल (Mobile) *</label><input name="Mobile" type="tel" pattern="[0-9]{10}" required className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none" /></div>
                                         <div><label className="text-xs font-bold text-slate-400 ml-1">जन्मतिथि (DOB) *</label><input name="DOB" type="date" required className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none" /></div>
