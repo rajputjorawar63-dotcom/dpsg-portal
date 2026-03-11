@@ -184,6 +184,75 @@
             const [otpValue, setOtpValue] = useState("");
             const [staffTempCreds, setStaffTempCreds] = useState(null);
 
+            // ==========================================
+            // 📸 FULL SCREEN CUSTOM CAMERA SYSTEM 📸
+            // ==========================================
+            const [isCamOpen, setIsCamOpen] = useState(false);
+            const [camFacing, setCamFacing] = useState('environment'); // 'user' or 'environment'
+            const [camTargetStr, setCamTargetStr] = useState(""); // 'selfie', 'aFront', 'aBack', 'pan'
+
+            const openFullScreenCamera = async (targetStr, facing) => {
+                setCamTargetStr(targetStr);
+                setCamFacing(facing);
+                setIsCamOpen(true);
+                startCamera(facing);
+            };
+
+            const startCamera = async (facing) => {
+                if(window.localStream) {
+                    window.localStream.getTracks().forEach(track => track.stop());
+                }
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: facing, width: {ideal: 1280}, height: {ideal: 720} }
+                    });
+                    window.localStream = stream;
+                    document.getElementById('fullScreenVideo').srcObject = stream;
+                } catch(e) {
+                    alert("कैमरा एक्सेस नहीं हो पाया! कृपया ब्राउज़र सेटिंग्स में कैमरा परमिशन दें।");
+                    setIsCamOpen(false);
+                }
+            };
+
+            const flipFullScreenCamera = () => {
+                const newFacing = camFacing === 'user' ? 'environment' : 'user';
+                setCamFacing(newFacing);
+                startCamera(newFacing);
+            };
+
+            const captureFullScreenPhoto = () => {
+                const video = document.getElementById('fullScreenVideo');
+                const canvas = document.createElement('canvas');
+                // वज़न कम करने के लिए रेसोलुशन सेट करना
+                const MAX_W = 600, MAX_H = 600;
+                let w = video.videoWidth, h = video.videoHeight;
+                if(w > h) { if(w > MAX_W) { h *= MAX_W/w; w = MAX_W; } }
+                else { if(h > MAX_H) { w *= MAX_H/h; h = MAX_H; } }
+                canvas.width = w; canvas.height = h;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, w, h);
+                
+                // 100-200 KB कंप्रेशन जादू
+                const base64Data = canvas.toDataURL('image/jpeg', 0.5);
+
+                if(camTargetStr === 'selfie') setCapturedImg(base64Data);
+                else if(camTargetStr === 'aFront') setAFrontImg(base64Data);
+                else if(camTargetStr === 'aBack') setABackImg(base64Data);
+                else if(camTargetStr === 'pan') setPanImg(base64Data);
+
+                closeFullScreenCamera();
+            };
+
+            const closeFullScreenCamera = () => {
+                if(window.localStream) {
+                    window.localStream.getTracks().forEach(track => track.stop());
+                    window.localStream = null;
+                }
+                setIsCamOpen(false);
+            };
+            // ==========================================
+
             const loadData = async () => {
                 try {
                     const res = await fetch(APP_URL + "?action=GET_DATA&_cb=" + new Date().getTime());
@@ -268,7 +337,7 @@
                 setStaff(staffTempCreds); setShowLogin(false); setOtpStep(false);
             };
 
-            // 🚀 कस्टमर बुकिंग सिस्टम (लोहे का बक्सा JSON)
+            // 🚀 कस्टमर बुकिंग सिस्टम 
             const bookCard = async (e) => {
                 e.preventDefault(); 
                 if(!capturedImg) { alert("कृपया अपनी लाइव सेल्फी (Face Photo) ज़रूर लें!"); return; }
@@ -295,7 +364,7 @@
                 closeModalAndReset(); setProcessingId(null); setTimeout(loadData, 1500);
             };
 
-            // 🚀 मास्टर अपडेट सिस्टम (लोहे का बक्सा JSON)
+            // 🚀 मास्टर अपडेट सिस्टम
             const masterUpdate = async (c, status, isInsideForm = false) => {
                 setProcessingId(c.n);
                 setCards(prev => prev.map(card => card.n === c.n ? { ...card, status: status === 'Sold' ? 'Sold' : 'Available' } : card));
@@ -516,8 +585,8 @@
                             </div>
                         )}
 
-                        {/* STAFF EDIT MODAL (Full Docs Edit) */}
-                        {selected && (
+                        {/* STAFF EDIT MODAL */}
+                        {selected && staff && (
                             <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto pb-24">
                                 <div className="glass p-6 md:p-10 w-full max-w-5xl border border-amber-500 rounded-3xl bg-[#0a0a0a] shadow-2xl relative my-auto mt-20 md:mt-auto">
                                     <button onClick={closeModalAndReset} className="absolute top-4 right-6 text-4xl text-slate-400 hover:text-white btn-press">&times;</button>
@@ -525,29 +594,48 @@
                                     <div className="grid md:grid-cols-2 gap-8">
                                         <div className="flex flex-col items-center justify-center bg-black/40 p-5 rounded-2xl border border-slate-800 shadow-inner">
                                             
-                                            <div className="text-center mb-4">
+                                            <div className="text-center mb-4 w-full">
                                                 {capturedImg ? <img src={capturedImg} className="w-[150px] h-[150px] rounded-full mx-auto object-cover border-4 border-green-500 shadow-lg" /> : 
                                                  selected.d.dp && selected.d.dp.startsWith('http') ? <img src={selected.d.dp} onClick={() => setEnlargedImg(selected.d.dp)} className="w-[150px] h-[150px] rounded-full mx-auto object-cover border-4 border-amber-500 cursor-pointer shadow-lg" /> : 
                                                  <div className="w-[150px] h-[150px] rounded-full bg-slate-900 mx-auto flex items-center justify-center text-sm text-red-500 font-black border-4 border-red-500 border-dashed">NO DP</div>}
-                                                <label className="mt-4 inline-block bg-amber-500 text-black px-4 py-2 rounded-lg text-xs font-black cursor-pointer hover:bg-amber-400 btn-press">
-                                                    <i className="fa-solid fa-camera"></i> Change DP (Selfie)
-                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} />
-                                                </label>
+                                                
+                                                {/* 📸 STAFF LIVE CAMERA & UPLOAD FOR SELFIE */}
+                                                <div className="flex justify-center gap-2 mt-4">
+                                                    <button type="button" onClick={()=>openFullScreenCamera('selfie', 'user')} className="bg-amber-500 text-black px-4 py-2 rounded-lg text-xs font-black btn-press shadow"><i className="fa-solid fa-camera"></i> Live</button>
+                                                    <label className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-xs font-black cursor-pointer btn-press shadow">
+                                                        <i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} />
+                                                    </label>
+                                                </div>
                                             </div>
 
                                             <div className="w-full space-y-3 border-t border-slate-700 pt-4">
                                                 <h4 className="text-amber-500 font-bold text-sm text-center">Customer Documents</h4>
-                                                <div className="flex justify-between items-center bg-slate-900 p-2 rounded-lg">
-                                                    <span className="text-xs text-slate-400 font-bold">Aadhaar (F): {selected.d.aF ? "✅" : "❌"}</span>
-                                                    <label className="bg-indigo-600 px-3 py-1.5 rounded-lg text-[10px] text-white font-bold cursor-pointer btn-press">Change<input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} /></label>
+                                                
+                                                {/* 📸 STAFF LIVE CAMERA & UPLOAD FOR AADHAAR FRONT */}
+                                                <div className="flex flex-col bg-slate-900 p-2 rounded-lg gap-2">
+                                                    <div className="flex justify-between items-center"><span className="text-xs text-slate-400 font-bold">Aadhaar (Front): {selected.d.aF ? "✅" : "❌"}</span></div>
+                                                    <div className="flex gap-2">
+                                                        <button type="button" onClick={()=>openFullScreenCamera('aFront', 'environment')} className="flex-1 bg-indigo-600 px-3 py-2 rounded-lg text-xs text-white font-bold btn-press"><i className="fa-solid fa-camera"></i> Live</button>
+                                                        <label className="flex-1 bg-slate-700 px-3 py-2 rounded-lg text-xs text-white font-bold cursor-pointer text-center btn-press"><i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} /></label>
+                                                    </div>
                                                 </div>
-                                                <div className="flex justify-between items-center bg-slate-900 p-2 rounded-lg">
-                                                    <span className="text-xs text-slate-400 font-bold">Aadhaar (B): {selected.d.aB ? "✅" : "❌"}</span>
-                                                    <label className="bg-indigo-600 px-3 py-1.5 rounded-lg text-[10px] text-white font-bold cursor-pointer btn-press">Change<input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} /></label>
+
+                                                {/* 📸 STAFF LIVE CAMERA & UPLOAD FOR AADHAAR BACK */}
+                                                <div className="flex flex-col bg-slate-900 p-2 rounded-lg gap-2">
+                                                    <div className="flex justify-between items-center"><span className="text-xs text-slate-400 font-bold">Aadhaar (Back): {selected.d.aB ? "✅" : "❌"}</span></div>
+                                                    <div className="flex gap-2">
+                                                        <button type="button" onClick={()=>openFullScreenCamera('aBack', 'environment')} className="flex-1 bg-indigo-600 px-3 py-2 rounded-lg text-xs text-white font-bold btn-press"><i className="fa-solid fa-camera"></i> Live</button>
+                                                        <label className="flex-1 bg-slate-700 px-3 py-2 rounded-lg text-xs text-white font-bold cursor-pointer text-center btn-press"><i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} /></label>
+                                                    </div>
                                                 </div>
-                                                <div className="flex justify-between items-center bg-slate-900 p-2 rounded-lg">
-                                                    <span className="text-xs text-slate-400 font-bold">PAN Card: {selected.d.pI ? "✅" : "❌"}</span>
-                                                    <label className="bg-red-600 px-3 py-1.5 rounded-lg text-[10px] text-white font-bold cursor-pointer btn-press">Change<input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} /></label>
+
+                                                {/* 📸 STAFF LIVE CAMERA & UPLOAD FOR PAN */}
+                                                <div className="flex flex-col bg-slate-900 p-2 rounded-lg gap-2">
+                                                    <div className="flex justify-between items-center"><span className="text-xs text-slate-400 font-bold">PAN Card: {selected.d.pI ? "✅" : "❌"}</span></div>
+                                                    <div className="flex gap-2">
+                                                        <button type="button" onClick={()=>openFullScreenCamera('pan', 'environment')} className="flex-1 bg-red-600 px-3 py-2 rounded-lg text-xs text-white font-bold btn-press"><i className="fa-solid fa-camera"></i> Live</button>
+                                                        <label className="flex-1 bg-slate-700 px-3 py-2 rounded-lg text-xs text-white font-bold cursor-pointer text-center btn-press"><i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} /></label>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -563,7 +651,15 @@
                                                 </div>
                                             </div>
                                         </div>
+
                                         <div className="space-y-4">
+                                            {/* 📍 STAFF LIVE QR CODE 📍 */}
+                                            <div className="bg-white p-4 rounded-xl border-4 border-amber-500 text-center mb-4 shadow-[0_0_20px_rgba(251,191,36,0.2)]">
+                                                <h4 className="text-black font-black text-lg mb-1"><i className="fa-solid fa-qrcode text-amber-500"></i> ग्राहक से लेने योग्य राशि (Live Payment)</h4>
+                                                <p className="text-red-600 font-black text-2xl mb-2">₹ {selected.price - discount}</p>
+                                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=${staffUpi}%26pn=DPSG%26am=${selected.price - discount}%26tr=${selected.mid}`} alt="Live QR" className="mx-auto border-2 border-slate-200 rounded p-1 w-[150px] h-[150px]" />
+                                            </div>
+
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div><label className="text-[10px] text-slate-400 font-bold">Name</label><input id="s_name" defaultValue={selected.d.name} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
                                                 <div><label className="text-[10px] text-slate-400 font-bold">Mobile</label><input id="s_mob" defaultValue={selected.d.mob} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
@@ -715,7 +811,7 @@
                         </div>
                     )}
 
-                    {/* CUSTOMER BOOKING MODAL (1 CLICK UPLOAD - CAMERA DIRECT) */}
+                    {/* CUSTOMER BOOKING MODAL (FULL SCREEN CAMERA + UPLOAD SUPPORT) */}
                     {selected && !staff && (
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <form onSubmit={bookCard} className="glass p-6 md:p-10 w-full max-w-3xl border border-amber-500 rounded-3xl shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
@@ -724,7 +820,7 @@
                                 
                                 <div className="space-y-5">
                                     
-                                    {/* 📦 1. NATIVE SELFIE CAMERA (DIRECT) 📦 */}
+                                    {/* 📦 1. SELFIE 📦 */}
                                     <div className="bg-black/50 p-6 rounded-2xl border-2 border-dashed border-amber-500 text-center">
                                         <h4 className="text-amber-400 font-black mb-4"><i className="fa-solid fa-user-circle"></i> 1. लाइव सेल्फी (Face Photo) *</h4>
                                         {capturedImg ? (
@@ -732,20 +828,23 @@
                                                 <img src={capturedImg} className="mx-auto rounded-full w-[150px] h-[150px] border-4 border-amber-500 object-cover shadow-lg" />
                                                 <div className="flex justify-center gap-3 mt-4">
                                                     <button type="button" onClick={()=>setEnlargedImg(capturedImg)} className="bg-blue-600 px-4 py-2 rounded-lg font-bold text-white shadow-md btn-press"><i className="fa-solid fa-eye"></i> View</button>
-                                                    <label className="bg-red-600 px-4 py-2 rounded-lg font-bold text-white shadow-md cursor-pointer btn-press"><i className="fa-solid fa-camera"></i> Retake<input type="file" accept="image/*" capture="user" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} /></label>
+                                                    <button type="button" onClick={()=>setCapturedImg(null)} className="bg-red-600 px-4 py-2 rounded-lg font-bold text-white shadow-md btn-press"><i className="fa-solid fa-trash"></i> Delete</button>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="flex justify-center gap-3">
-                                                <label className="bg-amber-500 hover:bg-amber-400 px-6 py-4 rounded-2xl font-black text-black shadow-[0_0_20px_rgba(251,191,36,0.4)] cursor-pointer flex-1 text-lg btn-press transition-transform">
-                                                    <i className="fa-solid fa-camera text-2xl mb-1 block"></i> OPEN FRONT CAMERA
-                                                    <input type="file" accept="image/*" capture="user" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} />
+                                            <div className="flex gap-2 w-full">
+                                                <button type="button" onClick={()=>openFullScreenCamera('selfie', 'user')} className="bg-amber-500 hover:bg-amber-400 p-3 rounded-xl font-black text-black shadow-lg flex-1 btn-press flex flex-col items-center justify-center">
+                                                    <i className="fa-solid fa-camera text-2xl mb-1"></i> LIVE CAMERA
+                                                </button>
+                                                <label className="bg-slate-700 hover:bg-slate-600 p-3 rounded-xl font-black text-white shadow-lg flex-1 btn-press flex flex-col items-center justify-center cursor-pointer">
+                                                    <i className="fa-solid fa-upload text-2xl mb-1"></i> UPLOAD
+                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} />
                                                 </label>
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* 📦 2. NATIVE AADHAAR FRONT 📦 */}
+                                    {/* 📦 2. AADHAAR FRONT 📦 */}
                                     <div className="bg-black/40 p-5 rounded-xl border border-dashed border-indigo-500 text-center">
                                         <h4 className="text-indigo-400 font-black mb-3 text-sm"><i className="fa-regular fa-id-card"></i> 2. आधार कार्ड (Front)</h4>
                                         {aFrontImg ? (
@@ -753,20 +852,23 @@
                                                 <img src={aFrontImg} className="mx-auto rounded-lg w-full max-w-[250px] border-2 border-indigo-500 shadow-md" />
                                                 <div className="flex justify-center gap-2 mt-3">
                                                     <button type="button" onClick={()=>setEnlargedImg(aFrontImg)} className="bg-blue-600 px-4 py-1.5 rounded-lg text-xs font-bold text-white btn-press"><i className="fa-solid fa-eye"></i> View</button>
-                                                    <label className="bg-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer btn-press">Retake<input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} /></label>
+                                                    <button type="button" onClick={()=>setAFrontImg(null)} className="bg-red-600 px-4 py-1.5 rounded-lg text-xs font-bold text-white btn-press"><i className="fa-solid fa-trash"></i> Remove</button>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="flex justify-center gap-3">
-                                                <label className="bg-indigo-600 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                            <div className="flex gap-2 w-full">
+                                                <button type="button" onClick={()=>openFullScreenCamera('aFront', 'environment')} className="bg-indigo-600 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg flex-1 btn-press">
                                                     <i className="fa-solid fa-camera mb-1 block text-lg"></i> Scan Front
-                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} />
+                                                </button>
+                                                <label className="bg-slate-700 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg flex-1 btn-press cursor-pointer">
+                                                    <i className="fa-solid fa-upload mb-1 block text-lg"></i> Upload
+                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} />
                                                 </label>
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* 📦 3. NATIVE AADHAAR BACK 📦 */}
+                                    {/* 📦 3. AADHAAR BACK 📦 */}
                                     <div className="bg-black/40 p-5 rounded-xl border border-dashed border-indigo-500 text-center">
                                         <h4 className="text-indigo-400 font-black mb-3 text-sm"><i className="fa-regular fa-id-card"></i> 3. आधार कार्ड (Back)</h4>
                                         {aBackImg ? (
@@ -774,20 +876,23 @@
                                                 <img src={aBackImg} className="mx-auto rounded-lg w-full max-w-[250px] border-2 border-indigo-500 shadow-md" />
                                                 <div className="flex justify-center gap-2 mt-3">
                                                     <button type="button" onClick={()=>setEnlargedImg(aBackImg)} className="bg-blue-600 px-4 py-1.5 rounded-lg text-xs font-bold text-white btn-press"><i className="fa-solid fa-eye"></i> View</button>
-                                                    <label className="bg-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer btn-press">Retake<input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} /></label>
+                                                    <button type="button" onClick={()=>setABackImg(null)} className="bg-red-600 px-4 py-1.5 rounded-lg text-xs font-bold text-white btn-press"><i className="fa-solid fa-trash"></i> Remove</button>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="flex justify-center gap-3">
-                                                <label className="bg-indigo-600 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                            <div className="flex gap-2 w-full">
+                                                <button type="button" onClick={()=>openFullScreenCamera('aBack', 'environment')} className="bg-indigo-600 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg flex-1 btn-press">
                                                     <i className="fa-solid fa-camera mb-1 block text-lg"></i> Scan Back
-                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} />
+                                                </button>
+                                                <label className="bg-slate-700 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg flex-1 btn-press cursor-pointer">
+                                                    <i className="fa-solid fa-upload mb-1 block text-lg"></i> Upload
+                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} />
                                                 </label>
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* 📦 4. NATIVE PAN CARD 📦 */}
+                                    {/* 📦 4. PAN CARD 📦 */}
                                     <div className="bg-black/40 p-5 rounded-xl border border-dashed border-red-500 text-center">
                                         <h4 className="text-red-400 font-black mb-3 text-sm"><i className="fa-solid fa-credit-card"></i> 4. पैन कार्ड (PAN Card)</h4>
                                         {panImg ? (
@@ -795,14 +900,17 @@
                                                 <img src={panImg} className="mx-auto rounded-lg w-full max-w-[250px] border-2 border-red-500 shadow-md" />
                                                 <div className="flex justify-center gap-2 mt-3">
                                                     <button type="button" onClick={()=>setEnlargedImg(panImg)} className="bg-blue-600 px-4 py-1.5 rounded-lg text-xs font-bold text-white btn-press"><i className="fa-solid fa-eye"></i> View</button>
-                                                    <label className="bg-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer btn-press">Retake<input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} /></label>
+                                                    <button type="button" onClick={()=>setPanImg(null)} className="bg-red-600 px-4 py-1.5 rounded-lg text-xs font-bold text-white btn-press"><i className="fa-solid fa-trash"></i> Remove</button>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="flex justify-center gap-3">
-                                                <label className="bg-red-600 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                            <div className="flex gap-2 w-full">
+                                                <button type="button" onClick={()=>openFullScreenCamera('pan', 'environment')} className="bg-red-600 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg flex-1 btn-press">
                                                     <i className="fa-solid fa-camera mb-1 block text-lg"></i> Scan PAN
-                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} />
+                                                </button>
+                                                <label className="bg-slate-700 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg flex-1 btn-press cursor-pointer">
+                                                    <i className="fa-solid fa-upload mb-1 block text-lg"></i> Upload
+                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} />
                                                 </label>
                                             </div>
                                         )}
@@ -833,7 +941,7 @@
                                     <button type="submit" disabled={processingId === "BOOKING" || !capturedImg} className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black py-4 rounded-xl text-xl md:text-2xl uppercase italic shadow-lg mt-2 disabled:opacity-50 btn-press flex items-center justify-center gap-2">
                                         {processingId === "BOOKING" ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-paper-plane"></i>} {processingId === "BOOKING" ? "UPLOADING SECURELY... ⏳" : "CONFIRM BOOKING 🔱"}
                                     </button>
-                                    {!capturedImg && <p className="text-red-500 text-center font-bold text-[10px] mt-1">बुकिंग के लिए लाइव सेल्फी खींचना अनिवार्य है।</p>}
+                                    {!capturedImg && <p className="text-red-500 text-center font-bold text-[10px] mt-1">बुकिंग के लिए लाइव सेल्फी खींचना या अपलोड करना अनिवार्य है।</p>}
                                 </div>
                             </form>
                         </div>
@@ -904,6 +1012,30 @@
                             )}
                         </div>
                     )}
+
+                    {/* 📸 FULL SCREEN CAMERA OVERLAY 📸 */}
+                    {isCamOpen && (
+                        <div className="fixed inset-0 z-[99999] bg-black flex flex-col justify-center items-center">
+                            <video id="fullScreenVideo" autoPlay playsInline className="absolute inset-0 w-full h-full object-contain bg-black"></video>
+                            
+                            <div className="absolute top-0 w-full p-4 flex justify-between z-10 bg-gradient-to-b from-black/80 to-transparent">
+                                <button type="button" onClick={closeFullScreenCamera} className="bg-red-600 text-white px-5 py-2 rounded-xl font-black btn-press shadow-lg border-2 border-white/20"><i className="fa-solid fa-arrow-left"></i> BACK</button>
+                                <button type="button" onClick={flipFullScreenCamera} className="bg-slate-800 text-white px-5 py-2 rounded-xl font-black btn-press shadow-lg border-2 border-white/20"><i className="fa-solid fa-camera-rotate"></i> FLIP</button>
+                            </div>
+                            
+                            {/* Scanner overlay effect */}
+                            <div className="absolute inset-0 pointer-events-none flex justify-center items-center">
+                                <div className="w-3/4 h-1/2 border-4 border-amber-500 rounded-3xl shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] relative">
+                                    <div className="absolute inset-0 border-2 border-amber-300 animate-pulse opacity-50"></div>
+                                </div>
+                            </div>
+
+                            <div className="absolute bottom-0 w-full p-8 flex justify-center z-10 bg-gradient-to-t from-black/80 to-transparent pb-16">
+                                <button type="button" onClick={captureFullScreenPhoto} className="bg-green-500 text-black px-10 py-5 rounded-full text-2xl font-black shadow-[0_0_30px_rgba(0,255,0,0.6)] btn-press border-4 border-white"><i className="fa-solid fa-camera"></i> CAPTURE</button>
+                            </div>
+                        </div>
+                    )}
+
                 </div>
             );
         };
