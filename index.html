@@ -50,7 +50,7 @@
         const { useState, useEffect } = React;
         
         // 🚀 आपकी बिल्कुल नई लिंक 🚀
-        const APP_URL = "https://script.google.com/macros/s/AKfycbx5kGyRzfey2294kcxa1Zg9SPkF5hbIDLl7SEsMmjtJTVhzX6QxJrS8FFMDHt4Rd6ukPg/exec";
+        const APP_URL = "https://script.google.com/macros/s/AKfycbw6qPk0CztCFBYNVi0icfhG6_NGvGko0ndUW0SBQZBSSpRvLOeQo4086BtE9XyLDQjPpw/exec";
         
         const COMPANY = "Digital Problem Solution Group";
         const SLOGAN = "समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा";
@@ -109,22 +109,6 @@
             {r:50, n:"Makeup Kit", d:"हर महिला की पहली पसंद।"},
             {r:51, n:"Electric Iron", d:"कपड़ों पर लाएं परफेक्ट चमक।"}
         ];
-
-        // 🛡️ ANTI-CRASH QUEUE UPLOAD SYSTEM (एक-एक करके फोटो भेजने वाला इंजन)
-        const uploadSingleBase64 = async (b64, type, nameStr) => {
-            if (!b64 || b64.startsWith('http') || b64 === "OLD_GARBAGE_REMOVED") return b64;
-            try {
-                let res = await fetch(APP_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: "UPLOAD_IMAGE", type: type, fileName: nameStr, base64: b64 })
-                });
-                let data = await res.json();
-                return data.url || "";
-            } catch(e) {
-                console.error("Upload error", e);
-                return "";
-            }
-        };
 
         // 🛠️ SUPER COMPRESSOR (400px - 30 KB Machine)
         const compressImage = (file) => {
@@ -332,6 +316,7 @@
                 if(file) { const compressedBase64 = await compressImage(file); setterFn(compressedBase64); }
             };
 
+            // 🚀 OTP System with URLSearchParams (Pukka Formula)
             const handleLoginAttempt = async () => {
                 let u = document.getElementById('l_id').value;
                 let p = document.getElementById('l_pass').value;
@@ -340,7 +325,10 @@
                     setStaffTempCreds({id: u, pass: p});
                     try {
                         const payload = { action: 'SEND_OTP', staffEmail: 'Chanchalbaisa722@gmail.com' };
-                        await fetch(APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+                        const urlParams = new URLSearchParams();
+                        for (let k in payload) urlParams.append(k, payload[k]);
+                        
+                        await fetch(APP_URL, { method: 'POST', body: urlParams });
                         setOtpStep(true); setProcessingId(null);
                         alert("सुरक्षा अलर्ट: ओनर की ईमेल और टेलीग्राम पर OTP भेज दिया गया है।");
                     } catch(e) { setProcessingId(null); alert("OTP भेजने में तकनीकी समस्या आई।"); }
@@ -352,34 +340,30 @@
                 setStaff(staffTempCreds); setShowLogin(false); setOtpStep(false);
             };
 
-            // 🚀 कस्टमर बुकिंग सिस्टम (QUEUE SYSTEM - 1 by 1 Upload)
+            // 🚀 कस्टमर बुकिंग सिस्टम (URLSearchParams - The Old 1000% Working Formula)
             const bookCard = async (e) => {
                 e.preventDefault(); 
                 if(!capturedImg) { alert("कृपया अपनी लाइव सेल्फी (Face Photo) ज़रूर लें!"); return; }
                 
-                setProcessingId("UPLOADING"); // 1. स्टेटस दिखाएं "UPLOADING"
+                setProcessingId("BOOKING"); 
                 const fd = new FormData(e.target); 
                 const n = selected.n;
-                const cName = fd.get("Customer_Name");
-                
-                // 2. एक-एक करके 4 फोटो भेजना (गूगल क्रैश नहीं होगा)
-                let dpUrl = await uploadSingleBase64(capturedImg, 'selfie', "DP_" + n + "_" + cName);
-                let afUrl = await uploadSingleBase64(aFrontImg, 'docs', "AadharF_" + n + "_" + cName);
-                let abUrl = await uploadSingleBase64(aBackImg, 'docs', "AadharB_" + n + "_" + cName);
-                let panUrl = await uploadSingleBase64(panImg, 'docs', "PAN_" + n + "_" + cName);
-
-                setProcessingId("BOOKING"); // 3. अब फॉर्म डेटा भेजें
                 
                 const payload = {
                     action: "BOOK", S_No: n.toString(), Category: selected.cat, Base_Price: selected.price,
                     Customer_Name: fd.get("Customer_Name"), Mobile: fd.get("Mobile"), DOB: fd.get("DOB") || "", 
                     Village: fd.get("Village") || "", Aadhaar: fd.get("Aadhaar"), PAN: fd.get("PAN") || "",
                     Payment_Mode: fd.get("Payment_Mode"), Payment_Ref: fd.get("Payment_Ref") || "",
-                    selfie: dpUrl || "", aFront: afUrl || "", aBack: abUrl || "", pan: panUrl || ""
+                    selfie: capturedImg || "", aFront: aFrontImg || "", aBack: aBackImg || "", pan: panImg || ""
                 };
 
+                const urlParams = new URLSearchParams();
+                for (let k in payload) {
+                    urlParams.append(k, payload[k]);
+                }
+
                 try { 
-                    let res = await fetch(APP_URL, { method: 'POST', body: JSON.stringify(payload) }); 
+                    let res = await fetch(APP_URL, { method: 'POST', body: urlParams }); 
                     let data = await res.json();
                     if(data.status === "ALREADY_BOOKED") {
                         alert("❌ यह कार्ड पहले से बुक हो चुका है!");
@@ -397,7 +381,7 @@
                 closeModalAndReset(); setProcessingId(null); setTimeout(loadData, 1500);
             };
 
-            // 🚀 मास्टर अपडेट सिस्टम (QUEUE SYSTEM FOR STAFF)
+            // 🚀 मास्टर अपडेट सिस्टम (URLSearchParams - The Old 1000% Working Formula)
             const masterUpdate = async (c, status, isInsideForm = false) => {
                 setProcessingId(isInsideForm ? "UPLOADING_STAFF" : c.n);
                 setCards(prev => prev.map(card => card.n === c.n ? { ...card, status: status === 'Sold' ? 'Sold' : 'Available' } : card));
@@ -430,23 +414,22 @@
                     if(cardInput && cardInput.files[0]) ecard64 = await compressImage(cardInput.files[0]);
                 }
 
-                // स्टाफ द्वारा नई फोटो डालने पर Queue Upload
-                let dpUrl = capturedImg ? await uploadSingleBase64(capturedImg, 'selfie', "DP_EDIT_" + c.n) : "";
-                let afUrl = aFrontImg ? await uploadSingleBase64(aFrontImg, 'docs', "AF_EDIT_" + c.n) : "";
-                let abUrl = aBackImg ? await uploadSingleBase64(aBackImg, 'docs', "AB_EDIT_" + c.n) : "";
-                let panUrl = panImg ? await uploadSingleBase64(panImg, 'docs', "PAN_EDIT_" + c.n) : "";
-
                 if(isInsideForm) setProcessingId(c.n);
 
                 const payload = {
                     action: "UPDATE", S_No: c.n.toString(), Status: status, staffID: staff.id, staffPass: staff.pass,
                     Customer_Name: sName, Mobile: sMob, DOB: sDob, Village: sVill, Aadhaar: sAdhar, PAN: sPan,
                     Payment_Mode: sPay, Payment_Ref: sRef, Paid: sPaid, Discount: finalDisc, Changes_Made: changesStr,
-                    selfie: dpUrl || "", aFront: afUrl || "", aBack: abUrl || "", pan: panUrl || "",
+                    selfie: capturedImg || "", aFront: aFrontImg || "", aBack: aBackImg || "", pan: panImg || "",
                     bill: bill64, ecard: ecard64
                 };
 
-                try { await fetch(APP_URL, { method: 'POST', body: JSON.stringify(payload) }); } catch(error) {}
+                const urlParams = new URLSearchParams();
+                for (let k in payload) {
+                    urlParams.append(k, payload[k]);
+                }
+
+                try { await fetch(APP_URL, { method: 'POST', body: urlParams }); } catch(error) {}
                 
                 setProcessingId(null); closeModalAndReset(); setVerifyOutsideModal(null); setPayVerified(false);
                 
@@ -980,10 +963,8 @@
                                         <div><label className="text-xs font-bold text-green-400 ml-1"><i className="fa-solid fa-hashtag"></i> Txn ID (रेफरेंस) *</label><input name="Payment_Ref" required placeholder="UTR Number / Payment ID" className="w-full bg-black p-3 rounded-xl font-black border border-green-500 text-green-400 text-base focus:border-amber-500 outline-none shadow-inner" /></div>
                                     </div>
                                     
-                                    {/* 🚀 SMART BUTTON WITH UPLOAD FEEDBACK 🚀 */}
-                                    <button type="submit" disabled={processingId === "BOOKING" || processingId === "UPLOADING" || !capturedImg} className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black py-4 rounded-xl text-xl md:text-2xl uppercase italic shadow-lg mt-2 disabled:opacity-50 btn-press flex items-center justify-center gap-2">
-                                        {processingId === "BOOKING" || processingId === "UPLOADING" ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-paper-plane"></i>} 
-                                        {processingId === "UPLOADING" ? "UPLOADING PHOTOS... ⏳" : processingId === "BOOKING" ? "SAVING RECORD... ⏳" : "CONFIRM BOOKING 🔱"}
+                                    <button type="submit" disabled={processingId === "BOOKING" || !capturedImg} className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black py-4 rounded-xl text-xl md:text-2xl uppercase italic shadow-lg mt-2 disabled:opacity-50 btn-press flex items-center justify-center gap-2">
+                                        {processingId === "BOOKING" ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-paper-plane"></i>} {processingId === "BOOKING" ? "UPLOADING SECURELY... ⏳" : "CONFIRM BOOKING 🔱"}
                                     </button>
                                     {!capturedImg && <p className="text-red-500 text-center font-bold text-[10px] mt-1">बुकिंग के लिए लाइव सेल्फी खींचना या अपलोड करना अनिवार्य है।</p>}
                                 </div>
@@ -991,7 +972,7 @@
                         </div>
                     )}
 
-                    {/* 📍 CUSTOMER SUCCESS MODAL (WITH WHATSAPP BUTTONS RESTORED) 📍 */}
+                    {/* 📍 CUSTOMER SUCCESS MODAL */}
                     {successModal && (
                         <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4">
                             <div className="glass p-8 max-w-md w-full text-center border-t-8 border-green-500 rounded-3xl shadow-2xl">
@@ -1023,7 +1004,7 @@
 
                     {!staff && (
                         <div className="mt-20 mb-10 text-center">
-                            {/* 📍 OTP LOGIN RESTORED 📍 */}
+                            {/* 📍 OTP LOGIN 📍 */}
                             {showLogin ? (
                                 <div className="glass p-6 max-w-sm mx-auto rounded-3xl border border-indigo-500 bg-[#0a0a0a] shadow-xl">
                                     <h4 className="text-2xl font-black text-indigo-400 mb-6 tracking-widest uppercase">
