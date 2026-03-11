@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="google" content="notranslate"> <title>DPSG - Digital Problem Solution Group</title>
+    <meta name="google" content="notranslate"> 
+    <title>DPSG - Digital Problem Solution Group</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -38,11 +39,7 @@
         .btn-press:active { transform: scale(0.92) !important; filter: brightness(0.8); }
         .btn-press:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
         
-        .neon-btn {
-            background: rgba(0,0,0,0.6); border: 2px solid #fbbf24; color: #fbbf24;
-            box-shadow: 0 0 10px #fbbf24, inset 0 0 5px #fbbf24;
-            animation: neonPulse 1.5s infinite alternate;
-        }
+        .neon-btn { background: rgba(0,0,0,0.6); border: 2px solid #fbbf24; color: #fbbf24; box-shadow: 0 0 10px #fbbf24, inset 0 0 5px #fbbf24; animation: neonPulse 1.5s infinite alternate; }
         @keyframes neonPulse { from { box-shadow: 0 0 5px #fbbf24; } to { box-shadow: 0 0 20px #fbbf24; } }
         .stock-ticker { background: #7f1d1d; color: white; padding: 10px; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid #fbbf24; letter-spacing: 1px;}
     </style>
@@ -52,8 +49,8 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
         
-        // 🚀 हुकुम की नई लिंक यहाँ सेट कर दी गई है 🚀
-        const APP_URL = "https://script.google.com/macros/s/AKfycbzGP3auknm6p6p2yNXMn5164fWmFxEO7HXkdUqkQ0zezfIfzjF6iCxQouFerjyyW9OJNA/exec";
+        // 🚀 आपकी नई लिंक 🚀
+        const APP_URL = "https://script.google.com/macros/s/AKfycbwAQXbypAox9_CuTGAEUpYhj8WDzdOJOQOcj6LWPfew2xlD7f-riU07UPppywgsvnDLxw/exec";
         
         const COMPANY = "Digital Problem Solution Group";
         const SLOGAN = "समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा";
@@ -113,8 +110,7 @@
             {r:51, n:"Electric Iron", d:"कपड़ों पर लाएं परफेक्ट चमक।"}
         ];
 
-        // 🛠️ IMAGE COMPRESSOR MACHINE (वज़न कम करने की मशीन) 🛠️
-        // इसमें हमने साइज़ 600px कर दिया है ताकि 4 फोटो मिलकर भी बहुत हल्की रहें।
+        // 🛠️ IMAGE COMPRESSOR (वज़न कम करने की मशीन) 
         const compressImage = (file) => {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -123,20 +119,14 @@
                     img.src = event.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 600; 
-                        const MAX_HEIGHT = 600;
-                        let width = img.width;
-                        let height = img.height;
-
-                        if (width > height) {
-                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                        } else {
-                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-                        }
+                        const MAX_WIDTH = 600; const MAX_HEIGHT = 600;
+                        let width = img.width; let height = img.height;
+                        if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
+                        else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
                         canvas.width = width; canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.5)); // 50% Quality - Very Light Size
+                        resolve(canvas.toDataURL('image/jpeg', 0.5)); 
                     };
                 };
                 reader.readAsDataURL(file);
@@ -180,7 +170,7 @@
             const [discount, setDiscount] = useState(0);
             const [payVerified, setPayVerified] = useState(false);
             
-            // 📸 4 डिब्बों की असली इमेजेस (ग्राहक सिर्फ खींचेगा, कोई अपलोड बटन नहीं) 📸
+            // 📸 4 डिब्बों की असली इमेजेस
             const [capturedImg, setCapturedImg] = useState(null);    
             const [aFrontImg, setAFrontImg] = useState(null);        
             const [aBackImg, setABackImg] = useState(null);          
@@ -194,12 +184,10 @@
             const [otpValue, setOtpValue] = useState("");
             const [staffTempCreds, setStaffTempCreds] = useState(null);
 
-            // 🌟 डेटा लाने का लॉजिक 🌟
             const loadData = async () => {
                 try {
                     const res = await fetch(APP_URL + "?action=GET_DATA&_cb=" + new Date().getTime());
                     const rows = await res.json();
-                    
                     if(rows && Array.isArray(rows)) {
                         let temp = [];
                         let currentLocks = new Set(JSON.parse(localStorage.getItem('dps_locks') || '[]'));
@@ -214,16 +202,12 @@
                                    s = "Sold";
                                    if(currentLocks.has(i)) { currentLocks.delete(i); locksChanged = true; }
                                }
-                               else if(rawS.includes("pending") || rawS.includes("लंबित")) {
-                                   s = "Pending";
-                               }
-                               else if(rawS.includes("reject") || rawS.includes("available") || rawS.includes("अस्वीकृत") || rawS.includes("उपलब्ध")) {
+                               else if(rawS.includes("pending") || rawS.includes("लंबित")) { s = "Pending"; }
+                               else if(rawS.includes("reject") || rawS.includes("available") || rawS.includes("उपलब्ध")) {
                                    s = "Available";
                                    if(currentLocks.has(i)) { currentLocks.delete(i); locksChanged = true; }
                                } 
-                            } else {
-                               if(currentLocks.has(i)) { currentLocks.delete(i); locksChanged = true; }
-                            }
+                            } else { if(currentLocks.has(i)) { currentLocks.delete(i); locksChanged = true; } }
                             temp.push({ 
                                 n: i, status: s, cat: i<=100?"VIP Card":i<=600?"Gold Card":"Silver Card",
                                 price: rD ? parseInt(rD[16] || (i<=100?500:i<=600?100:50)) : (i<=100?500:i<=600?100:50),
@@ -232,17 +216,13 @@
                                 d: { 
                                     name: (rD && rD[6])||"", mob: (rD && rD[7])||"", dob: (rD && rD[8])||"", 
                                     vill: (rD && rD[9])||"", adhar: (rD && rD[10])||"", pan: (rD && rD[11])||"", 
-                                    pay: (rD && rD[12])||"", ref: (rD && rD[13])||"", link: (rD && rD[14])||"", 
+                                    pay: (rD && rD[12])||"", ref: (rD && rD[13])||"", 
                                     dp: (rD && rD[26])||"", pI: (rD && rD[27])||"", aF: (rD && rD[28])||"", aB: (rD && rD[29])||"", discount: (rD && rD[17])||"0" 
                                 }
                             });
                         }
-                        if(locksChanged) {
-                            localStorage.setItem('dps_locks', JSON.stringify([...currentLocks]));
-                            setLocalLocks(currentLocks);
-                        }
-                        setCards(temp); 
-                        setLoading(false);
+                        if(locksChanged) { localStorage.setItem('dps_locks', JSON.stringify([...currentLocks])); setLocalLocks(currentLocks); }
+                        setCards(temp); setLoading(false);
                     }
                 } catch (error) {
                     if(cards.length === 0) {
@@ -259,18 +239,13 @@
                 try {
                     const res = await fetch(APP_URL + "?action=GET_SOLD_LIST&_cb=" + new Date().getTime());
                     const data = await res.json();
-                    setSoldListData(data);
-                    setShowSalesBoard(true);
+                    setSoldListData(data); setShowSalesBoard(true);
                 } catch(e) { alert("बिक्री बोर्ड लोड नहीं हो पाया!"); }
             };
 
-            // 📸 फोटो को सेलेक्ट करते ही कंप्रेस करने का लॉजिक
             const handleNativeCapture = async (e, setterFn) => {
                 const file = e.target.files[0];
-                if(file) {
-                    const compressedBase64 = await compressImage(file);
-                    setterFn(compressedBase64);
-                }
+                if(file) { const compressedBase64 = await compressImage(file); setterFn(compressedBase64); }
             };
 
             const handleLoginAttempt = async () => {
@@ -280,77 +255,47 @@
                     setProcessingId("OTP_SENDING");
                     setStaffTempCreds({id: u, pass: p});
                     try {
-                        const params = new URLSearchParams();
-                        params.append('action', 'SEND_OTP');
-                        params.append('staffEmail', 'Chanchalbaisa722@gmail.com');
-                        await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
-                        setOtpStep(true);
-                        setProcessingId(null);
+                        const payload = { action: 'SEND_OTP', staffEmail: 'Chanchalbaisa722@gmail.com' };
+                        await fetch(APP_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+                        setOtpStep(true); setProcessingId(null);
                         alert("सुरक्षा अलर्ट: ओनर की ईमेल पर OTP भेज दिया गया है।");
-                    } catch(e) {
-                        setProcessingId(null);
-                        alert("OTP भेजने में तकनीकी समस्या आई।");
-                    }
+                    } catch(e) { setProcessingId(null); alert("OTP भेजने में तकनीकी समस्या आई।"); }
                 } else { alert("Access Denied: Wrong ID or Password!"); }
             };
 
             const handleOtpVerify = () => {
                 sessionStorage.setItem('dps_session', JSON.stringify(staffTempCreds));
-                setStaff(staffTempCreds);
-                setShowLogin(false);
-                setOtpStep(false);
+                setStaff(staffTempCreds); setShowLogin(false); setOtpStep(false);
             };
 
-            // 🚀 पुराना और सबसे मज़बूत बुकिंग सिस्टम (1 क्लिक में सब अपलोड) 🚀
+            // 🚀 कस्टमर बुकिंग सिस्टम (लोहे का बक्सा JSON)
             const bookCard = async (e) => {
                 e.preventDefault(); 
-                if(!capturedImg) {
-                    alert("कृपया अपनी लाइव सेल्फी (Face Photo) ज़रूर लें!");
-                    return;
-                }
+                if(!capturedImg) { alert("कृपया अपनी लाइव सेल्फी (Face Photo) ज़रूर लें!"); return; }
                 setProcessingId("BOOKING");
                 const fd = new FormData(e.target); 
                 const n = selected.n;
                 
-                const params = new URLSearchParams();
-                params.append("action", "BOOK");
-                params.append("S_No", n.toString());
-                params.append("Category", selected.cat);
-                params.append("Base_Price", selected.price);
-                params.append("Customer_Name", fd.get("Customer_Name"));
-                params.append("Mobile", fd.get("Mobile"));
-                params.append("DOB", fd.get("DOB") || ""); 
-                params.append("Village", fd.get("Village") || "");
-                params.append("Aadhaar", fd.get("Aadhaar"));
-                params.append("PAN", fd.get("PAN") || "");
-                params.append("Payment_Mode", fd.get("Payment_Mode"));
-                params.append("Payment_Ref", fd.get("Payment_Ref") || "");
-                
-                // 🟢 एक साथ फोटो भेजना, क्योंकि अब फोटो बहुत हल्की है
-                if(capturedImg) params.append("selfie", capturedImg); 
-                if(aFrontImg) params.append("aFront", aFrontImg); 
-                if(aBackImg) params.append("aBack", aBackImg); 
-                if(panImg) params.append("pan", panImg); 
+                const payload = {
+                    action: "BOOK", S_No: n.toString(), Category: selected.cat, Base_Price: selected.price,
+                    Customer_Name: fd.get("Customer_Name"), Mobile: fd.get("Mobile"), DOB: fd.get("DOB") || "", 
+                    Village: fd.get("Village") || "", Aadhaar: fd.get("Aadhaar"), PAN: fd.get("PAN") || "",
+                    Payment_Mode: fd.get("Payment_Mode"), Payment_Ref: fd.get("Payment_Ref") || "",
+                    selfie: capturedImg || "", aFront: aFrontImg || "", aBack: aBackImg || "", pan: panImg || ""
+                };
 
-                try { 
-                    await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' }); 
-                } catch(err){ console.log(err); }
+                try { await fetch(APP_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' }); } catch(err){}
                 
-                finishBooking(fd, n);
-            };
-
-            const finishBooking = (fd, n) => {
                 setLocalLocks(prev => { const ns = new Set(prev).add(n); localStorage.setItem('dps_locks', JSON.stringify([...ns])); return ns; });
                 setSuccessModal({
                     n, cat: selected.cat, name: fd.get("Customer_Name"), mid: selected.mid, mob: fd.get("Mobile"),
                     dob: fd.get("DOB"), adhar: fd.get("Aadhaar"), pay: fd.get("Payment_Mode"), pan: fd.get("PAN") || "N/A",
                     vill: fd.get("Village") || "N/A", ref: fd.get("Payment_Ref") || "N/A", token: `DPSG-TK-${n.toString().padStart(3,'0')}`
                 });
-                closeModalAndReset();
-                setProcessingId(null); setTimeout(loadData, 1500);
+                closeModalAndReset(); setProcessingId(null); setTimeout(loadData, 1500);
             };
 
-            // 🚀 स्मार्ट मास्टर अपडेट (स्टाफ के लिए) 🚀
+            // 🚀 मास्टर अपडेट सिस्टम (लोहे का बक्सा JSON)
             const masterUpdate = async (c, status, isInsideForm = false) => {
                 setProcessingId(c.n);
                 setCards(prev => prev.map(card => card.n === c.n ? { ...card, status: status === 'Sold' ? 'Sold' : 'Available' } : card));
@@ -360,93 +305,64 @@
                 }
 
                 let sName = c.d.name, sMob = c.d.mob, sAdhar = c.d.adhar, sPan = c.d.pan;
-                let sPay = c.d.pay, sRef = c.d.ref, sPaid = c.price, finalDisc = 0;
+                let sPay = c.d.pay, sRef = c.d.ref, sPaid = c.price, finalDisc = 0, sDob = c.d.dob, sVill = c.d.vill;
                 let changesArr = [];
 
                 if(isInsideForm) {
                     sName = document.getElementById('s_name').value; sMob = document.getElementById('s_mob').value;
                     sAdhar = document.getElementById('s_adhar').value; sPan = document.getElementById('s_pan').value;
                     sPay = document.getElementById('s_pay').value; sRef = document.getElementById('s_ref').value;
+                    sDob = document.getElementById('s_dob').value; sVill = document.getElementById('s_vill').value;
                     sPaid = document.getElementById('s_paid').value; finalDisc = discount;
                     if(c.d.name !== sName) changesArr.push("नाम");
                     if(c.d.mob !== sMob) changesArr.push("नंबर");
                     if(c.d.pay !== sPay) changesArr.push("पेमेंट मोड");
                 }
-
                 let changesStr = changesArr.length > 0 ? changesArr.join(", ") + " सुधारे गए" : "कोई बदलाव नहीं";
 
-                const params = new URLSearchParams();
-                params.append("action", "UPDATE");
-                params.append("S_No", c.n);
-                params.append("Status", status);
-                params.append("staffID", staff.id);
-                params.append("staffPass", staff.pass);
-                params.append("Customer_Name", sName);
-                params.append("Mobile", sMob);
-                params.append("Aadhaar", sAdhar);
-                params.append("PAN", sPan);
-                params.append("Payment_Mode", sPay);
-                params.append("Payment_Ref", sRef);
-                params.append("Paid", sPaid);
-                params.append("Discount", finalDisc);
-
-                // स्टाफ के डाक्यूमेंट्स भी एक ही झटके में जाएंगे
+                let bill64 = "", ecard64 = "";
                 if(isInsideForm) {
                     const billInput = document.getElementById('staff_bill_upload');
                     const cardInput = document.getElementById('staff_card_upload');
-                    if(billInput && billInput.files[0]) params.append("bill", await compressImage(billInput.files[0]));
-                    if(cardInput && cardInput.files[0]) params.append("ecard", await compressImage(cardInput.files[0]));
+                    if(billInput && billInput.files[0]) bill64 = await compressImage(billInput.files[0]);
+                    if(cardInput && cardInput.files[0]) ecard64 = await compressImage(cardInput.files[0]);
                 }
 
-                try { await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' }); } catch(error) { console.error(error); }
+                const payload = {
+                    action: "UPDATE", S_No: c.n.toString(), Status: status, staffID: staff.id, staffPass: staff.pass,
+                    Customer_Name: sName, Mobile: sMob, DOB: sDob, Village: sVill, Aadhaar: sAdhar, PAN: sPan,
+                    Payment_Mode: sPay, Payment_Ref: sRef, Paid: sPaid, Discount: finalDisc,
+                    selfie: capturedImg || "", aFront: aFrontImg || "", aBack: aBackImg || "", pan: panImg || "",
+                    bill: bill64, ecard: ecard64
+                };
+
+                try { await fetch(APP_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' }); } catch(error) {}
                 
                 setProcessingId(null); closeModalAndReset(); setVerifyOutsideModal(null); setPayVerified(false);
                 
                 if(status === 'Sold') {
-                    setSessionStats(prev => {
-                        const nState = { ...prev, verified: [{n: c.n, name: sName || "Unknown"}, ...prev.verified] };
-                        localStorage.setItem('dps_session_stats', JSON.stringify(nState)); return nState;
-                    });
-                    setStaffSuccessModal({...c, finalPaid: sPaid, finalName: sName, finalMob: sMob, finalPan: sPan, finalAdhar: sAdhar, finalVill: c.d.vill, finalDisc, finalPayMode: sPay, changesStr});
+                    setSessionStats(prev => { const nState = { ...prev, verified: [{n: c.n, name: sName || "Unknown"}, ...prev.verified] }; localStorage.setItem('dps_session_stats', JSON.stringify(nState)); return nState; });
+                    setStaffSuccessModal({...c, finalPaid: sPaid, finalName: sName, finalMob: sMob, finalPan: sPan, finalAdhar: sAdhar, finalVill: sVill, finalDob: sDob, finalDisc, finalPayMode: sPay, changesStr});
                 } else {
-                    setSessionStats(prev => {
-                        const nState = { ...prev, rejected: [{n: c.n, name: sName || "Unknown"}, ...prev.rejected] };
-                        localStorage.setItem('dps_session_stats', JSON.stringify(nState)); return nState;
-                    });
-                    setStaffSuccessModal({...c, isReject: true, finalName: sName, finalMob: sMob}); 
+                    setSessionStats(prev => { const nState = { ...prev, rejected: [{n: c.n, name: sName || "Unknown"}, ...prev.rejected] }; localStorage.setItem('dps_session_stats', JSON.stringify(nState)); return nState; });
+                    setStaffSuccessModal({...c, isReject: true, finalName: sName, finalMob: sMob, finalDob: sDob, finalVill: sVill, finalAdhar: sAdhar, finalPan: sPan}); 
                 }
                 setTimeout(loadData, 1500);
             };
 
-            const closeModalAndReset = () => {
-                setSelected(null);
-                setCapturedImg(null); setAFrontImg(null); setABackImg(null); setPanImg(null);
-            };
-
+            const closeModalAndReset = () => { setSelected(null); setCapturedImg(null); setAFrontImg(null); setABackImg(null); setPanImg(null); setDiscount(0); };
             const handleOutsideVerify = (c) => { setPayVerified(false); setVerifyOutsideModal(c); };
+            const sendToGroupCopy = (text) => { navigator.clipboard.writeText(text).then(() => { alert("✅ व्हाट्सएप ग्रुप के लिए मैसेज कॉपी हो गया है! पेस्ट करके सेंड कर दें।"); window.open("https://chat.whatsapp.com/DOFkpAfbugQ2ATQxr4m6L2", "_blank"); }); };
 
-            const sendToGroupCopy = (text) => {
-                navigator.clipboard.writeText(text).then(() => {
-                    alert("✅ ग्रुप में भेजने के लिए मैसेज कॉपी हो गया है! व्हाट्सएप ग्रुप खुलने पर 'Paste' (पेस्ट) करके सेंड कर दें।");
-                    window.open("https://chat.whatsapp.com/DOFkpAfbugQ2ATQxr4m6L2", "_blank");
-                });
-            };
-
-            // 🛡️ चेक: अगर इमेज की जगह कचरा है तो क्या दिखाना है
             const renderImageButton = (imgData, label, icon) => {
-                if (!imgData || imgData === "" || imgData === "N/A") return null;
-                if (imgData === "OLD_GARBAGE_REMOVED") {
-                    return <button disabled className="bg-slate-700 text-slate-400 px-3 py-1.5 rounded-lg text-xs font-bold shadow-md cursor-not-allowed"><i className={`fa-solid ${icon}`}></i> {label} (Error)</button>;
-                }
+                if (!imgData || imgData === "" || imgData === "N/A" || imgData === "OLD_GARBAGE_REMOVED") return null;
                 return <button onClick={() => setEnlargedImg(imgData)} className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold btn-press shadow-md"><i className={`fa-solid ${icon}`}></i> {label}</button>;
             };
 
             const renderCard = (c) => {
                 const isLocked = localLocks.has(c.n) || c.status === 'Pending';
                 let s = c.status === 'Sold' ? 'Sold' : isLocked ? 'Pending' : 'Available';
-                
                 if(c.status === 'Processing_Hide' || c.status === 'Rejected') return null;
-
                 const color = s === 'Sold' ? 'sold-card' : s === 'Pending' ? 'pending-card' : `card-${c.cat.split(' ')[0]}`;
                 
                 return (
@@ -467,21 +383,14 @@
                 const soldCards = cards.filter(c => c.status === 'Sold');
                 const pendingCards = cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Processing_Hide' && c.status !== 'Rejected');
                 const availableCards = cards.filter(c => c.status === 'Available' && !localLocks.has(c.n) && c.status !== 'Processing_Hide' && c.status !== 'Rejected');
-                
                 let totalRev = 0, upiC = 0, cashC = 0, airtelC = 0, totalDisc = 0;
                 soldCards.forEach(c => {
-                    let d = parseInt(c.d.discount || 0);
-                    totalRev += (c.price - d);
-                    totalDisc += d;
-                    if(c.d.pay === "PhonePe/GPay") upiC++;
-                    else if(c.d.pay === "Airtel Payment Bank") airtelC++;
-                    else cashC++;
+                    let d = parseInt(c.d.discount || 0); totalRev += (c.price - d); totalDisc += d;
+                    if(c.d.pay === "PhonePe/GPay") upiC++; else if(c.d.pay === "Airtel Payment Bank") airtelC++; else cashC++;
                 });
-                
                 let vipA = availableCards.filter(c=>c.cat==="VIP Card").length;
                 let goldA = availableCards.filter(c=>c.cat==="Gold Card").length;
                 let silverA = availableCards.filter(c=>c.cat==="Silver Card").length;
-
                 return { soldCards, pendingCards, availableCards, totalRev, totalDisc, upiC, cashC, airtelC, vipA, goldA, silverA };
             };
 
@@ -489,16 +398,13 @@
 
             if(staff) {
                 const stats = getFinanceStats();
-                const reportText = `🔱 *DPSG DAILY FINANCE REPORT* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n📊 *TODAY'S STOCK (बचे कार्ड)*\n• *कुल कार्ड:* 1000\n• *बिक चुके (Sold):* ${stats.soldCards.length}\n• *पेंडिंग (Pending):* ${stats.pendingCards.length}\n• *बचे हुए (Available):* ${stats.availableCards.length}\n  (VIP: ${stats.vipA} | Gold: ${stats.goldA} | Silver: ${stats.silverA})\n\n💰 *FINANCE & SALES (अनुमानित)*\n• *कुल सेल (Revenue):* ₹${stats.totalRev}\n• *कुल डिस्काउंट दिया:* ₹${stats.totalDisc}\n\n💳 *PAYMENT MODE:*\n• *UPI / App:* ${stats.upiC} कार्ड\n• *Cash (नकद):* ${stats.cashC} कार्ड\n• *Airtel Bank:* ${stats.airtelC} कार्ड\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 जय माता दी! 🚩`;
+                const reportText = `🔱 *DPSG DAILY FINANCE REPORT* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n📊 *TODAY'S STOCK*\n• *कुल कार्ड:* 1000\n• *बिक चुके:* ${stats.soldCards.length}\n• *पेंडिंग:* ${stats.pendingCards.length}\n• *बचे हुए:* ${stats.availableCards.length}\n\n💰 *FINANCE & SALES*\n• *कुल सेल:* ₹${stats.totalRev}\n• *कुल डिस्काउंट:* ₹${stats.totalDisc}\n\n💳 *PAYMENT MODE:*\n• *UPI / App:* ${stats.upiC}\n• *Cash:* ${stats.cashC}\n• *Airtel:* ${stats.airtelC}\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 जय माता दी! 🚩`;
 
                 return (
                     <div className="flex flex-col min-h-screen bg-[#050505] text-white">
                         <div className="fixed top-0 w-full z-40 bg-black/95 backdrop-blur-md border-b border-slate-800 px-5 py-3 flex justify-between items-center shadow-lg">
-                            <div>
-                                <h2 className="text-xl md:text-2xl font-black text-indigo-400 leading-tight tracking-widest">{COMPANY}</h2>
-                                <p className="text-amber-500 text-[10px] md:text-xs font-bold italic truncate">"{SLOGAN}"</p>
-                            </div>
-                            <button onClick={() => {sessionStorage.removeItem('dps_session'); setStaff(null);}} className="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-lg font-black text-xs md:text-sm shadow-lg btn-press"><i className="fa-solid fa-power-off"></i> LOGOUT</button>
+                            <div><h2 className="text-xl md:text-2xl font-black text-indigo-400 leading-tight tracking-widest">{COMPANY}</h2><p className="text-amber-500 text-[10px] md:text-xs font-bold italic truncate">"{SLOGAN}"</p></div>
+                            <button onClick={() => {sessionStorage.removeItem('dps_session'); setStaff(null);}} className="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-lg font-black text-xs shadow-lg btn-press"><i className="fa-solid fa-power-off"></i> LOGOUT</button>
                         </div>
 
                         <div className="flex-1 overflow-y-auto pt-24 pb-28 px-4 custom-scroll">
@@ -508,25 +414,19 @@
                                         <i className="fa-solid fa-qrcode text-amber-500 text-2xl"></i>
                                         <input type="text" placeholder="Your UPI ID for QR (e.g. name@paytm)" value={staffUpi} onChange={(e)=>{setStaffUpi(e.target.value); localStorage.setItem('dps_staff_upi', e.target.value);}} className="bg-black border border-slate-600 text-white p-2 rounded-lg w-full font-bold text-sm outline-none focus:border-amber-500" />
                                     </div>
-                                    
-                                    <div className="flex items-center justify-between border-b border-slate-800 pb-2 mt-4">
-                                        <h3 className="text-xl font-black text-amber-400">Live Requests</h3>
-                                        <span className="bg-amber-500 text-black px-2 py-1 rounded text-xs font-black">{cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Rejected').length} Pending</span>
-                                    </div>
+                                    <div className="flex items-center justify-between border-b border-slate-800 pb-2 mt-4"><h3 className="text-xl font-black text-amber-400">Live Requests</h3><span className="bg-amber-500 text-black px-2 py-1 rounded text-xs font-black">{cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Rejected').length} Pending</span></div>
 
                                     {cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Rejected').length === 0 ? <p className="text-slate-500 text-center font-bold italic py-10">कोई पेंडिंग रिक्वेस्ट नहीं है...</p> : 
                                     cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Rejected').map(c => (
                                         <div key={c.n} className="bg-slate-900/90 p-4 rounded-2xl border-l-[6px] border-amber-500 shadow-lg flex flex-col gap-4">
                                             <div className="flex items-center gap-4">
-                                                {c.d.dp && c.d.dp.startsWith('http') ? <img src={c.d.dp} onClick={() => setEnlargedImg(c.d.dp)} className="w-16 h-16 rounded-full border-2 border-amber-500 object-cover cursor-pointer" alt="DP" title="बड़ा करें" /> : 
+                                                {c.d.dp && c.d.dp.startsWith('http') ? <img src={c.d.dp} onClick={() => setEnlargedImg(c.d.dp)} className="w-16 h-16 rounded-full border-2 border-amber-500 object-cover cursor-pointer" alt="DP" /> : 
                                                  c.d.dp === "OLD_GARBAGE_REMOVED" ? <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black border border-dashed border-red-500 text-red-500 text-center leading-tight p-1">Old<br/>Error</div> :
                                                  <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black border border-dashed border-slate-600 text-slate-500">NO DP</div>}
                                                 <div className="flex-1">
                                                     <p className="text-xl font-black text-white leading-none mb-1">#{c.n} <span className="text-amber-400 text-lg">- {c.d.name || "N/A"}</span></p>
                                                     <p className="text-xs text-slate-400 font-bold"><i className="fa-solid fa-phone"></i> {c.d.mob || "N/A"} | DOB: {c.d.dob || "N/A"} | {c.d.pay || "N/A"}</p>
                                                     <p className="text-[10px] text-green-400 font-bold mt-1">Tk: {c.token} {c.d.ref && `| Ref: ${c.d.ref}`}</p>
-                                                    
-                                                    {/* ✅ STAFF DASHBOARD VIEW BUTTONS (With Crash Protection) ✅ */}
                                                     <div className="flex flex-wrap gap-2 mt-2">
                                                         {renderImageButton(c.d.aF, "Aadhaar F", "fa-id-card")}
                                                         {renderImageButton(c.d.aB, "Aadhaar B", "fa-id-card")}
@@ -535,18 +435,10 @@
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
-                                                <button onClick={() => handleOutsideVerify(c)} disabled={processingId === c.n} className="bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">
-                                                    {processingId === c.n ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-check"></i>} {processingId === c.n ? "Wait..." : "Verify"}
-                                                </button>
-                                                <button onClick={() => masterUpdate(c, 'Rejected', false)} disabled={processingId === c.n} className="bg-red-700 hover:bg-red-600 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">
-                                                    {processingId === c.n ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-xmark"></i>} {processingId === c.n ? "Wait..." : "Reject"}
-                                                </button>
-                                                <button onClick={() => {if(!staffUpi){alert("Please add UPI ID first!");return;} setQuickQrCard(c);}} disabled={processingId === c.n} className="bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">
-                                                    <i className="fa-solid fa-qrcode"></i> Pay QR
-                                                </button>
-                                                <button onClick={() => { setSelected(c); setPayVerified(false); setPayMode(c.d.pay || ""); setDiscount(parseInt(c.d.discount || 0)); setCapturedImg(null); }} disabled={processingId === c.n} className="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">
-                                                    <i className="fa-solid fa-pen"></i> Edit Details
-                                                </button>
+                                                <button onClick={() => handleOutsideVerify(c)} disabled={processingId === c.n} className="bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">{processingId === c.n ? "Wait..." : "Verify"}</button>
+                                                <button onClick={() => masterUpdate(c, 'Rejected', false)} disabled={processingId === c.n} className="bg-red-700 hover:bg-red-600 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">{processingId === c.n ? "Wait..." : "Reject"}</button>
+                                                <button onClick={() => {if(!staffUpi){alert("Please add UPI ID first!");return;} setQuickQrCard(c);}} disabled={processingId === c.n} className="bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1"><i className="fa-solid fa-qrcode"></i> Pay QR</button>
+                                                <button onClick={() => { setSelected(c); setPayVerified(false); setPayMode(c.d.pay || ""); setDiscount(parseInt(c.d.discount || 0)); setCapturedImg(null); }} disabled={processingId === c.n} className="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1"><i className="fa-solid fa-pen"></i> Edit Details</button>
                                             </div>
                                         </div>
                                     ))}
@@ -556,24 +448,15 @@
                             {staffAppTab === 'ACTIVITY' && (
                                 <div className="max-w-3xl mx-auto space-y-4">
                                     <h3 className="text-2xl font-black text-amber-500 italic mb-4"><i className="fa-solid fa-chart-pie"></i> STATEMENT & REPORT</h3>
-                                    
                                     <div className="grid grid-cols-2 gap-4 mb-4">
-                                        <div className="bg-green-900/30 border-2 border-green-600 p-4 rounded-2xl text-center shadow-lg">
-                                            <p className="text-[10px] text-green-400 font-black uppercase tracking-widest mb-1">TOTAL REVENUE</p>
-                                            <p className="text-4xl font-black text-white">₹{stats.totalRev}</p>
-                                        </div>
-                                        <div className="bg-blue-900/30 border-2 border-blue-600 p-4 rounded-2xl text-center shadow-lg">
-                                            <p className="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-1">TOTAL SOLD CARDS</p>
-                                            <p className="text-4xl font-black text-white">{stats.soldCards.length}</p>
-                                        </div>
+                                        <div className="bg-green-900/30 border-2 border-green-600 p-4 rounded-2xl text-center shadow-lg"><p className="text-[10px] text-green-400 font-black uppercase mb-1">TOTAL REVENUE</p><p className="text-4xl font-black text-white">₹{stats.totalRev}</p></div>
+                                        <div className="bg-blue-900/30 border-2 border-blue-600 p-4 rounded-2xl text-center shadow-lg"><p className="text-[10px] text-blue-400 font-black uppercase mb-1">SOLD CARDS</p><p className="text-4xl font-black text-white">{stats.soldCards.length}</p></div>
                                     </div>
-
                                     <div className="grid grid-cols-3 gap-2 mb-4">
                                         <div className="bg-slate-900 p-3 rounded-xl border border-slate-700 text-center"><p className="text-[10px] text-slate-400 font-bold uppercase">UPI/App</p><p className="text-xl font-black text-white">{stats.upiC}</p></div>
                                         <div className="bg-slate-900 p-3 rounded-xl border border-slate-700 text-center"><p className="text-[10px] text-slate-400 font-bold uppercase">Cash</p><p className="text-xl font-black text-white">{stats.cashC}</p></div>
                                         <div className="bg-slate-900 p-3 rounded-xl border border-slate-700 text-center"><p className="text-[10px] text-slate-400 font-bold uppercase">Airtel</p><p className="text-xl font-black text-white">{stats.airtelC}</p></div>
                                     </div>
-
                                     <div className="bg-slate-900/80 p-5 rounded-2xl border-l-[6px] border-amber-500 shadow-lg mb-6">
                                         <h4 className="font-black text-white mb-3 uppercase tracking-wider text-sm"><i className="fa-solid fa-boxes-stacked text-amber-500"></i> LIVE STOCK (कार्ड्स का हिसाब)</h4>
                                         <div className="flex justify-between items-center bg-black p-3 rounded-lg mb-2"><span className="text-slate-400 font-bold text-xs">Total Cards</span><span className="font-black text-lg">1000</span></div>
@@ -581,7 +464,6 @@
                                         <div className="flex justify-between items-center bg-black p-3 rounded-lg"><span className="text-green-400 font-bold text-xs">Available (बचे हुए)</span><span className="font-black text-lg text-green-400">{stats.availableCards.length}</span></div>
                                         <p className="text-right text-[10px] text-slate-500 font-bold mt-2">VIP: {stats.vipA} | Gold: {stats.goldA} | Silver: {stats.silverA}</p>
                                     </div>
-
                                     <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(reportText)}`} target="_blank" className="w-full bg-[#25D366] hover:bg-[#20b858] text-black font-black py-4 rounded-xl text-lg shadow-lg btn-press flex items-center justify-center gap-3">
                                         <i className="fa-brands fa-whatsapp text-2xl"></i> SEND DAILY STATEMENT
                                     </a>
@@ -603,15 +485,9 @@
                         </div>
 
                         <div className="fixed bottom-0 w-full z-40 bg-black/95 backdrop-blur-lg border-t border-slate-800 flex justify-around p-2 shadow-[0_-10px_20px_rgba(0,0,0,0.8)] pb-safe">
-                            <button onClick={()=>setStaffAppTab('DASHBOARD')} className={`flex flex-col items-center p-2 rounded-xl w-1/3 transition-colors ${staffAppTab==='DASHBOARD'?'text-amber-500':'text-slate-500'}`}>
-                                <i className="fa-solid fa-list-check text-xl mb-1"></i><span className="text-[10px] font-black uppercase">Pending</span>
-                            </button>
-                            <button onClick={()=>setStaffAppTab('ACTIVITY')} className={`flex flex-col items-center p-2 rounded-xl w-1/3 transition-colors ${staffAppTab==='ACTIVITY'?'text-blue-500':'text-slate-500'}`}>
-                                <i className="fa-solid fa-chart-pie text-xl mb-1"></i><span className="text-[10px] font-black uppercase">Statement</span>
-                            </button>
-                            <button onClick={()=>setStaffAppTab('CARDS')} className={`flex flex-col items-center p-2 rounded-xl w-1/3 transition-colors ${staffAppTab==='CARDS'?'text-green-500':'text-slate-500'}`}>
-                                <i className="fa-solid fa-address-card text-xl mb-1"></i><span className="text-[10px] font-black uppercase">All Cards</span>
-                            </button>
+                            <button onClick={()=>setStaffAppTab('DASHBOARD')} className={`flex flex-col items-center p-2 rounded-xl w-1/3 transition-colors ${staffAppTab==='DASHBOARD'?'text-amber-500':'text-slate-500'}`}><i className="fa-solid fa-list-check text-xl mb-1"></i><span className="text-[10px] font-black uppercase">Pending</span></button>
+                            <button onClick={()=>setStaffAppTab('ACTIVITY')} className={`flex flex-col items-center p-2 rounded-xl w-1/3 transition-colors ${staffAppTab==='ACTIVITY'?'text-blue-500':'text-slate-500'}`}><i className="fa-solid fa-chart-pie text-xl mb-1"></i><span className="text-[10px] font-black uppercase">Statement</span></button>
+                            <button onClick={()=>setStaffAppTab('CARDS')} className={`flex flex-col items-center p-2 rounded-xl w-1/3 transition-colors ${staffAppTab==='CARDS'?'text-green-500':'text-slate-500'}`}><i className="fa-solid fa-address-card text-xl mb-1"></i><span className="text-[10px] font-black uppercase">All Cards</span></button>
                         </div>
 
                         {quickQrCard && (
@@ -640,7 +516,7 @@
                             </div>
                         )}
 
-                        {/* STAFF EDIT MODAL */}
+                        {/* STAFF EDIT MODAL (Full Docs Edit) */}
                         {selected && (
                             <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto pb-24">
                                 <div className="glass p-6 md:p-10 w-full max-w-5xl border border-amber-500 rounded-3xl bg-[#0a0a0a] shadow-2xl relative my-auto mt-20 md:mt-auto">
@@ -649,28 +525,32 @@
                                     <div className="grid md:grid-cols-2 gap-8">
                                         <div className="flex flex-col items-center justify-center bg-black/40 p-5 rounded-2xl border border-slate-800 shadow-inner">
                                             
-                                            {selected.d.dp && selected.d.dp.startsWith('http') ? (
-                                                <div className="relative mb-4 text-center">
-                                                    <img src={selected.d.dp} onClick={() => setEnlargedImg(selected.d.dp)} className="w-[200px] h-[200px] rounded-full object-cover glow-dp-huge cursor-pointer" alt="Customer DP" title="बड़ा करने के लिए क्लिक करें" />
-                                                </div>
-                                            ) : selected.d.dp === "OLD_GARBAGE_REMOVED" ? (
-                                                <div className="text-center mb-4">
-                                                    <div className="w-[200px] h-[200px] bg-slate-900 rounded-full flex flex-col items-center justify-center text-slate-500 font-black mb-2 border-4 border-dashed border-red-500"><i className="fa-solid fa-triangle-exclamation text-4xl mb-2 text-red-500/50"></i><span className="text-xl text-red-500 text-center">OLD ERROR<br/>(Cleaned)</span></div>
-                                                </div>
-                                            ) : (
-                                                <div className="text-center mb-4">
-                                                    <div className="w-[200px] h-[200px] bg-slate-900 rounded-full flex flex-col items-center justify-center text-slate-500 font-black mb-2 red-alert-dp"><i className="fa-solid fa-image-portrait text-4xl mb-2 text-red-500/50"></i><span className="text-xl text-red-500">NO DP</span></div>
-                                                </div>
-                                            )}
-
-                                            {/* ✅ VIEW BUTTONS INSIDE EDIT MODAL ✅ */}
-                                            <div className="flex flex-wrap gap-2 justify-center mb-4">
-                                                {renderImageButton(selected.d.aF, "Aadhaar (F)", "fa-id-card")}
-                                                {renderImageButton(selected.d.aB, "Aadhaar (B)", "fa-id-card")}
-                                                {renderImageButton(selected.d.pI, "PAN Card", "fa-credit-card")}
+                                            <div className="text-center mb-4">
+                                                {capturedImg ? <img src={capturedImg} className="w-[150px] h-[150px] rounded-full mx-auto object-cover border-4 border-green-500 shadow-lg" /> : 
+                                                 selected.d.dp && selected.d.dp.startsWith('http') ? <img src={selected.d.dp} onClick={() => setEnlargedImg(selected.d.dp)} className="w-[150px] h-[150px] rounded-full mx-auto object-cover border-4 border-amber-500 cursor-pointer shadow-lg" /> : 
+                                                 <div className="w-[150px] h-[150px] rounded-full bg-slate-900 mx-auto flex items-center justify-center text-sm text-red-500 font-black border-4 border-red-500 border-dashed">NO DP</div>}
+                                                <label className="mt-4 inline-block bg-amber-500 text-black px-4 py-2 rounded-lg text-xs font-black cursor-pointer hover:bg-amber-400 btn-press">
+                                                    <i className="fa-solid fa-camera"></i> Change DP (Selfie)
+                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} />
+                                                </label>
                                             </div>
 
-                                            {/* STAFF DOCUMENT UPLOAD */}
+                                            <div className="w-full space-y-3 border-t border-slate-700 pt-4">
+                                                <h4 className="text-amber-500 font-bold text-sm text-center">Customer Documents</h4>
+                                                <div className="flex justify-between items-center bg-slate-900 p-2 rounded-lg">
+                                                    <span className="text-xs text-slate-400 font-bold">Aadhaar (F): {selected.d.aF ? "✅" : "❌"}</span>
+                                                    <label className="bg-indigo-600 px-3 py-1.5 rounded-lg text-[10px] text-white font-bold cursor-pointer btn-press">Change<input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} /></label>
+                                                </div>
+                                                <div className="flex justify-between items-center bg-slate-900 p-2 rounded-lg">
+                                                    <span className="text-xs text-slate-400 font-bold">Aadhaar (B): {selected.d.aB ? "✅" : "❌"}</span>
+                                                    <label className="bg-indigo-600 px-3 py-1.5 rounded-lg text-[10px] text-white font-bold cursor-pointer btn-press">Change<input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} /></label>
+                                                </div>
+                                                <div className="flex justify-between items-center bg-slate-900 p-2 rounded-lg">
+                                                    <span className="text-xs text-slate-400 font-bold">PAN Card: {selected.d.pI ? "✅" : "❌"}</span>
+                                                    <label className="bg-red-600 px-3 py-1.5 rounded-lg text-[10px] text-white font-bold cursor-pointer btn-press">Change<input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} /></label>
+                                                </div>
+                                            </div>
+
                                             <div className="w-full mt-4 space-y-3 border-t border-slate-700 pt-4">
                                                 <h4 className="text-amber-500 font-bold text-sm text-center">Staff Uploads</h4>
                                                 <div className="bg-slate-900 p-3 rounded-lg border border-slate-700">
@@ -682,12 +562,13 @@
                                                     <input type="file" id="staff_card_upload" accept="image/*" className="w-full text-xs text-slate-300 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500"/>
                                                 </div>
                                             </div>
-                                            
                                         </div>
                                         <div className="space-y-4">
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div><label className="text-[10px] text-slate-400 font-bold">Name</label><input id="s_name" defaultValue={selected.d.name} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
                                                 <div><label className="text-[10px] text-slate-400 font-bold">Mobile</label><input id="s_mob" defaultValue={selected.d.mob} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
+                                                <div><label className="text-[10px] text-slate-400 font-bold">DOB</label><input id="s_dob" defaultValue={selected.d.dob} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
+                                                <div><label className="text-[10px] text-slate-400 font-bold">Village</label><input id="s_vill" defaultValue={selected.d.vill} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
                                                 <div><label className="text-[10px] text-slate-400 font-bold">Aadhaar</label><input id="s_adhar" defaultValue={selected.d.adhar} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
                                                 <div><label className="text-[10px] text-slate-400 font-bold">PAN</label><input id="s_pan" defaultValue={selected.d.pan} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white uppercase font-bold text-sm" /></div>
                                                 <div><label className="text-[10px] text-slate-400 font-bold">Pay Mode</label><select id="s_pay" defaultValue={selected.d.pay} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm"><option value="Cash">Cash</option><option value="PhonePe/GPay">UPI / App</option><option value="Airtel Payment Bank">Airtel Bank</option></select></div>
@@ -701,7 +582,7 @@
                                             <div className="bg-red-900/20 p-3 rounded-lg border border-red-800 mt-2"><label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={payVerified} onChange={(e)=>setPayVerified(e.target.checked)} className="w-6 h-6 accent-red-500" /><span className="text-white font-black text-sm">मैंने पेमेंट ले लिया है (Verified)</span></label></div>
                                             <div className="flex gap-3 mt-4">
                                                 <button onClick={()=>masterUpdate(selected, 'Sold', true)} disabled={!payVerified || processingId === selected.n} className={`flex-1 font-black py-3 rounded-xl text-lg shadow-lg btn-press flex items-center justify-center gap-2 ${payVerified ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-600'}`}>
-                                                    {processingId === selected.n ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-check"></i>} {processingId === selected.n ? "Please Wait..." : "VERIFY"}
+                                                    {processingId === selected.n ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-check"></i>} {processingId === selected.n ? "Wait..." : "VERIFY"}
                                                 </button>
                                                 <button onClick={()=>masterUpdate(selected, 'Rejected', true)} disabled={processingId === selected.n} className="flex-1 bg-red-800 text-white font-black py-3 rounded-xl text-lg shadow-lg btn-press flex items-center justify-center gap-2">
                                                     {processingId === selected.n ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-xmark"></i>} REJECT
@@ -713,7 +594,7 @@
                             </div>
                         )}
 
-                        {/* 📍 STAFF SUCCESS POPUP 📍 */}
+                        {/* 📍 STAFF SUCCESS POPUP (WITH WHATSAPP BUTTONS RESTORED) 📍 */}
                         {staffSuccessModal && (
                             <div className="fixed inset-0 z-[300] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md pb-safe">
                                 <div className={`glass p-6 md:p-8 max-w-md w-full text-center border-t-8 rounded-3xl bg-[#0a0a0a] shadow-[0_0_30px_rgba(59,130,246,0.3)] ${staffSuccessModal.isReject ? 'border-red-500' : 'border-blue-500'}`}>
@@ -721,7 +602,7 @@
                                     <h3 className="text-2xl font-black mb-6 text-white uppercase">#{staffSuccessModal.n} {staffSuccessModal.isReject ? 'Rejected!' : 'Verified!'}</h3>
                                     
                                     <div className="space-y-3">
-                                        <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *DPSG STAFF VERIFICATION REPORT* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी हुकुम!* 🚩\n\nप्रबंधन को सूचित किया जाता है कि एक लंबित आवेदन को सफलतापूर्वक *${staffSuccessModal.isReject ? 'REJECT' : 'VERIFY'}* कर दिया गया है。\n\n📋 *ग्राहक विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *ग्राहक का नाम:* ${staffSuccessModal.finalName || 'N/A'}\n• *जन्मतिथि (DOB):* ${staffSuccessModal.d?.dob || 'N/A'}\n• *संपर्क सूत्र:* ${staffSuccessModal.finalMob || 'N/A'}\n• *आधार नंबर:* ${staffSuccessModal.finalAdhar || 'N/A'}\n• *निवास स्थान:* ${staffSuccessModal.finalVill || 'N/A'}\n${!staffSuccessModal.isReject ? `• *पैन कार्ड (PAN):* ${staffSuccessModal.finalPan || 'N/A'}\n\n💰 *वित्तीय विवरण:*\n• *कार्ड का मूल शुल्क:* ₹${staffSuccessModal.price}\n• *प्रदान की गई छूट:* ₹${staffSuccessModal.finalDisc || 0}\n• *प्राप्त अंतिम राशि:* ₹${staffSuccessModal.finalPaid}\n• *भुगतान का माध्यम:* ${staffSuccessModal.finalPayMode || 'N/A'}\n\n🛠️ *प्रशासनिक टिप्पणी:*\n• *किए गए सुधार/बदलाव:* ${staffSuccessModal.changesStr}\n` : ''}• *सत्यापन कर्ता (Staff ID):* ${staff.id}\n━━━━━━━━━━━━━━━━━━━━━━\n✅ *कार्य पूर्णता के साथ पोर्टल पर अपडेट कर दिया गया है।*`)}`} target="_blank" className="flex items-center justify-center gap-3 w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
+                                        <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *DPSG STAFF VERIFICATION REPORT* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी हुकुम!* 🚩\n\nप्रबंधन को सूचित किया जाता है कि एक लंबित आवेदन को सफलतापूर्वक *${staffSuccessModal.isReject ? 'REJECT' : 'VERIFY'}* कर दिया गया है。\n\n📋 *ग्राहक विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *ग्राहक का नाम:* ${staffSuccessModal.finalName || 'N/A'}\n• *जन्मतिथि (DOB):* ${staffSuccessModal.finalDob || 'N/A'}\n• *संपर्क सूत्र:* ${staffSuccessModal.finalMob || 'N/A'}\n• *आधार नंबर:* ${staffSuccessModal.finalAdhar || 'N/A'}\n• *निवास स्थान:* ${staffSuccessModal.finalVill || 'N/A'}\n${!staffSuccessModal.isReject ? `• *पैन कार्ड (PAN):* ${staffSuccessModal.finalPan || 'N/A'}\n\n💰 *वित्तीय विवरण:*\n• *कार्ड का मूल शुल्क:* ₹${staffSuccessModal.price}\n• *प्रदान की गई छूट:* ₹${staffSuccessModal.finalDisc || 0}\n• *प्राप्त अंतिम राशि:* ₹${staffSuccessModal.finalPaid}\n• *भुगतान का माध्यम:* ${staffSuccessModal.finalPayMode || 'N/A'}\n\n🛠️ *प्रशासनिक टिप्पणी:*\n• *किए गए सुधार/बदलाव:* ${staffSuccessModal.changesStr}\n` : ''}• *सत्यापन कर्ता (Staff ID):* ${staff.id}\n━━━━━━━━━━━━━━━━━━━━━━\n✅ *कार्य पूर्णता के साथ पोर्टल पर अपडेट कर दिया गया है।*`)}`} target="_blank" className="flex items-center justify-center gap-3 w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
                                             <i className="fa-solid fa-user-tie text-xl"></i> 1. OWNER REPORT (FULL)
                                         </a>
 
@@ -739,7 +620,6 @@
                                         <button onClick={()=>sendToGroupCopy(`🔱 *DPSG VERIFICATION ALERT (GROUP)* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\nस्थिति: *${staffSuccessModal.isReject ? 'REJECTED ❌' : 'VERIFIED ✅'}*\n\n📋 *ग्राहक विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *नाम:* ${staffSuccessModal.finalName || 'N/A'}\n• *मोबाइल:* ${staffSuccessModal.finalMob || 'N/A'}\n• *आधार:* ${staffSuccessModal.finalAdhar || 'N/A'}\n• *निवास:* ${staffSuccessModal.finalVill || 'N/A'}\n${!staffSuccessModal.isReject ? `• *पैन:* ${staffSuccessModal.finalPan || 'N/A'}\n` : ''}\n💰 *वित्तीय विवरण:*\n• *अंतिम भुगतान:* ₹${staffSuccessModal.finalPaid} (${staffSuccessModal.finalPayMode || 'N/A'})\n\n👨‍💼 *सत्यापन कर्ता:* ${staff.id}\n━━━━━━━━━━━━━━━━━━━━━━`)} className="flex items-center justify-center gap-3 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
                                             <i className="fa-solid fa-users text-xl"></i> 3. SEND TO WHATSAPP GROUP
                                         </button>
-                                        
                                     </div>
                                     <button onClick={() => setStaffSuccessModal(null)} className="mt-6 text-slate-500 font-black text-sm underline pb-2">✖ Close Dashboard</button>
                                 </div>
@@ -756,6 +636,7 @@
             return (
                 <div className="max-w-[1600px] mx-auto p-4 pt-0">
                     
+                    {/* 📍 STOCK TICKER RESTORED 📍 */}
                     <div className="stock-ticker w-full absolute top-0 left-0 z-50">
                         <marquee scrollamount="8">
                             🔥 जल्दी करें! 1000 में से {cards.filter(c=>c.status==='Sold').length} कार्ड बिक चुके हैं, केवल {cards.filter(c=>c.status==='Available').length} शेष! 51 मेगा प्राइज़ जीतने का मौका पाएं! 🚩
@@ -789,6 +670,7 @@
                     </div>
 
                     <div className="grid lg:grid-cols-12 gap-10">
+                        {/* 📍 51 PRIZES RESTORED 📍 */}
                         <div className="lg:col-span-4 glass p-6 h-[800px] flex flex-col border-t-[8px] border-amber-500">
                             <h2 className="text-3xl font-black italic text-amber-500 mb-6 text-center underline">51 MEGA PRIZES</h2>
                             <div className="overflow-y-auto pr-2 space-y-4 flex-1 custom-scroll">
@@ -833,7 +715,7 @@
                         </div>
                     )}
 
-                    {/* CUSTOMER BOOKING MODAL (1 CLICK UPLOAD - NO INDIVIDUAL UPLOAD BUTTONS) */}
+                    {/* CUSTOMER BOOKING MODAL (1 CLICK UPLOAD - CAMERA DIRECT) */}
                     {selected && !staff && (
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <form onSubmit={bookCard} className="glass p-6 md:p-10 w-full max-w-3xl border border-amber-500 rounded-3xl shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
@@ -842,7 +724,7 @@
                                 
                                 <div className="space-y-5">
                                     
-                                    {/* 📦 1. NATIVE SELFIE CAMERA 📦 */}
+                                    {/* 📦 1. NATIVE SELFIE CAMERA (DIRECT) 📦 */}
                                     <div className="bg-black/50 p-6 rounded-2xl border-2 border-dashed border-amber-500 text-center">
                                         <h4 className="text-amber-400 font-black mb-4"><i className="fa-solid fa-user-circle"></i> 1. लाइव सेल्फी (Face Photo) *</h4>
                                         {capturedImg ? (
@@ -856,12 +738,8 @@
                                         ) : (
                                             <div className="flex justify-center gap-3">
                                                 <label className="bg-amber-500 hover:bg-amber-400 px-6 py-4 rounded-2xl font-black text-black shadow-[0_0_20px_rgba(251,191,36,0.4)] cursor-pointer flex-1 text-lg btn-press transition-transform">
-                                                    <i className="fa-solid fa-camera text-2xl mb-1 block"></i> OPEN CAMERA
+                                                    <i className="fa-solid fa-camera text-2xl mb-1 block"></i> OPEN FRONT CAMERA
                                                     <input type="file" accept="image/*" capture="user" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} />
-                                                </label>
-                                                <label className="bg-slate-800 border border-slate-600 px-4 py-4 rounded-2xl font-bold text-slate-300 shadow-lg cursor-pointer flex-none btn-press">
-                                                    <i className="fa-solid fa-images text-xl mb-1 block"></i> Gallery
-                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} />
                                                 </label>
                                             </div>
                                         )}
@@ -884,10 +762,6 @@
                                                     <i className="fa-solid fa-camera mb-1 block text-lg"></i> Scan Front
                                                     <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} />
                                                 </label>
-                                                <label className="bg-slate-700 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
-                                                    <i className="fa-solid fa-upload mb-1 block text-lg"></i> Upload
-                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} />
-                                                </label>
                                             </div>
                                         )}
                                     </div>
@@ -908,10 +782,6 @@
                                                 <label className="bg-indigo-600 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
                                                     <i className="fa-solid fa-camera mb-1 block text-lg"></i> Scan Back
                                                     <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} />
-                                                </label>
-                                                <label className="bg-slate-700 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
-                                                    <i className="fa-solid fa-upload mb-1 block text-lg"></i> Upload
-                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} />
                                                 </label>
                                             </div>
                                         )}
@@ -934,10 +804,6 @@
                                                     <i className="fa-solid fa-camera mb-1 block text-lg"></i> Scan PAN
                                                     <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} />
                                                 </label>
-                                                <label className="bg-slate-700 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
-                                                    <i className="fa-solid fa-upload mb-1 block text-lg"></i> Upload
-                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} />
-                                                </label>
                                             </div>
                                         )}
                                     </div>
@@ -956,7 +822,7 @@
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div><label className="text-xs font-bold text-slate-400 ml-1">पेमेंट मोड (Payment Mode) *</label><select name="Payment_Mode" required onChange={(e)=>setPayMode(e.target.value)} className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none"><option value="" disabled>चुनें (Select)</option><option value="Cash">नकद (Cash)</option><option value="PhonePe/GPay">UPI / App</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select></div>
+                                        <div><label className="text-xs font-bold text-slate-400 ml-1">पेमेंट मोड (Payment Mode) *</label><select name="Payment_Mode" required onChange={(e)=>setPayMode(e.target.value)} className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none"><option value="" disabled selected>चुनें (Select)</option><option value="Cash">नकद (Cash)</option><option value="PhonePe/GPay">UPI / App</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select></div>
                                         {payMode === 'Airtel Payment Bank' && <div><label className="text-xs font-black text-red-500 ml-1">PAN CARD *</label><input name="PAN" required pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" placeholder="ABCDE1234F" className="w-full bg-black p-3 rounded-xl font-black border-2 border-red-600 text-white text-base uppercase shadow-inner" /></div>}
                                     </div>
                                     
@@ -973,6 +839,7 @@
                         </div>
                     )}
 
+                    {/* 📍 CUSTOMER SUCCESS MODAL (WITH WHATSAPP BUTTONS RESTORED) 📍 */}
                     {successModal && (
                         <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4">
                             <div className="glass p-8 max-w-md w-full text-center border-t-8 border-green-500 rounded-3xl shadow-2xl">
@@ -1004,6 +871,7 @@
 
                     {!staff && (
                         <div className="mt-20 mb-10 text-center">
+                            {/* 📍 OTP LOGIN RESTORED 📍 */}
                             {showLogin ? (
                                 <div className="glass p-6 max-w-sm mx-auto rounded-3xl border border-indigo-500 bg-[#0a0a0a] shadow-xl">
                                     <h4 className="text-2xl font-black text-indigo-400 mb-6 tracking-widest uppercase">
