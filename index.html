@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="hi" translate="no">
 <head>
     <meta charset="UTF-8">
@@ -30,15 +30,8 @@
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.95); } }
         .custom-scroll::-webkit-scrollbar { width: 8px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 10px; }
-        @keyframes goldGlow {
-            0%, 100% { box-shadow: 0 0 15px #fbbf24, 0 0 30px #d97706; transform: scale(1); border-color: #fbbf24; }
-            50% { box-shadow: 0 0 40px #fbbf24, 0 0 70px #f59e0b; transform: scale(1.05); border-color: #fcd34d; }
-        }
-        .glow-dp-huge { animation: goldGlow 1.5s infinite alternate; border: 8px solid #fbbf24; }
-        .red-alert-dp { border: 8px dashed #ef4444; box-shadow: 0 0 20px #ef4444; }
         .btn-press:active { transform: scale(0.92) !important; filter: brightness(0.8); }
         .btn-press:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
-        
         .neon-btn { background: rgba(0,0,0,0.6); border: 2px solid #fbbf24; color: #fbbf24; box-shadow: 0 0 10px #fbbf24, inset 0 0 5px #fbbf24; animation: neonPulse 1.5s infinite alternate; }
         @keyframes neonPulse { from { box-shadow: 0 0 5px #fbbf24; } to { box-shadow: 0 0 20px #fbbf24; } }
         .stock-ticker { background: #7f1d1d; color: white; padding: 10px; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid #fbbf24; letter-spacing: 1px;}
@@ -50,7 +43,7 @@
         const { useState, useEffect } = React;
         
         // 🚀 आपकी बिल्कुल नई लिंक 🚀
-        const APP_URL = "https://script.google.com/macros/s/AKfycbw6qPk0CztCFBYNVi0icfhG6_NGvGko0ndUW0SBQZBSSpRvLOeQo4086BtE9XyLDQjPpw/exec";
+        const APP_URL = "https://script.google.com/macros/s/AKfycbzbSZodwdYWbBR9VkfW5NNAddMP-7G7eZ_IhWLmzhtR5dUmSToLwpIQdNjAEqvS5cYSdg/exec";
         
         const COMPANY = "Digital Problem Solution Group";
         const SLOGAN = "समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा";
@@ -110,7 +103,7 @@
             {r:51, n:"Electric Iron", d:"कपड़ों पर लाएं परफेक्ट चमक।"}
         ];
 
-        // 🛠️ SUPER COMPRESSOR (400px - 30 KB Machine)
+        // 🛠️ COMPRESSOR (400px)
         const compressImage = (file) => {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -126,7 +119,7 @@
                         canvas.width = width; canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.4)); // 0.4 Quality (Super Light)
+                        resolve(canvas.toDataURL('image/jpeg', 0.5)); 
                     };
                 };
                 reader.readAsDataURL(file);
@@ -137,120 +130,56 @@
             const [cards, setCards] = useState([]);
             const [activeTab, setActiveTab] = useState('ALL'); 
             const [selected, setSelected] = useState(null);
-            
-            const [staff, setStaff] = useState(() => {
-                try { return JSON.parse(sessionStorage.getItem('dps_session')) || null; } catch(e) { return null; }
-            });
-            
+            const [staff, setStaff] = useState(() => { try { return JSON.parse(sessionStorage.getItem('dps_session')) || null; } catch(e) { return null; } });
             const [staffAppTab, setStaffAppTab] = useState('DASHBOARD');
-            const [sessionStats, setSessionStats] = useState(() => {
-                try { return JSON.parse(localStorage.getItem('dps_session_stats')) || { verified: [], rejected: [] }; } 
-                catch(e) { return { verified: [], rejected: [] }; }
-            });
-
             const [successModal, setSuccessModal] = useState(null); 
-            const [quickQrCard, setQuickQrCard] = useState(null); 
             const [verifyOutsideModal, setVerifyOutsideModal] = useState(null);
-
-            const [staffSuccessModal, setStaffSuccessModal] = useState(() => {
-                try { return JSON.parse(localStorage.getItem('dps_sticky_popup')) || null; } catch(e) { return null; }
-            });
-
-            useEffect(() => {
-                if(staffSuccessModal) localStorage.setItem('dps_sticky_popup', JSON.stringify(staffSuccessModal));
-                else localStorage.removeItem('dps_sticky_popup');
-            }, [staffSuccessModal]);
-
+            const [staffSuccessModal, setStaffSuccessModal] = useState(null);
             const [loading, setLoading] = useState(true);
             const [localLocks, setLocalLocks] = useState(new Set(JSON.parse(localStorage.getItem('dps_locks') || '[]')));
-            const [staffUpi, setStaffUpi] = useState(localStorage.getItem('dps_staff_upi') || "");
-            const [payMode, setPayMode] = useState("");
-            
             const [processingId, setProcessingId] = useState(null); 
             const [discount, setDiscount] = useState(0);
             const [payVerified, setPayVerified] = useState(false);
+            const [payMode, setPayMode] = useState("");
             
-            // 📸 4 डिब्बों की असली इमेजेस
+            // 📸 ONLY DP (Selfie)
             const [capturedImg, setCapturedImg] = useState(null);    
-            const [aFrontImg, setAFrontImg] = useState(null);        
-            const [aBackImg, setABackImg] = useState(null);          
-            const [panImg, setPanImg] = useState(null);              
-
             const [enlargedImg, setEnlargedImg] = useState(null);
             const [showLogin, setShowLogin] = useState(false);
-            const [showSalesBoard, setShowSalesBoard] = useState(false);
-            const [soldListData, setSoldListData] = useState([]);
-            const [otpStep, setOtpStep] = useState(false);
-            const [otpValue, setOtpValue] = useState("");
-            const [staffTempCreds, setStaffTempCreds] = useState(null);
-
-            // ==========================================
-            // 📸 FULL SCREEN CUSTOM CAMERA SYSTEM 📸
-            // ==========================================
+            
+            // Camera States
             const [isCamOpen, setIsCamOpen] = useState(false);
-            const [camFacing, setCamFacing] = useState('environment'); 
-            const [camTargetStr, setCamTargetStr] = useState(""); 
+            const [camFacing, setCamFacing] = useState('user'); 
 
-            const openFullScreenCamera = async (targetStr, facing) => {
-                setCamTargetStr(targetStr);
-                setCamFacing(facing);
-                setIsCamOpen(true);
-                startCamera(facing);
+            const openFullScreenCamera = async (facing) => {
+                setCamFacing(facing); setIsCamOpen(true); startCamera(facing);
             };
 
             const startCamera = async (facing) => {
-                if(window.localStream) {
-                    window.localStream.getTracks().forEach(track => track.stop());
-                }
+                if(window.localStream) window.localStream.getTracks().forEach(track => track.stop());
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: facing, width: {ideal: 1280}, height: {ideal: 720} }
-                    });
-                    window.localStream = stream;
-                    document.getElementById('fullScreenVideo').srcObject = stream;
-                } catch(e) {
-                    alert("कैमरा एक्सेस नहीं हो पाया! कृपया ब्राउज़र सेटिंग्स में कैमरा परमिशन दें।");
-                    setIsCamOpen(false);
-                }
-            };
-
-            const flipFullScreenCamera = () => {
-                const newFacing = camFacing === 'user' ? 'environment' : 'user';
-                setCamFacing(newFacing);
-                startCamera(newFacing);
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: {ideal: 1280}, height: {ideal: 720} } });
+                    window.localStream = stream; document.getElementById('fullScreenVideo').srcObject = stream;
+                } catch(e) { alert("कैमरा एक्सेस नहीं हो पाया!"); setIsCamOpen(false); }
             };
 
             const captureFullScreenPhoto = () => {
                 const video = document.getElementById('fullScreenVideo');
                 const canvas = document.createElement('canvas');
-                // सुपर कंप्रेशन (400px, 0.4 quality)
                 const MAX_W = 400, MAX_H = 400;
                 let w = video.videoWidth, h = video.videoHeight;
-                if(w > h) { if(w > MAX_W) { h *= MAX_W/w; w = MAX_W; } }
-                else { if(h > MAX_H) { w *= MAX_H/h; h = MAX_H; } }
+                if(w > h) { if(w > MAX_W) { h *= MAX_W/w; w = MAX_W; } } else { if(h > MAX_H) { w *= MAX_H/h; h = MAX_H; } }
                 canvas.width = w; canvas.height = h;
-                
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(video, 0, 0, w, h);
-                
-                const base64Data = canvas.toDataURL('image/jpeg', 0.4); 
-
-                if(camTargetStr === 'selfie') setCapturedImg(base64Data);
-                else if(camTargetStr === 'aFront') setAFrontImg(base64Data);
-                else if(camTargetStr === 'aBack') setABackImg(base64Data);
-                else if(camTargetStr === 'pan') setPanImg(base64Data);
-
+                setCapturedImg(canvas.toDataURL('image/jpeg', 0.5)); 
                 closeFullScreenCamera();
             };
 
             const closeFullScreenCamera = () => {
-                if(window.localStream) {
-                    window.localStream.getTracks().forEach(track => track.stop());
-                    window.localStream = null;
-                }
+                if(window.localStream) { window.localStream.getTracks().forEach(track => track.stop()); window.localStream = null; }
                 setIsCamOpen(false);
             };
-            // ==========================================
 
             const loadData = async () => {
                 try {
@@ -259,23 +188,15 @@
                     if(rows && Array.isArray(rows)) {
                         let temp = [];
                         let currentLocks = new Set(JSON.parse(localStorage.getItem('dps_locks') || '[]'));
-                        let locksChanged = false;
-
                         for(let i=1; i<=1000; i++) {
                             let rD = rows.find(r => r[0] && parseInt(r[0]) === i);
                             let s = 'Available';
                             if(rD) {
                                let rawS = (rD[4] || 'Available').toString().trim().toLowerCase();
-                               if(rawS.includes("sold") || rawS.includes("success") || rawS.includes("verified") || rawS.includes("बिका")) {
-                                   s = "Sold";
-                                   if(currentLocks.has(i)) { currentLocks.delete(i); locksChanged = true; }
-                               }
-                               else if(rawS.includes("pending") || rawS.includes("लंबित")) { s = "Pending"; }
-                               else if(rawS.includes("reject") || rawS.includes("available") || rawS.includes("उपलब्ध")) {
-                                   s = "Available";
-                                   if(currentLocks.has(i)) { currentLocks.delete(i); locksChanged = true; }
-                               } 
-                            } else { if(currentLocks.has(i)) { currentLocks.delete(i); locksChanged = true; } }
+                               if(rawS.includes("sold") || rawS.includes("success")) { s = "Sold"; currentLocks.delete(i); }
+                               else if(rawS.includes("pending")) { s = "Pending"; }
+                               else if(rawS.includes("reject") || rawS.includes("available")) { s = "Available"; currentLocks.delete(i); } 
+                            } else { currentLocks.delete(i); }
                             temp.push({ 
                                 n: i, status: s, cat: i<=100?"VIP Card":i<=600?"Gold Card":"Silver Card",
                                 price: rD ? parseInt(rD[16] || (i<=100?500:i<=600?100:50)) : (i<=100?500:i<=600?100:50),
@@ -285,65 +206,27 @@
                                     name: (rD && rD[6])||"", mob: (rD && rD[7])||"", dob: (rD && rD[8])||"", 
                                     vill: (rD && rD[9])||"", adhar: (rD && rD[10])||"", pan: (rD && rD[11])||"", 
                                     pay: (rD && rD[12])||"", ref: (rD && rD[13])||"", 
-                                    dp: (rD && rD[26])||"", pI: (rD && rD[27])||"", aF: (rD && rD[28])||"", aB: (rD && rD[29])||"", discount: (rD && rD[17])||"0" 
+                                    dp: (rD && rD[26])||"", discount: (rD && rD[17])||"0" 
                                 }
                             });
                         }
-                        if(locksChanged) { localStorage.setItem('dps_locks', JSON.stringify([...currentLocks])); setLocalLocks(currentLocks); }
+                        localStorage.setItem('dps_locks', JSON.stringify([...currentLocks])); setLocalLocks(currentLocks);
                         setCards(temp); setLoading(false);
                     }
-                } catch (error) {
-                    if(cards.length === 0) {
-                        let temp = [];
-                        for(let i=1; i<=1000; i++) temp.push({ n: i, status: 'Available', cat: i<=100?"VIP Card":i<=600?"Gold Card":"Silver Card", price: (i<=100?500:i<=600?100:50) });
-                        setCards(temp); setLoading(false);
-                    }
-                }
+                } catch (error) { setLoading(false); }
             };
 
             useEffect(() => { loadData(); const itvl = setInterval(loadData, 10000); return () => clearInterval(itvl); }, []);
 
-            const fetchSoldList = async () => {
-                try {
-                    const res = await fetch(APP_URL + "?action=GET_SOLD_LIST&_cb=" + new Date().getTime());
-                    const data = await res.json();
-                    setSoldListData(data); setShowSalesBoard(true);
-                } catch(e) { alert("बिक्री बोर्ड लोड नहीं हो पाया!"); }
-            };
-
-            const handleNativeCapture = async (e, setterFn) => {
+            const handleNativeCapture = async (e) => {
                 const file = e.target.files[0];
-                if(file) { const compressedBase64 = await compressImage(file); setterFn(compressedBase64); }
+                if(file) { const b64 = await compressImage(file); setCapturedImg(b64); }
             };
 
-            // 🚀 OTP System with URLSearchParams (Pukka Formula)
-            const handleLoginAttempt = async () => {
-                let u = document.getElementById('l_id').value;
-                let p = document.getElementById('l_pass').value;
-                if(ADMINS[u] === p) {
-                    setProcessingId("OTP_SENDING");
-                    setStaffTempCreds({id: u, pass: p});
-                    try {
-                        const payload = { action: 'SEND_OTP', staffEmail: 'Chanchalbaisa722@gmail.com' };
-                        const urlParams = new URLSearchParams();
-                        for (let k in payload) urlParams.append(k, payload[k]);
-                        
-                        await fetch(APP_URL, { method: 'POST', body: urlParams });
-                        setOtpStep(true); setProcessingId(null);
-                        alert("सुरक्षा अलर्ट: ओनर की ईमेल और टेलीग्राम पर OTP भेज दिया गया है।");
-                    } catch(e) { setProcessingId(null); alert("OTP भेजने में तकनीकी समस्या आई।"); }
-                } else { alert("Access Denied: Wrong ID or Password!"); }
-            };
-
-            const handleOtpVerify = () => {
-                sessionStorage.setItem('dps_session', JSON.stringify(staffTempCreds));
-                setStaff(staffTempCreds); setShowLogin(false); setOtpStep(false);
-            };
-
-            // 🚀 कस्टमर बुकिंग सिस्टम (URLSearchParams - The Old 1000% Working Formula)
+            // 🚀 CUSTOMER BOOKING (URLSearchParams)
             const bookCard = async (e) => {
                 e.preventDefault(); 
-                if(!capturedImg) { alert("कृपया अपनी लाइव सेल्फी (Face Photo) ज़रूर लें!"); return; }
+                if(!capturedImg) { alert("कृपया अपनी लाइव सेल्फी (DP) ज़रूर लें!"); return; }
                 
                 setProcessingId("BOOKING"); 
                 const fd = new FormData(e.target); 
@@ -354,22 +237,14 @@
                     Customer_Name: fd.get("Customer_Name"), Mobile: fd.get("Mobile"), DOB: fd.get("DOB") || "", 
                     Village: fd.get("Village") || "", Aadhaar: fd.get("Aadhaar"), PAN: fd.get("PAN") || "",
                     Payment_Mode: fd.get("Payment_Mode"), Payment_Ref: fd.get("Payment_Ref") || "",
-                    selfie: capturedImg || "", aFront: aFrontImg || "", aBack: aBackImg || "", pan: panImg || ""
+                    selfie: capturedImg || ""
                 };
 
                 const urlParams = new URLSearchParams();
-                for (let k in payload) {
-                    urlParams.append(k, payload[k]);
-                }
+                for (let k in payload) urlParams.append(k, payload[k]);
 
                 try { 
-                    let res = await fetch(APP_URL, { method: 'POST', body: urlParams }); 
-                    let data = await res.json();
-                    if(data.status === "ALREADY_BOOKED") {
-                        alert("❌ यह कार्ड पहले से बुक हो चुका है!");
-                        setProcessingId(null);
-                        return;
-                    }
+                    await fetch(APP_URL, { method: 'POST', body: urlParams }); 
                 } catch(err){}
                 
                 setLocalLocks(prev => { const ns = new Set(prev).add(n); localStorage.setItem('dps_locks', JSON.stringify([...ns])); return ns; });
@@ -381,76 +256,47 @@
                 closeModalAndReset(); setProcessingId(null); setTimeout(loadData, 1500);
             };
 
-            // 🚀 मास्टर अपडेट सिस्टम (URLSearchParams - The Old 1000% Working Formula)
+            // 🚀 STAFF UPDATE (URLSearchParams)
             const masterUpdate = async (c, status, isInsideForm = false) => {
                 setProcessingId(isInsideForm ? "UPLOADING_STAFF" : c.n);
                 setCards(prev => prev.map(card => card.n === c.n ? { ...card, status: status === 'Sold' ? 'Sold' : 'Available' } : card));
-                
                 if(status === 'Available' || status === 'Rejected') { 
                     setLocalLocks(p => { const ns = new Set(p); ns.delete(c.n); localStorage.setItem('dps_locks', JSON.stringify([...ns])); return ns; }); 
                 }
 
                 let sName = c.d.name, sMob = c.d.mob, sAdhar = c.d.adhar, sPan = c.d.pan;
                 let sPay = c.d.pay, sRef = c.d.ref, sPaid = c.price, finalDisc = 0, sDob = c.d.dob, sVill = c.d.vill;
-                let changesArr = [];
-
+                
                 if(isInsideForm) {
                     sName = document.getElementById('s_name').value; sMob = document.getElementById('s_mob').value;
                     sAdhar = document.getElementById('s_adhar').value; sPan = document.getElementById('s_pan').value;
                     sPay = document.getElementById('s_pay').value; sRef = document.getElementById('s_ref').value;
                     sDob = document.getElementById('s_dob').value; sVill = document.getElementById('s_vill').value;
                     sPaid = document.getElementById('s_paid').value; finalDisc = discount;
-                    if(c.d.name !== sName) changesArr.push("नाम");
-                    if(c.d.mob !== sMob) changesArr.push("नंबर");
-                    if(c.d.pay !== sPay) changesArr.push("पेमेंट मोड");
-                }
-                let changesStr = changesArr.length > 0 ? changesArr.join(", ") + " सुधारे गए" : "कोई बदलाव नहीं";
-
-                let bill64 = "", ecard64 = "";
-                if(isInsideForm) {
-                    const billInput = document.getElementById('staff_bill_upload');
-                    const cardInput = document.getElementById('staff_card_upload');
-                    if(billInput && billInput.files[0]) bill64 = await compressImage(billInput.files[0]);
-                    if(cardInput && cardInput.files[0]) ecard64 = await compressImage(cardInput.files[0]);
                 }
 
                 if(isInsideForm) setProcessingId(c.n);
 
                 const payload = {
-                    action: "UPDATE", S_No: c.n.toString(), Status: status, staffID: staff.id, staffPass: staff.pass,
+                    action: "UPDATE", S_No: c.n.toString(), Category: c.cat, Status: status, staffID: staff.id,
                     Customer_Name: sName, Mobile: sMob, DOB: sDob, Village: sVill, Aadhaar: sAdhar, PAN: sPan,
-                    Payment_Mode: sPay, Payment_Ref: sRef, Paid: sPaid, Discount: finalDisc, Changes_Made: changesStr,
-                    selfie: capturedImg || "", aFront: aFrontImg || "", aBack: aBackImg || "", pan: panImg || "",
-                    bill: bill64, ecard: ecard64
+                    Payment_Mode: sPay, Payment_Ref: sRef, Paid: sPaid, Discount: finalDisc, Changes_Made: "Data Verified",
+                    selfie: capturedImg || ""
                 };
 
                 const urlParams = new URLSearchParams();
-                for (let k in payload) {
-                    urlParams.append(k, payload[k]);
-                }
+                for (let k in payload) urlParams.append(k, payload[k]);
 
                 try { await fetch(APP_URL, { method: 'POST', body: urlParams }); } catch(error) {}
                 
                 setProcessingId(null); closeModalAndReset(); setVerifyOutsideModal(null); setPayVerified(false);
-                
-                if(status === 'Sold') {
-                    setSessionStats(prev => { const nState = { ...prev, verified: [{n: c.n, name: sName || "Unknown"}, ...prev.verified] }; localStorage.setItem('dps_session_stats', JSON.stringify(nState)); return nState; });
-                    setStaffSuccessModal({...c, finalPaid: sPaid, finalName: sName, finalMob: sMob, finalPan: sPan, finalAdhar: sAdhar, finalVill: sVill, finalDob: sDob, finalDisc, finalPayMode: sPay, changesStr});
-                } else {
-                    setSessionStats(prev => { const nState = { ...prev, rejected: [{n: c.n, name: sName || "Unknown"}, ...prev.rejected] }; localStorage.setItem('dps_session_stats', JSON.stringify(nState)); return nState; });
-                    setStaffSuccessModal({...c, isReject: true, finalName: sName, finalMob: sMob, finalDob: sDob, finalVill: sVill, finalAdhar: sAdhar, finalPan: sPan}); 
-                }
+                if(status === 'Sold') setStaffSuccessModal({...c, finalPaid: sPaid, finalName: sName, finalMob: sMob, finalPan: sPan, finalAdhar: sAdhar, finalVill: sVill, finalDob: sDob, finalDisc, finalPayMode: sPay, changesStr: "Verified"});
+                else setStaffSuccessModal({...c, isReject: true, finalName: sName, finalMob: sMob}); 
                 setTimeout(loadData, 1500);
             };
 
-            const closeModalAndReset = () => { setSelected(null); setCapturedImg(null); setAFrontImg(null); setABackImg(null); setPanImg(null); setDiscount(0); };
+            const closeModalAndReset = () => { setSelected(null); setCapturedImg(null); setDiscount(0); };
             const handleOutsideVerify = (c) => { setPayVerified(false); setVerifyOutsideModal(c); };
-            const sendToGroupCopy = (text) => { navigator.clipboard.writeText(text).then(() => { alert("✅ व्हाट्सएप ग्रुप के लिए मैसेज कॉपी हो गया है! पेस्ट करके सेंड कर दें।"); window.open("https://chat.whatsapp.com/DOFkpAfbugQ2ATQxr4m6L2", "_blank"); }); };
-
-            const renderImageButton = (imgData, label, icon) => {
-                if (!imgData || imgData === "" || imgData === "N/A" || imgData === "OLD_GARBAGE_REMOVED") return null;
-                return <button onClick={() => setEnlargedImg(imgData)} className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold btn-press shadow-md"><i className={`fa-solid ${icon}`}></i> {label}</button>;
-            };
 
             const renderCard = (c) => {
                 const isLocked = localLocks.has(c.n) || c.status === 'Pending';
@@ -461,7 +307,7 @@
                 return (
                     <div key={c.n} onClick={() => {
                         if (s === 'Sold') return;
-                        if (!staff && s === 'Pending') { alert("यह कार्ड पहले ही बुक / पेंडिंग है। कृपया दूसरा कार्ड चुनें।"); return; }
+                        if (!staff && s === 'Pending') { alert("यह कार्ड पहले ही बुक / पेंडिंग है।"); return; }
                         setSelected(c);
                     }} className={`grid-item ${color}`}>
                         <span className="z-10 relative text-white drop-shadow-md">{c.n}</span>
@@ -472,27 +318,9 @@
                 );
             };
 
-            const getFinanceStats = () => {
-                const soldCards = cards.filter(c => c.status === 'Sold');
-                const pendingCards = cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Processing_Hide' && c.status !== 'Rejected');
-                const availableCards = cards.filter(c => c.status === 'Available' && !localLocks.has(c.n) && c.status !== 'Processing_Hide' && c.status !== 'Rejected');
-                let totalRev = 0, upiC = 0, cashC = 0, airtelC = 0, totalDisc = 0;
-                soldCards.forEach(c => {
-                    let d = parseInt(c.d.discount || 0); totalRev += (c.price - d); totalDisc += d;
-                    if(c.d.pay === "PhonePe/GPay") upiC++; else if(c.d.pay === "Airtel Payment Bank") airtelC++; else cashC++;
-                });
-                let vipA = availableCards.filter(c=>c.cat==="VIP Card").length;
-                let goldA = availableCards.filter(c=>c.cat==="Gold Card").length;
-                let silverA = availableCards.filter(c=>c.cat==="Silver Card").length;
-                return { soldCards, pendingCards, availableCards, totalRev, totalDisc, upiC, cashC, airtelC, vipA, goldA, silverA };
-            };
-
             if(loading) return <div className="h-screen flex items-center justify-center font-black text-amber-500 text-6xl animate-pulse bg-[#050505]">DPSG Loading...</div>;
 
             if(staff) {
-                const stats = getFinanceStats();
-                const reportText = `🔱 *DPSG DAILY FINANCE REPORT* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n📊 *TODAY'S STOCK*\n• *कुल कार्ड:* 1000\n• *बिक चुके:* ${stats.soldCards.length}\n• *पेंडिंग:* ${stats.pendingCards.length}\n• *बचे हुए:* ${stats.availableCards.length}\n\n💰 *FINANCE & SALES*\n• *कुल सेल:* ₹${stats.totalRev}\n• *कुल डिस्काउंट:* ₹${stats.totalDisc}\n\n💳 *PAYMENT MODE:*\n• *UPI / App:* ${stats.upiC}\n• *Cash:* ${stats.cashC}\n• *Airtel:* ${stats.airtelC}\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 जय माता दी! 🚩`;
-
                 return (
                     <div className="flex flex-col min-h-screen bg-[#050505] text-white">
                         <div className="fixed top-0 w-full z-40 bg-black/95 backdrop-blur-md border-b border-slate-800 px-5 py-3 flex justify-between items-center shadow-lg">
@@ -503,103 +331,42 @@
                         <div className="flex-1 overflow-y-auto pt-24 pb-28 px-4 custom-scroll">
                             {staffAppTab === 'DASHBOARD' && (
                                 <div className="max-w-3xl mx-auto space-y-4">
-                                    <div className="bg-slate-900/80 p-4 rounded-xl border border-slate-700 flex items-center gap-3">
-                                        <i className="fa-solid fa-qrcode text-amber-500 text-2xl"></i>
-                                        <input type="text" placeholder="Your UPI ID for QR (e.g. name@paytm)" value={staffUpi} onChange={(e)=>{setStaffUpi(e.target.value); localStorage.setItem('dps_staff_upi', e.target.value);}} className="bg-black border border-slate-600 text-white p-2 rounded-lg w-full font-bold text-sm outline-none focus:border-amber-500" />
-                                    </div>
                                     <div className="flex items-center justify-between border-b border-slate-800 pb-2 mt-4"><h3 className="text-xl font-black text-amber-400">Live Requests</h3><span className="bg-amber-500 text-black px-2 py-1 rounded text-xs font-black">{cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Rejected').length} Pending</span></div>
-
-                                    {cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Rejected').length === 0 ? <p className="text-slate-500 text-center font-bold italic py-10">कोई पेंडिंग रिक्वेस्ट नहीं है...</p> : 
-                                    cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Rejected').map(c => (
+                                    {cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Rejected').map(c => (
                                         <div key={c.n} className="bg-slate-900/90 p-4 rounded-2xl border-l-[6px] border-amber-500 shadow-lg flex flex-col gap-4">
                                             <div className="flex items-center gap-4">
                                                 {c.d.dp && c.d.dp.startsWith('http') ? <img src={c.d.dp} onClick={() => setEnlargedImg(c.d.dp)} className="w-16 h-16 rounded-full border-2 border-amber-500 object-cover cursor-pointer" alt="DP" /> : 
-                                                 c.d.dp === "OLD_GARBAGE_REMOVED" ? <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black border border-dashed border-red-500 text-red-500 text-center leading-tight p-1">Old<br/>Error</div> :
                                                  <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black border border-dashed border-slate-600 text-slate-500">NO DP</div>}
                                                 <div className="flex-1">
                                                     <p className="text-xl font-black text-white leading-none mb-1">#{c.n} <span className="text-amber-400 text-lg">- {c.d.name || "N/A"}</span></p>
-                                                    <p className="text-xs text-slate-400 font-bold"><i className="fa-solid fa-phone"></i> {c.d.mob || "N/A"} | DOB: {c.d.dob || "N/A"} | {c.d.pay || "N/A"}</p>
-                                                    <p className="text-[10px] text-green-400 font-bold mt-1">Tk: {c.token} {c.d.ref && `| Ref: ${c.d.ref}`}</p>
-                                                    <div className="flex flex-wrap gap-2 mt-2">
-                                                        {renderImageButton(c.d.aF, "Aadhaar F", "fa-id-card")}
-                                                        {renderImageButton(c.d.aB, "Aadhaar B", "fa-id-card")}
-                                                        {renderImageButton(c.d.pI, "PAN", "fa-credit-card")}
-                                                    </div>
+                                                    <p className="text-xs text-slate-400 font-bold"><i className="fa-solid fa-phone"></i> {c.d.mob || "N/A"}</p>
+                                                    <p className="text-[10px] text-green-400 font-bold mt-1">Aadhaar: {c.d.adhar} | PAN: {c.d.pan || "N/A"}</p>
                                                 </div>
                                             </div>
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
-                                                <button onClick={() => handleOutsideVerify(c)} disabled={processingId === c.n} className="bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">{processingId === c.n ? "Wait..." : "Verify"}</button>
-                                                <button onClick={() => masterUpdate(c, 'Rejected', false)} disabled={processingId === c.n} className="bg-red-700 hover:bg-red-600 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">{processingId === c.n ? "Wait..." : "Reject"}</button>
-                                                <button onClick={() => {if(!staffUpi){alert("Please add UPI ID first!");return;} setQuickQrCard(c);}} disabled={processingId === c.n} className="bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1"><i className="fa-solid fa-qrcode"></i> Pay QR</button>
-                                                <button onClick={() => { setSelected(c); setPayVerified(false); setPayMode(c.d.pay || ""); setDiscount(parseInt(c.d.discount || 0)); setCapturedImg(null); }} disabled={processingId === c.n} className="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1"><i className="fa-solid fa-pen"></i> Edit Details</button>
+                                            <div className="grid grid-cols-2 gap-2 mt-2">
+                                                <button onClick={() => handleOutsideVerify(c)} disabled={processingId === c.n} className="bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">{processingId === c.n ? "Wait..." : "Verify ✅"}</button>
+                                                <button onClick={() => { setSelected(c); setPayVerified(false); setDiscount(parseInt(c.d.discount || 0)); setCapturedImg(null); }} disabled={processingId === c.n} className="bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1"><i className="fa-solid fa-pen"></i> Edit & Verify</button>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             )}
-
-                            {staffAppTab === 'ACTIVITY' && (
-                                <div className="max-w-3xl mx-auto space-y-4">
-                                    <h3 className="text-2xl font-black text-amber-500 italic mb-4"><i className="fa-solid fa-chart-pie"></i> STATEMENT & REPORT</h3>
-                                    <div className="grid grid-cols-2 gap-4 mb-4">
-                                        <div className="bg-green-900/30 border-2 border-green-600 p-4 rounded-2xl text-center shadow-lg"><p className="text-[10px] text-green-400 font-black uppercase mb-1">TOTAL REVENUE</p><p className="text-4xl font-black text-white">₹{stats.totalRev}</p></div>
-                                        <div className="bg-blue-900/30 border-2 border-blue-600 p-4 rounded-2xl text-center shadow-lg"><p className="text-[10px] text-blue-400 font-black uppercase mb-1">SOLD CARDS</p><p className="text-4xl font-black text-white">{stats.soldCards.length}</p></div>
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-2 mb-4">
-                                        <div className="bg-slate-900 p-3 rounded-xl border border-slate-700 text-center"><p className="text-[10px] text-slate-400 font-bold uppercase">UPI/App</p><p className="text-xl font-black text-white">{stats.upiC}</p></div>
-                                        <div className="bg-slate-900 p-3 rounded-xl border border-slate-700 text-center"><p className="text-[10px] text-slate-400 font-bold uppercase">Cash</p><p className="text-xl font-black text-white">{stats.cashC}</p></div>
-                                        <div className="bg-slate-900 p-3 rounded-xl border border-slate-700 text-center"><p className="text-[10px] text-slate-400 font-bold uppercase">Airtel</p><p className="text-xl font-black text-white">{stats.airtelC}</p></div>
-                                    </div>
-                                    <div className="bg-slate-900/80 p-5 rounded-2xl border-l-[6px] border-amber-500 shadow-lg mb-6">
-                                        <h4 className="font-black text-white mb-3 uppercase tracking-wider text-sm"><i className="fa-solid fa-boxes-stacked text-amber-500"></i> LIVE STOCK (कार्ड्स का हिसाब)</h4>
-                                        <div className="flex justify-between items-center bg-black p-3 rounded-lg mb-2"><span className="text-slate-400 font-bold text-xs">Total Cards</span><span className="font-black text-lg">1000</span></div>
-                                        <div className="flex justify-between items-center bg-black p-3 rounded-lg mb-2"><span className="text-yellow-400 font-bold text-xs">Pending (पेंडिंग बुकिंग)</span><span className="font-black text-lg text-yellow-400">{stats.pendingCards.length}</span></div>
-                                        <div className="flex justify-between items-center bg-black p-3 rounded-lg"><span className="text-green-400 font-bold text-xs">Available (बचे हुए)</span><span className="font-black text-lg text-green-400">{stats.availableCards.length}</span></div>
-                                        <p className="text-right text-[10px] text-slate-500 font-bold mt-2">VIP: {stats.vipA} | Gold: {stats.goldA} | Silver: {stats.silverA}</p>
-                                    </div>
-                                    <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(reportText)}`} target="_blank" className="w-full bg-[#25D366] hover:bg-[#20b858] text-black font-black py-4 rounded-xl text-lg shadow-lg btn-press flex items-center justify-center gap-3">
-                                        <i className="fa-brands fa-whatsapp text-2xl"></i> SEND DAILY STATEMENT
-                                    </a>
-                                </div>
-                            )}
-
                             {staffAppTab === 'CARDS' && (
-                                <div>
-                                    <div className="flex flex-wrap gap-2 mb-4 justify-center">
-                                        {['ALL', 'VIP Card', 'Gold Card', 'Silver Card'].map(t => (
-                                            <button key={t} onClick={() => setActiveTab(t)} className={`px-4 py-2 rounded-full font-black text-xs uppercase btn-press ${activeTab === t ? 'bg-amber-500 text-black shadow-lg' : 'bg-slate-800 text-slate-400'}`}>{t.split(' ')[0]}</button>
-                                        ))}
-                                    </div>
-                                    <div className="card-grid">
-                                        {cards.filter(c => activeTab === 'ALL' || c.cat === activeTab).map(renderCard)}
-                                    </div>
+                                <div className="card-grid">
+                                    {cards.filter(c => activeTab === 'ALL' || c.cat === activeTab).map(renderCard)}
                                 </div>
                             )}
                         </div>
 
-                        <div className="fixed bottom-0 w-full z-40 bg-black/95 backdrop-blur-lg border-t border-slate-800 flex justify-around p-2 shadow-[0_-10px_20px_rgba(0,0,0,0.8)] pb-safe">
-                            <button onClick={()=>setStaffAppTab('DASHBOARD')} className={`flex flex-col items-center p-2 rounded-xl w-1/3 transition-colors ${staffAppTab==='DASHBOARD'?'text-amber-500':'text-slate-500'}`}><i className="fa-solid fa-list-check text-xl mb-1"></i><span className="text-[10px] font-black uppercase">Pending</span></button>
-                            <button onClick={()=>setStaffAppTab('ACTIVITY')} className={`flex flex-col items-center p-2 rounded-xl w-1/3 transition-colors ${staffAppTab==='ACTIVITY'?'text-blue-500':'text-slate-500'}`}><i className="fa-solid fa-chart-pie text-xl mb-1"></i><span className="text-[10px] font-black uppercase">Statement</span></button>
-                            <button onClick={()=>setStaffAppTab('CARDS')} className={`flex flex-col items-center p-2 rounded-xl w-1/3 transition-colors ${staffAppTab==='CARDS'?'text-green-500':'text-slate-500'}`}><i className="fa-solid fa-address-card text-xl mb-1"></i><span className="text-[10px] font-black uppercase">All Cards</span></button>
+                        <div className="fixed bottom-0 w-full z-40 bg-black/95 backdrop-blur-lg border-t border-slate-800 flex justify-around p-2 pb-safe">
+                            <button onClick={()=>setStaffAppTab('DASHBOARD')} className={`flex flex-col items-center p-2 rounded-xl w-1/2 transition-colors ${staffAppTab==='DASHBOARD'?'text-amber-500':'text-slate-500'}`}><i className="fa-solid fa-list-check text-xl mb-1"></i><span className="text-[10px] font-black uppercase">Pending</span></button>
+                            <button onClick={()=>setStaffAppTab('CARDS')} className={`flex flex-col items-center p-2 rounded-xl w-1/2 transition-colors ${staffAppTab==='CARDS'?'text-green-500':'text-slate-500'}`}><i className="fa-solid fa-address-card text-xl mb-1"></i><span className="text-[10px] font-black uppercase">All Cards</span></button>
                         </div>
-
-                        {quickQrCard && (
-                            <div className="fixed inset-0 z-[150] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm">
-                                <div className="bg-white p-8 rounded-3xl text-center max-w-sm w-full shadow-[0_0_50px_rgba(251,191,36,0.3)] relative">
-                                    <button onClick={() => setQuickQrCard(null)} className="absolute top-3 right-5 text-3xl text-slate-400 hover:text-red-500 btn-press">&times;</button>
-                                    <h3 className="text-xl font-black text-black mb-1">Pay ₹{quickQrCard.price - (quickQrCard.d.discount || 0)}</h3>
-                                    <p className="text-[10px] font-bold text-slate-500 mb-4">{COMPANY}</p>
-                                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${staffUpi}%26pn=Digital%20Problem%20Solution%20Group%26am=${quickQrCard.price - (quickQrCard.d.discount || 0)}%26tr=${quickQrCard.mid}%26tn=Membership_${quickQrCard.mid}`} alt="Live QR" className="mx-auto border-4 border-slate-100 rounded-xl" />
-                                    <p className="text-xs font-black text-slate-700 mt-4 bg-slate-100 py-2 rounded-lg truncate px-2">ID: {quickQrCard.mid}</p>
-                                </div>
-                            </div>
-                        )}
 
                         {verifyOutsideModal && (
                             <div className="fixed inset-0 z-[160] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm">
                                 <div className="glass p-6 w-full max-w-sm border-t-4 border-green-500 rounded-3xl bg-[#0a0a0a] shadow-2xl text-center">
                                     <h3 className="text-2xl font-black text-white mb-2">कार्ड #{verifyOutsideModal.n} वेरीफाई करें</h3>
-                                    <p className="text-sm text-slate-400 mb-6">सिक्योरिटी चेक: कृपया पेमेंट की पुष्टि करें।</p>
                                     <div className="bg-red-900/30 p-4 rounded-xl border border-red-500 mb-6 text-left"><label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={payVerified} onChange={(e)=>setPayVerified(e.target.checked)} className="w-6 h-6 accent-red-500" /><span className="text-white font-bold text-sm">मैंने पेमेंट ले लिया है (Verified)</span></label></div>
                                     <div className="flex gap-3">
                                         <button onClick={()=>masterUpdate(verifyOutsideModal, 'Sold', false)} disabled={!payVerified || processingId === verifyOutsideModal.n} className={`flex-1 py-3 rounded-xl font-black btn-press ${payVerified ? 'bg-green-600 text-white shadow-lg' : 'bg-slate-800 text-slate-500'}`}>{processingId === verifyOutsideModal.n ? "Wait..." : "Verify ✅"}</button>
@@ -609,21 +376,221 @@
                             </div>
                         )}
 
-                        {/* STAFF EDIT MODAL */}
+                        {/* STAFF EDIT MODAL (ONLY DP) */}
                         {selected && staff && (
                             <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto pb-24">
                                 <div className="glass p-6 md:p-10 w-full max-w-5xl border border-amber-500 rounded-3xl bg-[#0a0a0a] shadow-2xl relative my-auto mt-20 md:mt-auto">
                                     <button onClick={closeModalAndReset} className="absolute top-4 right-6 text-4xl text-slate-400 hover:text-white btn-press">&times;</button>
                                     <div className="text-center mb-6"><h3 className="text-4xl font-black text-amber-500 italic mb-1">#{selected.n}</h3><span className="bg-amber-500 text-black px-4 py-1 rounded-full text-sm font-black">{selected.cat}</span></div>
                                     <div className="grid md:grid-cols-2 gap-8">
+                                        
                                         <div className="flex flex-col items-center justify-center bg-black/40 p-5 rounded-2xl border border-slate-800 shadow-inner">
+                                            <h4 className="text-amber-500 font-bold mb-4">Customer DP (Selfie)</h4>
+                                            {capturedImg ? <img src={capturedImg} className="w-[150px] h-[150px] rounded-full mx-auto object-cover border-4 border-green-500 shadow-lg" /> : 
+                                             selected.d.dp && selected.d.dp.startsWith('http') ? <img src={selected.d.dp} onClick={() => setEnlargedImg(selected.d.dp)} className="w-[150px] h-[150px] rounded-full mx-auto object-cover border-4 border-amber-500 cursor-pointer shadow-lg" /> : 
+                                             <div className="w-[150px] h-[150px] rounded-full bg-slate-900 mx-auto flex items-center justify-center text-sm text-red-500 font-black border-4 border-red-500 border-dashed">NO DP</div>}
                                             
-                                            <div className="text-center mb-4 w-full">
-                                                {capturedImg ? <img src={capturedImg} className="w-[150px] h-[150px] rounded-full mx-auto object-cover border-4 border-green-500 shadow-lg" /> : 
-                                                 selected.d.dp && selected.d.dp.startsWith('http') ? <img src={selected.d.dp} onClick={() => setEnlargedImg(selected.d.dp)} className="w-[150px] h-[150px] rounded-full mx-auto object-cover border-4 border-amber-500 cursor-pointer shadow-lg" /> : 
-                                                 <div className="w-[150px] h-[150px] rounded-full bg-slate-900 mx-auto flex items-center justify-center text-sm text-red-500 font-black border-4 border-red-500 border-dashed">NO DP</div>}
-                                                
-                                                {/* 📸 STAFF LIVE CAMERA & UPLOAD FOR SELFIE */}
+                                            <div className="flex justify-center gap-2 mt-4">
+                                                <button type="button" onClick={()=>openFullScreenCamera('user')} className="bg-amber-500 text-black px-4 py-2 rounded-lg text-xs font-black btn-press shadow"><i className="fa-solid fa-camera"></i> Live DP</button>
+                                                <label className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-xs font-black cursor-pointer btn-press shadow">
+                                                    <i className="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" hidden onChange={handleNativeCapture} />
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div><label className="text-[10px] text-slate-400 font-bold">Name</label><input id="s_name" defaultValue={selected.d.name} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
+                                                <div><label className="text-[10px] text-slate-400 font-bold">Mobile</label><input id="s_mob" defaultValue={selected.d.mob} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
+                                                <div><label className="text-[10px] text-slate-400 font-bold">DOB</label><input id="s_dob" defaultValue={selected.d.dob} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
+                                                <div><label className="text-[10px] text-slate-400 font-bold">Village</label><input id="s_vill" defaultValue={selected.d.vill} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
+                                                <div><label className="text-[10px] text-slate-400 font-bold">Aadhaar (Number)</label><input id="s_adhar" defaultValue={selected.d.adhar} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
+                                                <div><label className="text-[10px] text-slate-400 font-bold">PAN (Number)</label><input id="s_pan" defaultValue={selected.d.pan} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white uppercase font-bold text-sm" /></div>
+                                                <div><label className="text-[10px] text-slate-400 font-bold">Pay Mode</label><select id="s_pay" defaultValue={selected.d.pay} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm"><option value="Cash">Cash</option><option value="PhonePe/GPay">UPI / App</option><option value="Airtel Payment Bank">Airtel Bank</option></select></div>
+                                                <div><label className="text-[10px] text-green-400 font-bold">Txn ID/Ref</label><input id="s_ref" defaultValue={selected.d.ref} className="w-full bg-black p-2 rounded-lg border border-green-800 text-green-400 font-bold text-sm" /></div>
+                                            </div>
+                                            
+                                            <div className="grid grid-cols-2 gap-3 mt-2">
+                                                <div><label className="text-[10px] text-red-400 font-bold">Discount (₹)</label><input type="number" value={discount} onChange={(e)=>setDiscount(parseInt(e.target.value)||0)} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-red-400 font-bold text-sm outline-none" /></div>
+                                                <div><label className="text-[10px] text-green-400 font-bold">Final Paid (₹)</label><input id="s_paid" type="number" value={selected.price - discount} readOnly className="w-full bg-green-900/30 p-2 rounded-lg border border-green-700 text-green-400 font-black text-sm outline-none" /></div>
+                                            </div>
+                                            <div className="bg-red-900/20 p-3 rounded-lg border border-red-800 mt-2"><label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={payVerified} onChange={(e)=>setPayVerified(e.target.checked)} className="w-6 h-6 accent-red-500" /><span className="text-white font-black text-sm">मैंने पेमेंट ले लिया है (Verified)</span></label></div>
+                                            <div className="flex gap-3 mt-4">
+                                                <button onClick={()=>masterUpdate(selected, 'Sold', true)} disabled={!payVerified || processingId === selected.n || processingId === "UPLOADING_STAFF"} className={`flex-1 font-black py-3 rounded-xl text-lg shadow-lg btn-press flex items-center justify-center gap-2 ${payVerified ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-600'}`}>
+                                                    {processingId === selected.n || processingId === "UPLOADING_STAFF" ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-check"></i>} VERIFY
+                                                </button>
+                                                <button onClick={()=>masterUpdate(selected, 'Rejected', true)} disabled={processingId === selected.n || processingId === "UPLOADING_STAFF"} className="flex-1 bg-red-800 text-white font-black py-3 rounded-xl text-lg shadow-lg btn-press flex items-center justify-center gap-2">
+                                                    <i className="fa-solid fa-xmark"></i> REJECT
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {staffSuccessModal && (
+                            <div className="fixed inset-0 z-[300] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md pb-safe">
+                                <div className={`glass p-6 md:p-8 max-w-md w-full text-center border-t-8 rounded-3xl bg-[#0a0a0a] shadow-[0_0_30px_rgba(59,130,246,0.3)] ${staffSuccessModal.isReject ? 'border-red-500' : 'border-blue-500'}`}>
+                                    <i className={`fa-solid ${staffSuccessModal.isReject ? 'fa-circle-xmark text-red-500' : 'fa-shield-halved text-blue-500'} text-6xl mb-4`}></i>
+                                    <h3 className="text-2xl font-black mb-6 text-white uppercase">#{staffSuccessModal.n} {staffSuccessModal.isReject ? 'Rejected!' : 'Verified!'}</h3>
+                                    <button onClick={() => setStaffSuccessModal(null)} className="mt-6 bg-slate-800 text-white px-8 py-3 rounded-full font-black hover:bg-slate-700 transition-colors shadow-lg">✖ Close</button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            // ==========================================
+            // 🌐 CUSTOMER UI (WEBSITE MODE) 🌐
+            // ==========================================
+            return (
+                <div className="max-w-[1600px] mx-auto p-4 pt-0">
+                    <div className="stock-ticker w-full absolute top-0 left-0 z-50">
+                        <marquee scrollamount="8">🔥 जल्दी करें! 1000 में से {cards.filter(c=>c.status==='Sold').length} कार्ड बिक चुके हैं, केवल {cards.filter(c=>c.status==='Available').length} शेष! 51 मेगा प्राइज़ जीतने का मौका पाएं! 🚩</marquee>
+                    </div>
+
+                    <header className="text-center mb-16 mt-16 relative">
+                        <h1 className="text-6xl md:text-8xl font-black italic text-white rajdhani tracking-tighter drop-shadow-lg">{COMPANY}</h1>
+                        <p className="text-amber-500 text-xl md:text-2xl font-bold mt-4 italic">" {SLOGAN} "</p>
+                        <div className="banner-row mt-10">
+                            {[ {t:'VIP', p:'500', c:'card-VIP', d:'पूरा परिवार मान्य | 6 महीने | 100% फ्री ई-मित्र सेवा'}, {t:'GOLD', p:'100', c:'card-Gold', d:'1 व्यक्ति | 3 महीने | 50% ई-मित्र छूट | गारंटीड उपहार'}, {t:'SILVER', p:'50', c:'card-Silver', d:'1 व्यक्ति | 1 महीना | सीमित सेवा | लकी ड्रा मौका'}].map((b, i) => (
+                                <div key={i} className={`banner-3d ${b.c} p-8 rounded-[2rem] shadow-xl border-2 border-white/20 text-left`}><h2 className="text-4xl font-black mb-2">{b.t}</h2><p className="text-sm font-bold opacity-90 mb-6">{b.d}</p><div className="text-5xl font-black text-white">₹{b.p}</div></div>
+                            ))}
+                        </div>
+                    </header>
+
+                    <div className="flex flex-wrap gap-4 mt-6 mb-10 justify-center">
+                        {['ALL', 'VIP Card', 'Gold Card', 'Silver Card'].map(t => (
+                            <button key={t} onClick={() => setActiveTab(t)} className={`px-8 py-3 rounded-full font-black text-xl uppercase transition-all shadow-lg btn-press ${activeTab === t ? 'bg-amber-500 text-black scale-105' : 'bg-slate-800 text-slate-300'}`}>{t.split(' ')[0]}</button>
+                        ))}
+                    </div>
+
+                    <div className="grid lg:grid-cols-12 gap-10">
+                        <div className="lg:col-span-4 glass p-6 h-[800px] flex flex-col border-t-[8px] border-amber-500">
+                            <h2 className="text-3xl font-black italic text-amber-500 mb-6 text-center underline">51 MEGA PRIZES</h2>
+                            <div className="overflow-y-auto pr-2 space-y-4 flex-1 custom-scroll">
+                                {PRIZES.map((p) => (
+                                    <div key={p.r} className="p-4 rounded-2xl bg-slate-800/80 border-l-[8px] border-amber-500 shadow-md">
+                                        <div className="flex items-center gap-4 mb-2"><div className="w-12 h-12 flex items-center justify-center font-black text-xl rounded-xl bg-amber-500 text-black shrink-0">{p.r}</div><h4 className="font-black text-xl text-white leading-tight">{p.n}</h4></div><p className="text-sm text-slate-300 font-bold ml-16">{p.d}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="lg:col-span-8 glass p-4 md:p-8 h-[800px] flex flex-col border-t-[8px] border-indigo-500">
+                            <div className="card-grid overflow-y-auto flex-1 custom-scroll">
+                                {cards.filter(c => activeTab === 'ALL' || c.cat === activeTab).map(renderCard)}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* CUSTOMER BOOKING MODAL (ONLY DP) */}
+                    {selected && !staff && (
+                        <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
+                            <form onSubmit={bookCard} className="glass p-6 md:p-10 w-full max-w-3xl border border-amber-500 rounded-3xl shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
+                                <button type="button" onClick={closeModalAndReset} className="absolute top-4 right-6 text-4xl text-slate-400 hover:text-white btn-press">&times;</button>
+                                <div className="text-center mb-6"><h3 className="text-3xl md:text-5xl font-black text-amber-500 mb-1 uppercase">CARD #{selected.n}</h3><span className="bg-amber-500 text-black px-4 py-1 rounded-full text-sm font-black">{selected.cat} | ₹{selected.price}</span></div>
+                                
+                                <div className="space-y-5">
+                                    {/* 📦 1. ONLY SELFIE DP 📦 */}
+                                    <div className="bg-black/50 p-6 rounded-2xl border-2 border-dashed border-amber-500 text-center">
+                                        <h4 className="text-amber-400 font-black mb-4"><i className="fa-solid fa-user-circle"></i> लाइव सेल्फी (DP) *</h4>
+                                        {capturedImg ? (
+                                            <div>
+                                                <img src={capturedImg} className="mx-auto rounded-full w-[150px] h-[150px] border-4 border-amber-500 object-cover shadow-lg" />
+                                                <div className="flex justify-center gap-3 mt-4">
+                                                    <button type="button" onClick={()=>setEnlargedImg(capturedImg)} className="bg-blue-600 px-4 py-2 rounded-lg font-bold text-white shadow-md btn-press"><i className="fa-solid fa-eye"></i> View</button>
+                                                    <button type="button" onClick={()=>setCapturedImg(null)} className="bg-red-600 px-4 py-2 rounded-lg font-bold text-white shadow-md btn-press"><i className="fa-solid fa-trash"></i> Delete</button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="flex gap-2 w-full">
+                                                <button type="button" onClick={()=>openFullScreenCamera('user')} className="bg-amber-500 hover:bg-amber-400 p-3 rounded-xl font-black text-black shadow-lg flex-1 btn-press flex flex-col items-center justify-center">
+                                                    <i className="fa-solid fa-camera text-2xl mb-1"></i> LIVE CAMERA
+                                                </button>
+                                                <label className="bg-slate-700 hover:bg-slate-600 p-3 rounded-xl font-black text-white shadow-lg flex-1 btn-press flex flex-col items-center justify-center cursor-pointer">
+                                                    <i className="fa-solid fa-upload text-2xl mb-1"></i> UPLOAD
+                                                    <input type="file" accept="image/*" hidden onChange={handleNativeCapture} />
+                                                </label>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* FORM DETAILS WITH AADHAR/PAN TEXT FIELDS */}
+                                    <div><label className="text-xs font-bold text-slate-400 ml-1">पूरा नाम (Full Name) *</label><input name="Customer_Name" required className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none" /></div>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="text-xs font-bold text-slate-400 ml-1">मोबाइल (Mobile) *</label><input name="Mobile" type="tel" pattern="[0-9]{10}" required className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none" /></div>
+                                        <div><label className="text-xs font-bold text-slate-400 ml-1">जन्मतिथि (DOB) *</label><input name="DOB" type="date" required className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none" /></div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="text-xs font-bold text-slate-400 ml-1">आधार नंबर (Aadhaar) *</label><input name="Aadhaar" type="tel" pattern="[0-9]{12}" required className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none" /></div>
+                                        <div><label className="text-xs font-bold text-slate-400 ml-1">गाँव / शहर (Village/City)</label><input name="Village" className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none" /></div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="text-xs font-bold text-slate-400 ml-1">पेमेंट मोड (Payment Mode) *</label><select name="Payment_Mode" required onChange={(e)=>setPayMode(e.target.value)} className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none"><option value="" disabled selected>चुनें (Select)</option><option value="Cash">नकद (Cash)</option><option value="PhonePe/GPay">UPI / App</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select></div>
+                                        {payMode === 'Airtel Payment Bank' && <div><label className="text-xs font-black text-red-500 ml-1">PAN नंबर (PAN CARD) *</label><input name="PAN" required pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" placeholder="ABCDE1234F" className="w-full bg-black p-3 rounded-xl font-black border-2 border-red-600 text-white text-base uppercase shadow-inner" /></div>}
+                                    </div>
+                                    
+                                    <div className="grid md:grid-cols-1 gap-4">
+                                        <div><label className="text-xs font-bold text-green-400 ml-1"><i className="fa-solid fa-hashtag"></i> Txn ID (रेफरेंस) *</label><input name="Payment_Ref" required placeholder="UTR Number / Payment ID" className="w-full bg-black p-3 rounded-xl font-black border border-green-500 text-green-400 text-base focus:border-amber-500 outline-none shadow-inner" /></div>
+                                    </div>
+                                    
+                                    <button type="submit" disabled={processingId === "BOOKING" || !capturedImg} className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black py-4 rounded-xl text-xl md:text-2xl uppercase italic shadow-lg mt-2 disabled:opacity-50 btn-press flex items-center justify-center gap-2">
+                                        {processingId === "BOOKING" ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-paper-plane"></i>} {processingId === "BOOKING" ? "UPLOADING SECURELY... ⏳" : "CONFIRM BOOKING 🔱"}
+                                    </button>
+                                    {!capturedImg && <p className="text-red-500 text-center font-bold text-[10px] mt-1">बुकिंग के लिए लाइव सेल्फी (DP) खींचना या अपलोड करना अनिवार्य है।</p>}
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    {successModal && (
+                        <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4">
+                            <div className="glass p-8 max-w-md w-full text-center border-t-8 border-green-500 rounded-3xl shadow-2xl">
+                                <i className="fa-regular fa-circle-check text-7xl text-green-500 mb-4 animate-bounce"></i>
+                                <h3 className="text-3xl font-black mb-2 text-white uppercase">बुकिंग सफल!</h3>
+                                <div className="bg-green-600/20 p-3 rounded-xl border border-green-500 mb-6 font-black text-xl text-green-400">TOKEN: {successModal.token}</div>
+                                <button onClick={()=>setSuccessModal(null)} className="bg-green-600 text-white px-8 py-3 rounded-full font-black hover:bg-green-500 transition-colors shadow-lg">✖ OK</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {enlargedImg && (
+                        <div className="fixed inset-0 z-[500] bg-black/95 flex items-center justify-center p-4 backdrop-blur-xl" onClick={() => setEnlargedImg(null)}>
+                            <button onClick={() => setEnlargedImg(null)} className="absolute top-5 right-5 text-white text-5xl font-black hover:text-red-500 transition-colors">&times;</button>
+                            <img src={enlargedImg} className="max-w-full max-h-[90vh] rounded-2xl border-4 border-amber-500 shadow-[0_0_50px_rgba(251,191,36,0.5)] object-contain" />
+                        </div>
+                    )}
+
+                    {!staff && (
+                        <div className="mt-20 mb-10 text-center">
+                            <button onClick={()=>{let u=prompt("Staff ID:");let p=prompt("Pass:");if(ADMINS[u]===p){const sess={id:u,pass:p};localStorage.setItem('dps_session',JSON.stringify(sess));setStaff(sess);}else alert("Access Denied");}} className="text-slate-500 hover:text-indigo-400 font-black tracking-widest text-sm uppercase transition-colors">🔱 STAFF CONTROL CENTER 🔱</button>
+                        </div>
+                    )}
+
+                    {/* 📸 FULL SCREEN CAMERA OVERLAY 📸 */}
+                    {isCamOpen && (
+                        <div className="fixed inset-0 z-[99999] bg-black flex flex-col justify-center items-center">
+                            <video id="fullScreenVideo" autoPlay playsInline className="absolute inset-0 w-full h-full object-cover bg-black"></video>
+                            <div className="absolute top-0 w-full p-4 flex justify-between z-10">
+                                <button type="button" onClick={closeFullScreenCamera} className="bg-red-600 text-white px-5 py-2 rounded-xl font-black"><i className="fa-solid fa-arrow-left"></i> BACK</button>
+                            </div>
+                            <div className="absolute bottom-0 w-full p-8 flex justify-center z-10 pb-16">
+                                <button type="button" onClick={captureFullScreenPhoto} className="bg-green-500 text-black px-10 py-5 rounded-full text-2xl font-black border-4 border-white"><i className="fa-solid fa-camera"></i> CAPTURE DP</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
+                                              {/* 📸 STAFF LIVE CAMERA & UPLOAD FOR SELFIE */}
                                                 <div className="flex justify-center gap-2 mt-4">
                                                     <button type="button" onClick={()=>openFullScreenCamera('selfie', 'user')} className="bg-amber-500 text-black px-4 py-2 rounded-lg text-xs font-black btn-press shadow"><i className="fa-solid fa-camera"></i> Live</button>
                                                     <label className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-xs font-black cursor-pointer btn-press shadow">
