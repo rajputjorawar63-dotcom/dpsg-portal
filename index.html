@@ -42,8 +42,7 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
         
-        // 🚀 आपकी बिल्कुल नई लिंक 🚀
-        const APP_URL = "https://script.google.com/macros/s/AKfycbzbSZodwdYWbBR9VkfW5NNAddMP-7G7eZ_IhWLmzhtR5dUmSToLwpIQdNjAEqvS5cYSdg/exec";
+        const APP_URL = "https://script.google.com/macros/s/AKfycbwMWwRC4C7aoszhSTsz_jPRa3ynew4Gp1dVuozyl7MtPLv4SvNYK7BTFm0J2cxiVYCWPQ/exec";
         
         const COMPANY = "Digital Problem Solution Group";
         const SLOGAN = "समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा";
@@ -57,7 +56,7 @@
             {r:5, n:"Bati Oven", d:"अब घर पर बनाएं राजस्थानी स्वाद, जीतें प्रीमियम बाटी ओवन।"},
             {r:6, n:"Keypad Mobile", d:"अपनों से जुड़े रहने का मौका, जीतें एक टिकाऊ कीपैड मोबाइल।"},
             {r:7, n:"Smart Watch", d:"अपनी सेहत और समय पर रखें नज़र, स्टाइल वाली स्मार्ट वॉच के साथ।"},
-            {r:8, n:"Power Bank", d:"अब मोबाइल की बैटरी कभी नहीं होगी खत्म।"},
+            {r:8, n:"Power Bank", d:"अब मोबाइल की बैटरी कभी نہیں۔"},
             {r:9, n:"Sports Shoes", d:"फिटनेस की ओर बढ़ाएं कदम, पहनें स्टाइलिश और आरामदायक स्पोर्ट्स शूज।"},
             {r:10, n:"Riding Helmet", d:"आपकी सुरक्षा हमारी प्राथमिकता, जीतें एक ISI मार्क राइडिंग हेलमेट।"},
             {r:11, n:"Remote Control Car", d:"बच्चों की पहली पसंद, शानदार रेसिंग कार।"},
@@ -103,7 +102,6 @@
             {r:51, n:"Electric Iron", d:"कपड़ों पर लाएं परफेक्ट चमक।"}
         ];
 
-        // 🛠️ COMPRESSOR (400px)
         const compressImage = (file) => {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -142,12 +140,10 @@
             const [payVerified, setPayVerified] = useState(false);
             const [payMode, setPayMode] = useState("");
             
-            // 📸 ONLY DP (Selfie)
             const [capturedImg, setCapturedImg] = useState(null);    
             const [enlargedImg, setEnlargedImg] = useState(null);
             const [showLogin, setShowLogin] = useState(false);
             
-            // Camera States
             const [isCamOpen, setIsCamOpen] = useState(false);
             const [camFacing, setCamFacing] = useState('user'); 
 
@@ -223,7 +219,6 @@
                 if(file) { const b64 = await compressImage(file); setCapturedImg(b64); }
             };
 
-            // 🚀 CUSTOMER BOOKING (URLSearchParams)
             const bookCard = async (e) => {
                 e.preventDefault(); 
                 if(!capturedImg) { alert("कृपया अपनी लाइव सेल्फी (DP) ज़रूर लें!"); return; }
@@ -256,7 +251,6 @@
                 closeModalAndReset(); setProcessingId(null); setTimeout(loadData, 1500);
             };
 
-            // 🚀 STAFF UPDATE (URLSearchParams)
             const masterUpdate = async (c, status, isInsideForm = false) => {
                 setProcessingId(isInsideForm ? "UPLOADING_STAFF" : c.n);
                 setCards(prev => prev.map(card => card.n === c.n ? { ...card, status: status === 'Sold' ? 'Sold' : 'Available' } : card));
@@ -376,7 +370,6 @@
                             </div>
                         )}
 
-                        {/* STAFF EDIT MODAL (ONLY DP) */}
                         {selected && staff && (
                             <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto pb-24">
                                 <div className="glass p-6 md:p-10 w-full max-w-5xl border border-amber-500 rounded-3xl bg-[#0a0a0a] shadow-2xl relative my-auto mt-20 md:mt-auto">
@@ -441,9 +434,6 @@
                 );
             }
 
-            // ==========================================
-            // 🌐 CUSTOMER UI (WEBSITE MODE) 🌐
-            // ==========================================
             return (
                 <div className="max-w-[1600px] mx-auto p-4 pt-0">
                     <div className="stock-ticker w-full absolute top-0 left-0 z-50">
@@ -484,7 +474,6 @@
                         </div>
                     </div>
 
-                    {/* CUSTOMER BOOKING MODAL (ONLY DP) */}
                     {selected && !staff && (
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <form onSubmit={bookCard} className="glass p-6 md:p-10 w-full max-w-3xl border border-amber-500 rounded-3xl shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
@@ -492,7 +481,6 @@
                                 <div className="text-center mb-6"><h3 className="text-3xl md:text-5xl font-black text-amber-500 mb-1 uppercase">CARD #{selected.n}</h3><span className="bg-amber-500 text-black px-4 py-1 rounded-full text-sm font-black">{selected.cat} | ₹{selected.price}</span></div>
                                 
                                 <div className="space-y-5">
-                                    {/* 📦 1. ONLY SELFIE DP 📦 */}
                                     <div className="bg-black/50 p-6 rounded-2xl border-2 border-dashed border-amber-500 text-center">
                                         <h4 className="text-amber-400 font-black mb-4"><i className="fa-solid fa-user-circle"></i> लाइव सेल्फी (DP) *</h4>
                                         {capturedImg ? (
@@ -516,7 +504,6 @@
                                         )}
                                     </div>
 
-                                    {/* FORM DETAILS WITH AADHAR/PAN TEXT FIELDS */}
                                     <div><label className="text-xs font-bold text-slate-400 ml-1">पूरा नाम (Full Name) *</label><input name="Customer_Name" required className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none" /></div>
                                     
                                     <div className="grid grid-cols-2 gap-4">
@@ -571,7 +558,6 @@
                         </div>
                     )}
 
-                    {/* 📸 FULL SCREEN CAMERA OVERLAY 📸 */}
                     {isCamOpen && (
                         <div className="fixed inset-0 z-[99999] bg-black flex flex-col justify-center items-center">
                             <video id="fullScreenVideo" autoPlay playsInline className="absolute inset-0 w-full h-full object-cover bg-black"></video>
