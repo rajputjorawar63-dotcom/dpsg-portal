@@ -52,8 +52,8 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
         
-        // 🚀 आपकी न्यू और 100% वर्किंग मास्टर लिंक 🚀
-        const APP_URL = "https://script.google.com/macros/s/AKfycbyEASFG0_ep44aMqX7h8EciDwzx687jaVJlc43ETFog8Idqvpf0PZAkHPIn1Ms7h3AiWA/exec";
+        // 🚀 हुकुम की नई लिंक यहाँ सेट कर दी गई है 🚀
+        const APP_URL = "https://script.google.com/macros/s/AKfycbzGP3auknm6p6p2yNXMn5164fWmFxEO7HXkdUqkQ0zezfIfzjF6iCxQouFerjyyW9OJNA/exec";
         
         const COMPANY = "Digital Problem Solution Group";
         const SLOGAN = "समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा";
@@ -113,7 +113,8 @@
             {r:51, n:"Electric Iron", d:"कपड़ों पर लाएं परफेक्ट चमक।"}
         ];
 
-        // 🛠️ IMAGE COMPRESSOR MACHINE 🛠️
+        // 🛠️ IMAGE COMPRESSOR MACHINE (वज़न कम करने की मशीन) 🛠️
+        // इसमें हमने साइज़ 600px कर दिया है ताकि 4 फोटो मिलकर भी बहुत हल्की रहें।
         const compressImage = (file) => {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -122,8 +123,8 @@
                     img.src = event.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 800;
-                        const MAX_HEIGHT = 800;
+                        const MAX_WIDTH = 600; 
+                        const MAX_HEIGHT = 600;
                         let width = img.width;
                         let height = img.height;
 
@@ -135,7 +136,7 @@
                         canvas.width = width; canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.6)); 
+                        resolve(canvas.toDataURL('image/jpeg', 0.5)); // 50% Quality - Very Light Size
                     };
                 };
                 reader.readAsDataURL(file);
@@ -179,14 +180,11 @@
             const [discount, setDiscount] = useState(0);
             const [payVerified, setPayVerified] = useState(false);
             
-            // 📸 अलग-अलग अपलोड के लिए लिंक्स का स्टेट (NEW LOGIC) 📸
-            const [selfieLink, setSelfieLink] = useState(null);
-            const [aFrontLink, setAFrontLink] = useState(null);
-            const [aBackLink, setABackLink] = useState(null);
-            const [panLink, setPanLink] = useState(null);
-            const [billLink, setBillLink] = useState(null);
-            const [ecardLink, setEcardLink] = useState(null);
-            const [uploadingType, setUploadingType] = useState(null);
+            // 📸 4 डिब्बों की असली इमेजेस (ग्राहक सिर्फ खींचेगा, कोई अपलोड बटन नहीं) 📸
+            const [capturedImg, setCapturedImg] = useState(null);    
+            const [aFrontImg, setAFrontImg] = useState(null);        
+            const [aBackImg, setABackImg] = useState(null);          
+            const [panImg, setPanImg] = useState(null);              
 
             const [enlargedImg, setEnlargedImg] = useState(null);
             const [showLogin, setShowLogin] = useState(false);
@@ -194,9 +192,9 @@
             const [soldListData, setSoldListData] = useState([]);
             const [otpStep, setOtpStep] = useState(false);
             const [otpValue, setOtpValue] = useState("");
-            const [generatedOtp, setGeneratedOtp] = useState("");
             const [staffTempCreds, setStaffTempCreds] = useState(null);
 
+            // 🌟 डेटा लाने का लॉजिक 🌟
             const loadData = async () => {
                 try {
                     const res = await fetch(APP_URL + "?action=GET_DATA&_cb=" + new Date().getTime());
@@ -212,12 +210,14 @@
                             let s = 'Available';
                             if(rD) {
                                let rawS = (rD[4] || 'Available').toString().trim().toLowerCase();
-                               if(rawS.includes("sold") || rawS.includes("success") || rawS.includes("verified")) {
+                               if(rawS.includes("sold") || rawS.includes("success") || rawS.includes("verified") || rawS.includes("बिका")) {
                                    s = "Sold";
                                    if(currentLocks.has(i)) { currentLocks.delete(i); locksChanged = true; }
                                }
-                               else if(rawS.includes("pending")) { s = "Pending"; }
-                               else if(rawS.includes("reject") || rawS.includes("available") || rawS.includes("अस्वीकृत")) {
+                               else if(rawS.includes("pending") || rawS.includes("लंबित")) {
+                                   s = "Pending";
+                               }
+                               else if(rawS.includes("reject") || rawS.includes("available") || rawS.includes("अस्वीकृत") || rawS.includes("उपलब्ध")) {
                                    s = "Available";
                                    if(currentLocks.has(i)) { currentLocks.delete(i); locksChanged = true; }
                                } 
@@ -264,34 +264,13 @@
                 } catch(e) { alert("बिक्री बोर्ड लोड नहीं हो पाया!"); }
             };
 
-            // 🚀 INDIVIDUAL IMAGE UPLOADER (THE BULLETPROOF LOGIC) 🚀
-            const handleIndividualUpload = async (e, type, linkSetter) => {
+            // 📸 फोटो को सेलेक्ट करते ही कंप्रेस करने का लॉजिक
+            const handleNativeCapture = async (e, setterFn) => {
                 const file = e.target.files[0];
-                if(!file) return;
-
-                setUploadingType(type); // Start Loading Spinner for this specific box
-                try {
+                if(file) {
                     const compressedBase64 = await compressImage(file);
-                    
-                    const params = new URLSearchParams();
-                    params.append("action", "UPLOAD_IMAGE");
-                    params.append("imgType", type);
-                    params.append("fileName", type + "_" + new Date().getTime());
-                    params.append("base64Data", compressedBase64);
-
-                    const response = await fetch(APP_URL, { method: 'POST', body: params });
-                    const link = await response.text();
-
-                    if(link && link.startsWith('http')) {
-                        linkSetter(link); // Save link and show Green Tick ✅
-                    } else {
-                        alert("❌ फोटो अपलोड फेल हो गई, कृपया दोबारा प्रयास करें।");
-                    }
-                } catch(err) {
-                    alert("❌ नेटवर्क या सर्वर एरर: " + err.message);
+                    setterFn(compressedBase64);
                 }
-                setUploadingType(null); // Stop Spinner
-                e.target.value = ""; // Reset Input
             };
 
             const handleLoginAttempt = async () => {
@@ -305,7 +284,6 @@
                         params.append('action', 'SEND_OTP');
                         params.append('staffEmail', 'Chanchalbaisa722@gmail.com');
                         await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
-                        setGeneratedOtp("123456"); 
                         setOtpStep(true);
                         setProcessingId(null);
                         alert("सुरक्षा अलर्ट: ओनर की ईमेल पर OTP भेज दिया गया है।");
@@ -323,11 +301,11 @@
                 setOtpStep(false);
             };
 
-            // 🚀 CRASH-PROOF BOOKING SYSTEM (ONLY SENDS TEXT & LINKS) 🚀
+            // 🚀 पुराना और सबसे मज़बूत बुकिंग सिस्टम (1 क्लिक में सब अपलोड) 🚀
             const bookCard = async (e) => {
                 e.preventDefault(); 
-                if(!selfieLink) {
-                    alert("कृपया अपनी लाइव सेल्फी (Face Photo) अपलोड करें!");
+                if(!capturedImg) {
+                    alert("कृपया अपनी लाइव सेल्फी (Face Photo) ज़रूर लें!");
                     return;
                 }
                 setProcessingId("BOOKING");
@@ -348,13 +326,16 @@
                 params.append("Payment_Mode", fd.get("Payment_Mode"));
                 params.append("Payment_Ref", fd.get("Payment_Ref") || "");
                 
-                // 🟢 सिर्फ छोटी लिंक्स जा रही हैं, कोई भारी फोटो नहीं 🟢
-                params.append("selfieLink", selfieLink || ""); 
-                params.append("aFrontLink", aFrontLink || ""); 
-                params.append("aBackLink", aBackLink || ""); 
-                params.append("panLink", panLink || ""); 
+                // 🟢 एक साथ फोटो भेजना, क्योंकि अब फोटो बहुत हल्की है
+                if(capturedImg) params.append("selfie", capturedImg); 
+                if(aFrontImg) params.append("aFront", aFrontImg); 
+                if(aBackImg) params.append("aBack", aBackImg); 
+                if(panImg) params.append("pan", panImg); 
 
-                try { await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' }); } catch(err){ console.log(err); }
+                try { 
+                    await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' }); 
+                } catch(err){ console.log(err); }
+                
                 finishBooking(fd, n);
             };
 
@@ -369,7 +350,7 @@
                 setProcessingId(null); setTimeout(loadData, 1500);
             };
 
-            // 🚀 SMART MASTER UPDATE 🚀
+            // 🚀 स्मार्ट मास्टर अपडेट (स्टाफ के लिए) 🚀
             const masterUpdate = async (c, status, isInsideForm = false) => {
                 setProcessingId(c.n);
                 setCards(prev => prev.map(card => card.n === c.n ? { ...card, status: status === 'Sold' ? 'Sold' : 'Available' } : card));
@@ -409,9 +390,13 @@
                 params.append("Paid", sPaid);
                 params.append("Discount", finalDisc);
 
-                // ✅ स्टाफ के डाक्यूमेंट्स भी लिंक के रूप में जाएंगे
-                params.append("billLink", billLink || "");
-                params.append("ecardLink", ecardLink || "");
+                // स्टाफ के डाक्यूमेंट्स भी एक ही झटके में जाएंगे
+                if(isInsideForm) {
+                    const billInput = document.getElementById('staff_bill_upload');
+                    const cardInput = document.getElementById('staff_card_upload');
+                    if(billInput && billInput.files[0]) params.append("bill", await compressImage(billInput.files[0]));
+                    if(cardInput && cardInput.files[0]) params.append("ecard", await compressImage(cardInput.files[0]));
+                }
 
                 try { await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' }); } catch(error) { console.error(error); }
                 
@@ -435,8 +420,7 @@
 
             const closeModalAndReset = () => {
                 setSelected(null);
-                setSelfieLink(null); setAFrontLink(null); setABackLink(null); setPanLink(null);
-                setBillLink(null); setEcardLink(null);
+                setCapturedImg(null); setAFrontImg(null); setABackImg(null); setPanImg(null);
             };
 
             const handleOutsideVerify = (c) => { setPayVerified(false); setVerifyOutsideModal(c); };
@@ -446,6 +430,15 @@
                     alert("✅ ग्रुप में भेजने के लिए मैसेज कॉपी हो गया है! व्हाट्सएप ग्रुप खुलने पर 'Paste' (पेस्ट) करके सेंड कर दें।");
                     window.open("https://chat.whatsapp.com/DOFkpAfbugQ2ATQxr4m6L2", "_blank");
                 });
+            };
+
+            // 🛡️ चेक: अगर इमेज की जगह कचरा है तो क्या दिखाना है
+            const renderImageButton = (imgData, label, icon) => {
+                if (!imgData || imgData === "" || imgData === "N/A") return null;
+                if (imgData === "OLD_GARBAGE_REMOVED") {
+                    return <button disabled className="bg-slate-700 text-slate-400 px-3 py-1.5 rounded-lg text-xs font-bold shadow-md cursor-not-allowed"><i className={`fa-solid ${icon}`}></i> {label} (Error)</button>;
+                }
+                return <button onClick={() => setEnlargedImg(imgData)} className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold btn-press shadow-md"><i className={`fa-solid ${icon}`}></i> {label}</button>;
             };
 
             const renderCard = (c) => {
@@ -525,17 +518,19 @@
                                     cards.filter(c => (localLocks.has(c.n) || c.status === 'Pending') && c.status !== 'Sold' && c.status !== 'Rejected').map(c => (
                                         <div key={c.n} className="bg-slate-900/90 p-4 rounded-2xl border-l-[6px] border-amber-500 shadow-lg flex flex-col gap-4">
                                             <div className="flex items-center gap-4">
-                                                {c.d.dp && c.d.dp.startsWith('http') ? <img src={c.d.dp} onClick={() => setEnlargedImg(c.d.dp)} className="w-16 h-16 rounded-full border-2 border-amber-500 object-cover cursor-pointer" alt="DP" title="बड़ा करें" /> : <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black border border-dashed border-slate-600 text-slate-500">NO DP</div>}
+                                                {c.d.dp && c.d.dp.startsWith('http') ? <img src={c.d.dp} onClick={() => setEnlargedImg(c.d.dp)} className="w-16 h-16 rounded-full border-2 border-amber-500 object-cover cursor-pointer" alt="DP" title="बड़ा करें" /> : 
+                                                 c.d.dp === "OLD_GARBAGE_REMOVED" ? <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black border border-dashed border-red-500 text-red-500 text-center leading-tight p-1">Old<br/>Error</div> :
+                                                 <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black border border-dashed border-slate-600 text-slate-500">NO DP</div>}
                                                 <div className="flex-1">
                                                     <p className="text-xl font-black text-white leading-none mb-1">#{c.n} <span className="text-amber-400 text-lg">- {c.d.name || "N/A"}</span></p>
                                                     <p className="text-xs text-slate-400 font-bold"><i className="fa-solid fa-phone"></i> {c.d.mob || "N/A"} | DOB: {c.d.dob || "N/A"} | {c.d.pay || "N/A"}</p>
                                                     <p className="text-[10px] text-green-400 font-bold mt-1">Tk: {c.token} {c.d.ref && `| Ref: ${c.d.ref}`}</p>
                                                     
-                                                    {/* ✅ VIEW BUTTONS FOR STAFF DASHBOARD ✅ */}
+                                                    {/* ✅ STAFF DASHBOARD VIEW BUTTONS (With Crash Protection) ✅ */}
                                                     <div className="flex flex-wrap gap-2 mt-2">
-                                                        {c.d.aF && c.d.aF.startsWith('http') && <button onClick={() => setEnlargedImg(c.d.aF)} className="bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1 rounded text-[10px] font-bold btn-press shadow-md"><i className="fa-regular fa-id-card"></i> Aadhaar F</button>}
-                                                        {c.d.aB && c.d.aB.startsWith('http') && <button onClick={() => setEnlargedImg(c.d.aB)} className="bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1 rounded text-[10px] font-bold btn-press shadow-md"><i className="fa-regular fa-id-card"></i> Aadhaar B</button>}
-                                                        {c.d.pI && c.d.pI.startsWith('http') && <button onClick={() => setEnlargedImg(c.d.pI)} className="bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded text-[10px] font-bold btn-press shadow-md"><i className="fa-solid fa-credit-card"></i> PAN</button>}
+                                                        {renderImageButton(c.d.aF, "Aadhaar F", "fa-id-card")}
+                                                        {renderImageButton(c.d.aB, "Aadhaar B", "fa-id-card")}
+                                                        {renderImageButton(c.d.pI, "PAN", "fa-credit-card")}
                                                     </div>
                                                 </div>
                                             </div>
@@ -549,7 +544,7 @@
                                                 <button onClick={() => {if(!staffUpi){alert("Please add UPI ID first!");return;} setQuickQrCard(c);}} disabled={processingId === c.n} className="bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">
                                                     <i className="fa-solid fa-qrcode"></i> Pay QR
                                                 </button>
-                                                <button onClick={() => { setSelected(c); setPayVerified(false); setPayMode(c.d.pay || ""); setDiscount(parseInt(c.d.discount || 0)); }} disabled={processingId === c.n} className="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">
+                                                <button onClick={() => { setSelected(c); setPayVerified(false); setPayMode(c.d.pay || ""); setDiscount(parseInt(c.d.discount || 0)); setCapturedImg(null); }} disabled={processingId === c.n} className="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">
                                                     <i className="fa-solid fa-pen"></i> Edit Details
                                                 </button>
                                             </div>
@@ -658,6 +653,10 @@
                                                 <div className="relative mb-4 text-center">
                                                     <img src={selected.d.dp} onClick={() => setEnlargedImg(selected.d.dp)} className="w-[200px] h-[200px] rounded-full object-cover glow-dp-huge cursor-pointer" alt="Customer DP" title="बड़ा करने के लिए क्लिक करें" />
                                                 </div>
+                                            ) : selected.d.dp === "OLD_GARBAGE_REMOVED" ? (
+                                                <div className="text-center mb-4">
+                                                    <div className="w-[200px] h-[200px] bg-slate-900 rounded-full flex flex-col items-center justify-center text-slate-500 font-black mb-2 border-4 border-dashed border-red-500"><i className="fa-solid fa-triangle-exclamation text-4xl mb-2 text-red-500/50"></i><span className="text-xl text-red-500 text-center">OLD ERROR<br/>(Cleaned)</span></div>
+                                                </div>
                                             ) : (
                                                 <div className="text-center mb-4">
                                                     <div className="w-[200px] h-[200px] bg-slate-900 rounded-full flex flex-col items-center justify-center text-slate-500 font-black mb-2 red-alert-dp"><i className="fa-solid fa-image-portrait text-4xl mb-2 text-red-500/50"></i><span className="text-xl text-red-500">NO DP</span></div>
@@ -666,33 +665,21 @@
 
                                             {/* ✅ VIEW BUTTONS INSIDE EDIT MODAL ✅ */}
                                             <div className="flex flex-wrap gap-2 justify-center mb-4">
-                                                {selected.d.aF && selected.d.aF.startsWith('http') && <button onClick={() => setEnlargedImg(selected.d.aF)} className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold btn-press shadow-md"><i className="fa-regular fa-id-card"></i> Aadhaar (Front)</button>}
-                                                {selected.d.aB && selected.d.aB.startsWith('http') && <button onClick={() => setEnlargedImg(selected.d.aB)} className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold btn-press shadow-md"><i className="fa-regular fa-id-card"></i> Aadhaar (Back)</button>}
-                                                {selected.d.pI && selected.d.pI.startsWith('http') && <button onClick={() => setEnlargedImg(selected.d.pI)} className="bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold btn-press shadow-md"><i className="fa-solid fa-credit-card"></i> PAN Card</button>}
+                                                {renderImageButton(selected.d.aF, "Aadhaar (F)", "fa-id-card")}
+                                                {renderImageButton(selected.d.aB, "Aadhaar (B)", "fa-id-card")}
+                                                {renderImageButton(selected.d.pI, "PAN Card", "fa-credit-card")}
                                             </div>
 
-                                            {/* STAFF DOCUMENT UPLOAD (INDIVIDUAL UPLOAD LOGIC) */}
+                                            {/* STAFF DOCUMENT UPLOAD */}
                                             <div className="w-full mt-4 space-y-3 border-t border-slate-700 pt-4">
-                                                <h4 className="text-amber-500 font-bold text-sm text-center mb-2"><i className="fa-solid fa-cloud-arrow-up"></i> Staff Uploads</h4>
-                                                
-                                                <div className="bg-slate-900 p-3 rounded-lg border border-slate-700 flex justify-between items-center">
-                                                    <span className="text-[10px] text-slate-400 font-bold">1. Upload Bill</span>
-                                                    {uploadingType === 'bill' ? <span className="text-amber-500 text-xs font-bold animate-pulse">Uploading...</span> : billLink ? <span className="text-green-500 text-xs font-bold">✅ Done</span> : (
-                                                        <label className="bg-amber-600 hover:bg-amber-500 px-3 py-1.5 rounded text-white text-[10px] font-bold cursor-pointer btn-press">
-                                                            <i className="fa-solid fa-receipt"></i> Choose
-                                                            <input type="file" accept="image/*" hidden onChange={(e)=>handleIndividualUpload(e, 'bill', setBillLink)} />
-                                                        </label>
-                                                    )}
+                                                <h4 className="text-amber-500 font-bold text-sm text-center">Staff Uploads</h4>
+                                                <div className="bg-slate-900 p-3 rounded-lg border border-slate-700">
+                                                    <label className="text-[10px] text-slate-400 font-bold block mb-1">Upload Bill Receipt</label>
+                                                    <input type="file" id="staff_bill_upload" accept="image/*" className="w-full text-xs text-slate-300 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-black hover:file:bg-amber-400"/>
                                                 </div>
-
-                                                <div className="bg-slate-900 p-3 rounded-lg border border-slate-700 flex justify-between items-center">
-                                                    <span className="text-[10px] text-slate-400 font-bold">2. Upload E-Card</span>
-                                                    {uploadingType === 'ecard' ? <span className="text-amber-500 text-xs font-bold animate-pulse">Uploading...</span> : ecardLink ? <span className="text-green-500 text-xs font-bold">✅ Done</span> : (
-                                                        <label className="bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded text-white text-[10px] font-bold cursor-pointer btn-press">
-                                                            <i className="fa-solid fa-id-badge"></i> Choose
-                                                            <input type="file" accept="image/*" hidden onChange={(e)=>handleIndividualUpload(e, 'ecard', setEcardLink)} />
-                                                        </label>
-                                                    )}
+                                                <div className="bg-slate-900 p-3 rounded-lg border border-slate-700">
+                                                    <label className="text-[10px] text-slate-400 font-bold block mb-1">Upload E-Card</label>
+                                                    <input type="file" id="staff_card_upload" accept="image/*" className="w-full text-xs text-slate-300 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500"/>
                                                 </div>
                                             </div>
                                             
@@ -713,8 +700,8 @@
                                             </div>
                                             <div className="bg-red-900/20 p-3 rounded-lg border border-red-800 mt-2"><label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={payVerified} onChange={(e)=>setPayVerified(e.target.checked)} className="w-6 h-6 accent-red-500" /><span className="text-white font-black text-sm">मैंने पेमेंट ले लिया है (Verified)</span></label></div>
                                             <div className="flex gap-3 mt-4">
-                                                <button onClick={()=>masterUpdate(selected, 'Sold', true)} disabled={!payVerified || processingId === selected.n || uploadingType} className={`flex-1 font-black py-3 rounded-xl text-lg shadow-lg btn-press flex items-center justify-center gap-2 ${payVerified ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-600'}`}>
-                                                    {processingId === selected.n ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-check"></i>} {processingId === selected.n ? "Wait..." : "VERIFY"}
+                                                <button onClick={()=>masterUpdate(selected, 'Sold', true)} disabled={!payVerified || processingId === selected.n} className={`flex-1 font-black py-3 rounded-xl text-lg shadow-lg btn-press flex items-center justify-center gap-2 ${payVerified ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-600'}`}>
+                                                    {processingId === selected.n ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-check"></i>} {processingId === selected.n ? "Please Wait..." : "VERIFY"}
                                                 </button>
                                                 <button onClick={()=>masterUpdate(selected, 'Rejected', true)} disabled={processingId === selected.n} className="flex-1 bg-red-800 text-white font-black py-3 rounded-xl text-lg shadow-lg btn-press flex items-center justify-center gap-2">
                                                     {processingId === selected.n ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-xmark"></i>} REJECT
@@ -734,7 +721,7 @@
                                     <h3 className="text-2xl font-black mb-6 text-white uppercase">#{staffSuccessModal.n} {staffSuccessModal.isReject ? 'Rejected!' : 'Verified!'}</h3>
                                     
                                     <div className="space-y-3">
-                                        <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *DPSG STAFF VERIFICATION REPORT* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी हुकुम!* 🚩\n\nप्रबंधन को सूचित किया जाता है कि एक लंबित आवेदन को सफलतापूर्वक *${staffSuccessModal.isReject ? 'REJECT' : 'VERIFY'}* कर दिया गया है。\n\n📋 *ग्राहक विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *ग्राहक का नाम:* ${staffSuccessModal.finalName || 'N/A'}\n• *जन्मतिथि (DOB):* ${staffSuccessModal.d?.dob || 'N/A'}\n• *संपर्क सूत्र:* ${staffSuccessModal.finalMob || 'N/A'}\n• *आधार नंबर:* ${staffSuccessModal.finalAdhar || 'N/A'}\n• *निवास स्थान:* ${staffSuccessModal.finalVill || 'N/A'}\n${!staffSuccessModal.isReject ? `• *पैन कार्ड (PAN):* ${staffSuccessModal.finalPan || 'N/A'}\n\n🖼️ *ग्राहक दस्तावेज़ (DOCUMENTS):*\n• *Aadhaar Front:* ${staffSuccessModal.d?.aF || 'N/A'}\n• *Aadhaar Back:* ${staffSuccessModal.d?.aB || 'N/A'}\n• *PAN Card:* ${staffSuccessModal.d?.pI || 'N/A'}\n\n💰 *वित्तीय विवरण:*\n• *कार्ड का मूल शुल्क:* ₹${staffSuccessModal.price}\n• *प्रदान की गई छूट:* ₹${staffSuccessModal.finalDisc || 0}\n• *प्राप्त अंतिम राशि:* ₹${staffSuccessModal.finalPaid}\n• *भुगतान का माध्यम:* ${staffSuccessModal.finalPayMode || 'N/A'}\n\n🛠️ *प्रशासनिक टिप्पणी:*\n• *किए गए सुधार/बदलाव:* ${staffSuccessModal.changesStr}\n` : ''}• *सत्यापन कर्ता (Staff ID):* ${staff.id}\n━━━━━━━━━━━━━━━━━━━━━━\n✅ *कार्य पूर्णता के साथ पोर्टल पर अपडेट कर दिया गया है।*`)}`} target="_blank" className="flex items-center justify-center gap-3 w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
+                                        <a href={`whatsapp://send?phone=917229874128&text=${encodeURIComponent(`🔱 *DPSG STAFF VERIFICATION REPORT* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 *जय माता दी हुकुम!* 🚩\n\nप्रबंधन को सूचित किया जाता है कि एक लंबित आवेदन को सफलतापूर्वक *${staffSuccessModal.isReject ? 'REJECT' : 'VERIFY'}* कर दिया गया है。\n\n📋 *ग्राहक विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *ग्राहक का नाम:* ${staffSuccessModal.finalName || 'N/A'}\n• *जन्मतिथि (DOB):* ${staffSuccessModal.d?.dob || 'N/A'}\n• *संपर्क सूत्र:* ${staffSuccessModal.finalMob || 'N/A'}\n• *आधार नंबर:* ${staffSuccessModal.finalAdhar || 'N/A'}\n• *निवास स्थान:* ${staffSuccessModal.finalVill || 'N/A'}\n${!staffSuccessModal.isReject ? `• *पैन कार्ड (PAN):* ${staffSuccessModal.finalPan || 'N/A'}\n\n💰 *वित्तीय विवरण:*\n• *कार्ड का मूल शुल्क:* ₹${staffSuccessModal.price}\n• *प्रदान की गई छूट:* ₹${staffSuccessModal.finalDisc || 0}\n• *प्राप्त अंतिम राशि:* ₹${staffSuccessModal.finalPaid}\n• *भुगतान का माध्यम:* ${staffSuccessModal.finalPayMode || 'N/A'}\n\n🛠️ *प्रशासनिक टिप्पणी:*\n• *किए गए सुधार/बदलाव:* ${staffSuccessModal.changesStr}\n` : ''}• *सत्यापन कर्ता (Staff ID):* ${staff.id}\n━━━━━━━━━━━━━━━━━━━━━━\n✅ *कार्य पूर्णता के साथ पोर्टल पर अपडेट कर दिया गया है।*`)}`} target="_blank" className="flex items-center justify-center gap-3 w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
                                             <i className="fa-solid fa-user-tie text-xl"></i> 1. OWNER REPORT (FULL)
                                         </a>
 
@@ -749,7 +736,7 @@
                                             </a>
                                         )}
 
-                                        <button onClick={()=>sendToGroupCopy(`🔱 *DPSG VERIFICATION ALERT (GROUP)* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\nस्थिति: *${staffSuccessModal.isReject ? 'REJECTED ❌' : 'VERIFIED ✅'}*\n\n📋 *ग्राहक विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *नाम:* ${staffSuccessModal.finalName || 'N/A'}\n• *मोबाइल:* ${staffSuccessModal.finalMob || 'N/A'}\n• *आधार:* ${staffSuccessModal.finalAdhar || 'N/A'}\n• *निवास:* ${staffSuccessModal.finalVill || 'N/A'}\n${!staffSuccessModal.isReject ? `• *पैन:* ${staffSuccessModal.finalPan || 'N/A'}\n\n🖼️ *दस्तावेज़ लिंक्स:*\n• *Aadhaar (F):* ${staffSuccessModal.d?.aF || 'N/A'}\n• *Aadhaar (B):* ${staffSuccessModal.d?.aB || 'N/A'}\n• *PAN Card:* ${staffSuccessModal.d?.pI || 'N/A'}\n` : ''}\n💰 *वित्तीय विवरण:*\n• *अंतिम भुगतान:* ₹${staffSuccessModal.finalPaid} (${staffSuccessModal.finalPayMode || 'N/A'})\n\n👨‍💼 *सत्यापन कर्ता:* ${staff.id}\n━━━━━━━━━━━━━━━━━━━━━━`)} className="flex items-center justify-center gap-3 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
+                                        <button onClick={()=>sendToGroupCopy(`🔱 *DPSG VERIFICATION ALERT (GROUP)* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\nस्थिति: *${staffSuccessModal.isReject ? 'REJECTED ❌' : 'VERIFIED ✅'}*\n\n📋 *ग्राहक विवरण:*\n• *कार्ड क्रमांक:* #${staffSuccessModal.n} (${staffSuccessModal.cat})\n• *नाम:* ${staffSuccessModal.finalName || 'N/A'}\n• *मोबाइल:* ${staffSuccessModal.finalMob || 'N/A'}\n• *आधार:* ${staffSuccessModal.finalAdhar || 'N/A'}\n• *निवास:* ${staffSuccessModal.finalVill || 'N/A'}\n${!staffSuccessModal.isReject ? `• *पैन:* ${staffSuccessModal.finalPan || 'N/A'}\n` : ''}\n💰 *वित्तीय विवरण:*\n• *अंतिम भुगतान:* ₹${staffSuccessModal.finalPaid} (${staffSuccessModal.finalPayMode || 'N/A'})\n\n👨‍💼 *सत्यापन कर्ता:* ${staff.id}\n━━━━━━━━━━━━━━━━━━━━━━`)} className="flex items-center justify-center gap-3 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl text-sm shadow-md btn-press">
                                             <i className="fa-solid fa-users text-xl"></i> 3. SEND TO WHATSAPP GROUP
                                         </button>
                                         
@@ -846,7 +833,7 @@
                         </div>
                     )}
 
-                    {/* CUSTOMER BOOKING MODAL */}
+                    {/* CUSTOMER BOOKING MODAL (1 CLICK UPLOAD - NO INDIVIDUAL UPLOAD BUTTONS) */}
                     {selected && !staff && (
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <form onSubmit={bookCard} className="glass p-6 md:p-10 w-full max-w-3xl border border-amber-500 rounded-3xl shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
@@ -855,101 +842,101 @@
                                 
                                 <div className="space-y-5">
                                     
-                                    {/* 📦 1. INDIVIDUAL UPLOAD: SELFIE 📦 */}
-                                    <div className="bg-black/50 p-4 rounded-xl border-2 border-dashed border-amber-500 text-center">
-                                        <h4 className="text-amber-400 font-black mb-3"><i className="fa-solid fa-user-circle"></i> 1. लाइव सेल्फी (Face Photo) *</h4>
-                                        {uploadingType === 'selfie' ? (
-                                            <div className="text-amber-500 font-bold animate-pulse py-4"><i className="fa-solid fa-spinner fa-spin"></i> Uploading to Drive...</div>
-                                        ) : selfieLink ? (
+                                    {/* 📦 1. NATIVE SELFIE CAMERA 📦 */}
+                                    <div className="bg-black/50 p-6 rounded-2xl border-2 border-dashed border-amber-500 text-center">
+                                        <h4 className="text-amber-400 font-black mb-4"><i className="fa-solid fa-user-circle"></i> 1. लाइव सेल्फी (Face Photo) *</h4>
+                                        {capturedImg ? (
                                             <div>
-                                                <img src={selfieLink} className="mx-auto rounded-full w-[100px] h-[100px] border-4 border-green-500 object-cover shadow-lg" />
-                                                <div className="text-green-500 font-black mt-2 text-sm bg-green-900/30 py-1 rounded-lg">✅ Uploaded Successfully</div>
-                                                <button type="button" onClick={()=>setSelfieLink(null)} className="mt-2 text-red-400 font-bold text-xs underline">✖ Retake</button>
+                                                <img src={capturedImg} className="mx-auto rounded-full w-[150px] h-[150px] border-4 border-amber-500 object-cover shadow-lg" />
+                                                <div className="flex justify-center gap-3 mt-4">
+                                                    <button type="button" onClick={()=>setEnlargedImg(capturedImg)} className="bg-blue-600 px-4 py-2 rounded-lg font-bold text-white shadow-md btn-press"><i className="fa-solid fa-eye"></i> View</button>
+                                                    <label className="bg-red-600 px-4 py-2 rounded-lg font-bold text-white shadow-md cursor-pointer btn-press"><i className="fa-solid fa-camera"></i> Retake<input type="file" accept="image/*" capture="user" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} /></label>
+                                                </div>
                                             </div>
                                         ) : (
                                             <div className="flex justify-center gap-3">
-                                                <label className="bg-amber-500 hover:bg-amber-400 px-5 py-3 rounded-xl font-black text-black shadow-lg cursor-pointer flex-1 btn-press">
-                                                    <i className="fa-solid fa-camera text-xl mb-1 block"></i> Open Camera
-                                                    <input type="file" accept="image/*" capture="user" hidden onChange={(e)=>handleIndividualUpload(e, 'selfie', setSelfieLink)} />
+                                                <label className="bg-amber-500 hover:bg-amber-400 px-6 py-4 rounded-2xl font-black text-black shadow-[0_0_20px_rgba(251,191,36,0.4)] cursor-pointer flex-1 text-lg btn-press transition-transform">
+                                                    <i className="fa-solid fa-camera text-2xl mb-1 block"></i> OPEN CAMERA
+                                                    <input type="file" accept="image/*" capture="user" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} />
                                                 </label>
-                                                <label className="bg-slate-800 border border-slate-600 px-4 py-3 rounded-xl font-bold text-slate-300 shadow-lg cursor-pointer flex-none btn-press">
+                                                <label className="bg-slate-800 border border-slate-600 px-4 py-4 rounded-2xl font-bold text-slate-300 shadow-lg cursor-pointer flex-none btn-press">
                                                     <i className="fa-solid fa-images text-xl mb-1 block"></i> Gallery
-                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleIndividualUpload(e, 'selfie', setSelfieLink)} />
+                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} />
                                                 </label>
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* 📦 2. INDIVIDUAL UPLOAD: AADHAAR FRONT 📦 */}
-                                    <div className="bg-black/40 p-4 rounded-xl border border-dashed border-indigo-500 text-center">
+                                    {/* 📦 2. NATIVE AADHAAR FRONT 📦 */}
+                                    <div className="bg-black/40 p-5 rounded-xl border border-dashed border-indigo-500 text-center">
                                         <h4 className="text-indigo-400 font-black mb-3 text-sm"><i className="fa-regular fa-id-card"></i> 2. आधार कार्ड (Front)</h4>
-                                        {uploadingType === 'aFront' ? (
-                                            <div className="text-indigo-400 font-bold animate-pulse py-4"><i className="fa-solid fa-spinner fa-spin"></i> Uploading...</div>
-                                        ) : aFrontLink ? (
+                                        {aFrontImg ? (
                                             <div>
-                                                <img src={aFrontLink} className="mx-auto rounded-lg h-[80px] border-2 border-green-500 object-cover shadow-lg" />
-                                                <div className="text-green-500 font-black mt-2 text-sm">✅ Uploaded</div>
-                                                <button type="button" onClick={()=>setAFrontLink(null)} className="mt-1 text-red-400 font-bold text-xs underline">✖ Remove</button>
+                                                <img src={aFrontImg} className="mx-auto rounded-lg w-full max-w-[250px] border-2 border-indigo-500 shadow-md" />
+                                                <div className="flex justify-center gap-2 mt-3">
+                                                    <button type="button" onClick={()=>setEnlargedImg(aFrontImg)} className="bg-blue-600 px-4 py-1.5 rounded-lg text-xs font-bold text-white btn-press"><i className="fa-solid fa-eye"></i> View</button>
+                                                    <label className="bg-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer btn-press">Retake<input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} /></label>
+                                                </div>
                                             </div>
                                         ) : (
                                             <div className="flex justify-center gap-3">
-                                                <label className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                                <label className="bg-indigo-600 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
                                                     <i className="fa-solid fa-camera mb-1 block text-lg"></i> Scan Front
-                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleIndividualUpload(e, 'aFront', setAFrontLink)} />
+                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} />
                                                 </label>
-                                                <label className="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                                <label className="bg-slate-700 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
                                                     <i className="fa-solid fa-upload mb-1 block text-lg"></i> Upload
-                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleIndividualUpload(e, 'aFront', setAFrontLink)} />
+                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} />
                                                 </label>
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* 📦 3. INDIVIDUAL UPLOAD: AADHAAR BACK 📦 */}
-                                    <div className="bg-black/40 p-4 rounded-xl border border-dashed border-indigo-500 text-center">
+                                    {/* 📦 3. NATIVE AADHAAR BACK 📦 */}
+                                    <div className="bg-black/40 p-5 rounded-xl border border-dashed border-indigo-500 text-center">
                                         <h4 className="text-indigo-400 font-black mb-3 text-sm"><i className="fa-regular fa-id-card"></i> 3. आधार कार्ड (Back)</h4>
-                                        {uploadingType === 'aBack' ? (
-                                            <div className="text-indigo-400 font-bold animate-pulse py-4"><i className="fa-solid fa-spinner fa-spin"></i> Uploading...</div>
-                                        ) : aBackLink ? (
+                                        {aBackImg ? (
                                             <div>
-                                                <img src={aBackLink} className="mx-auto rounded-lg h-[80px] border-2 border-green-500 object-cover shadow-lg" />
-                                                <div className="text-green-500 font-black mt-2 text-sm">✅ Uploaded</div>
-                                                <button type="button" onClick={()=>setABackLink(null)} className="mt-1 text-red-400 font-bold text-xs underline">✖ Remove</button>
+                                                <img src={aBackImg} className="mx-auto rounded-lg w-full max-w-[250px] border-2 border-indigo-500 shadow-md" />
+                                                <div className="flex justify-center gap-2 mt-3">
+                                                    <button type="button" onClick={()=>setEnlargedImg(aBackImg)} className="bg-blue-600 px-4 py-1.5 rounded-lg text-xs font-bold text-white btn-press"><i className="fa-solid fa-eye"></i> View</button>
+                                                    <label className="bg-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer btn-press">Retake<input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} /></label>
+                                                </div>
                                             </div>
                                         ) : (
                                             <div className="flex justify-center gap-3">
-                                                <label className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                                <label className="bg-indigo-600 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
                                                     <i className="fa-solid fa-camera mb-1 block text-lg"></i> Scan Back
-                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleIndividualUpload(e, 'aBack', setABackLink)} />
+                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} />
                                                 </label>
-                                                <label className="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                                <label className="bg-slate-700 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
                                                     <i className="fa-solid fa-upload mb-1 block text-lg"></i> Upload
-                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleIndividualUpload(e, 'aBack', setABackLink)} />
+                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} />
                                                 </label>
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* 📦 4. INDIVIDUAL UPLOAD: PAN CARD 📦 */}
-                                    <div className="bg-black/40 p-4 rounded-xl border border-dashed border-red-500 text-center">
+                                    {/* 📦 4. NATIVE PAN CARD 📦 */}
+                                    <div className="bg-black/40 p-5 rounded-xl border border-dashed border-red-500 text-center">
                                         <h4 className="text-red-400 font-black mb-3 text-sm"><i className="fa-solid fa-credit-card"></i> 4. पैन कार्ड (PAN Card)</h4>
-                                        {uploadingType === 'pan' ? (
-                                            <div className="text-red-400 font-bold animate-pulse py-4"><i className="fa-solid fa-spinner fa-spin"></i> Uploading...</div>
-                                        ) : panLink ? (
+                                        {panImg ? (
                                             <div>
-                                                <img src={panLink} className="mx-auto rounded-lg h-[80px] border-2 border-green-500 object-cover shadow-lg" />
-                                                <div className="text-green-500 font-black mt-2 text-sm">✅ Uploaded</div>
-                                                <button type="button" onClick={()=>setPanLink(null)} className="mt-1 text-red-400 font-bold text-xs underline">✖ Remove</button>
+                                                <img src={panImg} className="mx-auto rounded-lg w-full max-w-[250px] border-2 border-red-500 shadow-md" />
+                                                <div className="flex justify-center gap-2 mt-3">
+                                                    <button type="button" onClick={()=>setEnlargedImg(panImg)} className="bg-blue-600 px-4 py-1.5 rounded-lg text-xs font-bold text-white btn-press"><i className="fa-solid fa-eye"></i> View</button>
+                                                    <label className="bg-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer btn-press">Retake<input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} /></label>
+                                                </div>
                                             </div>
                                         ) : (
                                             <div className="flex justify-center gap-3">
-                                                <label className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                                <label className="bg-red-600 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
                                                     <i className="fa-solid fa-camera mb-1 block text-lg"></i> Scan PAN
-                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleIndividualUpload(e, 'pan', setPanLink)} />
+                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} />
                                                 </label>
-                                                <label className="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                                <label className="bg-slate-700 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
                                                     <i className="fa-solid fa-upload mb-1 block text-lg"></i> Upload
-                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleIndividualUpload(e, 'pan', setPanLink)} />
+                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} />
                                                 </label>
                                             </div>
                                         )}
@@ -977,10 +964,10 @@
                                         <div><label className="text-xs font-bold text-green-400 ml-1"><i className="fa-solid fa-hashtag"></i> Txn ID (रेफरेंस) *</label><input name="Payment_Ref" required placeholder="UTR Number / Payment ID" className="w-full bg-black p-3 rounded-xl font-black border border-green-500 text-green-400 text-base focus:border-amber-500 outline-none shadow-inner" /></div>
                                     </div>
                                     
-                                    <button type="submit" disabled={processingId === "BOOKING" || uploadingType !== null} className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black py-4 rounded-xl text-xl md:text-2xl uppercase italic shadow-lg mt-2 disabled:opacity-50 btn-press flex items-center justify-center gap-2">
-                                        {processingId === "BOOKING" ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-paper-plane"></i>} {processingId === "BOOKING" ? "PROCESSING... ⏳" : "CONFIRM BOOKING 🔱"}
+                                    <button type="submit" disabled={processingId === "BOOKING" || !capturedImg} className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black py-4 rounded-xl text-xl md:text-2xl uppercase italic shadow-lg mt-2 disabled:opacity-50 btn-press flex items-center justify-center gap-2">
+                                        {processingId === "BOOKING" ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-paper-plane"></i>} {processingId === "BOOKING" ? "UPLOADING SECURELY... ⏳" : "CONFIRM BOOKING 🔱"}
                                     </button>
-                                    {!selfieLink && <p className="text-red-500 text-center font-bold text-[10px] mt-1">बुकिंग के लिए लाइव सेल्फी पहले अपलोड करें।</p>}
+                                    {!capturedImg && <p className="text-red-500 text-center font-bold text-[10px] mt-1">बुकिंग के लिए लाइव सेल्फी खींचना अनिवार्य है।</p>}
                                 </div>
                             </form>
                         </div>
