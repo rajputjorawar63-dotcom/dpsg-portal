@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="hi" translate="no">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DPSG - Digital Problem Solution Group</title>
+    <meta name="google" content="notranslate"> <title>DPSG - Digital Problem Solution Group</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -53,7 +53,7 @@
         const { useState, useEffect } = React;
         
         // 🚀 आपकी न्यू और 100% वर्किंग मास्टर लिंक 🚀
-        const APP_URL = "https://script.google.com/macros/s/AKfycbxnN6sNDvXpOkgl1YRT_Yk4GlF2q1w0oyjg7Ct_I2uTJCX497E8zxvb3i4UTHsx3NWuNg/exec";
+        const APP_URL = "https://script.google.com/macros/s/AKfycbyEASFG0_ep44aMqX7h8EciDwzx687jaVJlc43ETFog8Idqvpf0PZAkHPIn1Ms7h3AiWA/exec";
         
         const COMPANY = "Digital Problem Solution Group";
         const SLOGAN = "समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा";
@@ -113,7 +113,7 @@
             {r:51, n:"Electric Iron", d:"कपड़ों पर लाएं परफेक्ट चमक।"}
         ];
 
-        // 🛠️ IMAGE COMPRESSOR MACHINE (तबाही रोकने के लिए - गैलरी और कैमरा दोनों के लिए) 🛠️
+        // 🛠️ IMAGE COMPRESSOR MACHINE 🛠️
         const compressImage = (file) => {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -122,7 +122,7 @@
                     img.src = event.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 800; // फोटो को हल्का करने की मशीन
+                        const MAX_WIDTH = 800;
                         const MAX_HEIGHT = 800;
                         let width = img.width;
                         let height = img.height;
@@ -135,7 +135,7 @@
                         canvas.width = width; canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.6)); // 60% Quality - Very Light Size (100KB)
+                        resolve(canvas.toDataURL('image/jpeg', 0.6)); 
                     };
                 };
                 reader.readAsDataURL(file);
@@ -179,13 +179,16 @@
             const [discount, setDiscount] = useState(0);
             const [payVerified, setPayVerified] = useState(false);
             
-            // 📸 4 डिब्बों की असली इमेजेस 📸
-            const [enlargedImg, setEnlargedImg] = useState(null);
-            const [capturedImg, setCapturedImg] = useState(null);    
-            const [aFrontImg, setAFrontImg] = useState(null);        
-            const [aBackImg, setABackImg] = useState(null);          
-            const [panImg, setPanImg] = useState(null);              
+            // 📸 अलग-अलग अपलोड के लिए लिंक्स का स्टेट (NEW LOGIC) 📸
+            const [selfieLink, setSelfieLink] = useState(null);
+            const [aFrontLink, setAFrontLink] = useState(null);
+            const [aBackLink, setABackLink] = useState(null);
+            const [panLink, setPanLink] = useState(null);
+            const [billLink, setBillLink] = useState(null);
+            const [ecardLink, setEcardLink] = useState(null);
+            const [uploadingType, setUploadingType] = useState(null);
 
+            const [enlargedImg, setEnlargedImg] = useState(null);
             const [showLogin, setShowLogin] = useState(false);
             const [showSalesBoard, setShowSalesBoard] = useState(false);
             const [soldListData, setSoldListData] = useState([]);
@@ -194,7 +197,6 @@
             const [generatedOtp, setGeneratedOtp] = useState("");
             const [staffTempCreds, setStaffTempCreds] = useState(null);
 
-            // 🌟 डेटा लाने का लॉजिक 🌟
             const loadData = async () => {
                 try {
                     const res = await fetch(APP_URL + "?action=GET_DATA&_cb=" + new Date().getTime());
@@ -214,9 +216,7 @@
                                    s = "Sold";
                                    if(currentLocks.has(i)) { currentLocks.delete(i); locksChanged = true; }
                                }
-                               else if(rawS.includes("pending")) {
-                                   s = "Pending";
-                               }
+                               else if(rawS.includes("pending")) { s = "Pending"; }
                                else if(rawS.includes("reject") || rawS.includes("available") || rawS.includes("अस्वीकृत")) {
                                    s = "Available";
                                    if(currentLocks.has(i)) { currentLocks.delete(i); locksChanged = true; }
@@ -264,14 +264,34 @@
                 } catch(e) { alert("बिक्री बोर्ड लोड नहीं हो पाया!"); }
             };
 
-            // 📸 नेटिव कैमरे का फंक्शन + इमेज कंप्रेसर (ऑटोमैटिक) 📸
-            const handleNativeCapture = async (e, setterFn) => {
+            // 🚀 INDIVIDUAL IMAGE UPLOADER (THE BULLETPROOF LOGIC) 🚀
+            const handleIndividualUpload = async (e, type, linkSetter) => {
                 const file = e.target.files[0];
-                if(file) {
-                    // भारी फोटो को यहीं हल्का कर देगा, चाहे कैमरा हो या गैलरी
+                if(!file) return;
+
+                setUploadingType(type); // Start Loading Spinner for this specific box
+                try {
                     const compressedBase64 = await compressImage(file);
-                    setterFn(compressedBase64);
+                    
+                    const params = new URLSearchParams();
+                    params.append("action", "UPLOAD_IMAGE");
+                    params.append("imgType", type);
+                    params.append("fileName", type + "_" + new Date().getTime());
+                    params.append("base64Data", compressedBase64);
+
+                    const response = await fetch(APP_URL, { method: 'POST', body: params });
+                    const link = await response.text();
+
+                    if(link && link.startsWith('http')) {
+                        linkSetter(link); // Save link and show Green Tick ✅
+                    } else {
+                        alert("❌ फोटो अपलोड फेल हो गई, कृपया दोबारा प्रयास करें।");
+                    }
+                } catch(err) {
+                    alert("❌ नेटवर्क या सर्वर एरर: " + err.message);
                 }
+                setUploadingType(null); // Stop Spinner
+                e.target.value = ""; // Reset Input
             };
 
             const handleLoginAttempt = async () => {
@@ -284,9 +304,8 @@
                         const params = new URLSearchParams();
                         params.append('action', 'SEND_OTP');
                         params.append('staffEmail', 'Chanchalbaisa722@gmail.com');
-                        
                         await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' });
-                        setGeneratedOtp("123456"); // Fallback for security mode
+                        setGeneratedOtp("123456"); 
                         setOtpStep(true);
                         setProcessingId(null);
                         alert("सुरक्षा अलर्ट: ओनर की ईमेल पर OTP भेज दिया गया है।");
@@ -294,9 +313,7 @@
                         setProcessingId(null);
                         alert("OTP भेजने में तकनीकी समस्या आई।");
                     }
-                } else {
-                    alert("Access Denied: Wrong ID or Password!");
-                }
+                } else { alert("Access Denied: Wrong ID or Password!"); }
             };
 
             const handleOtpVerify = () => {
@@ -306,14 +323,17 @@
                 setOtpStep(false);
             };
 
-            // 🚀 एकदम पुराना और मज़बूत बुकिंग सिस्टम (URLSearchParams) 🚀
+            // 🚀 CRASH-PROOF BOOKING SYSTEM (ONLY SENDS TEXT & LINKS) 🚀
             const bookCard = async (e) => {
                 e.preventDefault(); 
+                if(!selfieLink) {
+                    alert("कृपया अपनी लाइव सेल्फी (Face Photo) अपलोड करें!");
+                    return;
+                }
                 setProcessingId("BOOKING");
                 const fd = new FormData(e.target); 
                 const n = selected.n;
                 
-                // पुरानी पैकिंग जो कभी क्रैश नहीं होती
                 const params = new URLSearchParams();
                 params.append("action", "BOOK");
                 params.append("S_No", n.toString());
@@ -321,25 +341,20 @@
                 params.append("Base_Price", selected.price);
                 params.append("Customer_Name", fd.get("Customer_Name"));
                 params.append("Mobile", fd.get("Mobile"));
-                params.append("DOB", fd.get("DOB") || ""); // ✅ DOB Saved
+                params.append("DOB", fd.get("DOB") || ""); 
                 params.append("Village", fd.get("Village") || "");
                 params.append("Aadhaar", fd.get("Aadhaar"));
                 params.append("PAN", fd.get("PAN") || "");
                 params.append("Payment_Mode", fd.get("Payment_Mode"));
                 params.append("Payment_Ref", fd.get("Payment_Ref") || "");
                 
-                if(capturedImg) params.append("selfie", capturedImg); 
-                if(aFrontImg) params.append("aFront", aFrontImg); 
-                if(aBackImg) params.append("aBack", aBackImg); 
-                if(panImg) params.append("pan", panImg); 
+                // 🟢 सिर्फ छोटी लिंक्स जा रही हैं, कोई भारी फोटो नहीं 🟢
+                params.append("selfieLink", selfieLink || ""); 
+                params.append("aFrontLink", aFrontLink || ""); 
+                params.append("aBackLink", aBackLink || ""); 
+                params.append("panLink", panLink || ""); 
 
-                try { 
-                    await fetch(APP_URL, { 
-                        method: 'POST', 
-                        body: params, 
-                        mode: 'no-cors'
-                    }); 
-                } catch(err){ console.log(err); }
+                try { await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' }); } catch(err){ console.log(err); }
                 finishBooking(fd, n);
             };
 
@@ -350,11 +365,11 @@
                     dob: fd.get("DOB"), adhar: fd.get("Aadhaar"), pay: fd.get("Payment_Mode"), pan: fd.get("PAN") || "N/A",
                     vill: fd.get("Village") || "N/A", ref: fd.get("Payment_Ref") || "N/A", token: `DPSG-TK-${n.toString().padStart(3,'0')}`
                 });
-                setSelected(null); setCapturedImg(null); setAFrontImg(null); setABackImg(null); setPanImg(null);
+                closeModalAndReset();
                 setProcessingId(null); setTimeout(loadData, 1500);
             };
 
-            // 🚀 स्मार्ट मास्टर अपडेट (URLSearchParams के साथ) 🚀
+            // 🚀 SMART MASTER UPDATE 🚀
             const masterUpdate = async (c, status, isInsideForm = false) => {
                 setProcessingId(c.n);
                 setCards(prev => prev.map(card => card.n === c.n ? { ...card, status: status === 'Sold' ? 'Sold' : 'Available' } : card));
@@ -394,26 +409,13 @@
                 params.append("Paid", sPaid);
                 params.append("Discount", finalDisc);
 
-                // ✅ स्टाफ डाक्यूमेंट अपलोड फिक्स ✅
-                if(isInsideForm) {
-                    const billInput = document.getElementById('staff_bill_upload');
-                    const cardInput = document.getElementById('staff_card_upload');
-                    
-                    if(billInput && billInput.files[0]) {
-                        let b64 = await compressImage(billInput.files[0]);
-                        params.append("bill", b64);
-                    }
-                    if(cardInput && cardInput.files[0]) {
-                        let c64 = await compressImage(cardInput.files[0]);
-                        params.append("ecard", c64);
-                    }
-                }
+                // ✅ स्टाफ के डाक्यूमेंट्स भी लिंक के रूप में जाएंगे
+                params.append("billLink", billLink || "");
+                params.append("ecardLink", ecardLink || "");
 
-                try { 
-                    await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' }); 
-                } catch(error) { console.error(error); }
+                try { await fetch(APP_URL, { method: 'POST', body: params, mode: 'no-cors' }); } catch(error) { console.error(error); }
                 
-                setProcessingId(null); setSelected(null); setVerifyOutsideModal(null); setPayVerified(false); setCapturedImg(null);
+                setProcessingId(null); closeModalAndReset(); setVerifyOutsideModal(null); setPayVerified(false);
                 
                 if(status === 'Sold') {
                     setSessionStats(prev => {
@@ -429,6 +431,12 @@
                     setStaffSuccessModal({...c, isReject: true, finalName: sName, finalMob: sMob}); 
                 }
                 setTimeout(loadData, 1500);
+            };
+
+            const closeModalAndReset = () => {
+                setSelected(null);
+                setSelfieLink(null); setAFrontLink(null); setABackLink(null); setPanLink(null);
+                setBillLink(null); setEcardLink(null);
             };
 
             const handleOutsideVerify = (c) => { setPayVerified(false); setVerifyOutsideModal(c); };
@@ -541,7 +549,7 @@
                                                 <button onClick={() => {if(!staffUpi){alert("Please add UPI ID first!");return;} setQuickQrCard(c);}} disabled={processingId === c.n} className="bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">
                                                     <i className="fa-solid fa-qrcode"></i> Pay QR
                                                 </button>
-                                                <button onClick={() => { setSelected(c); setPayVerified(false); setPayMode(c.d.pay || ""); setDiscount(parseInt(c.d.discount || 0)); setCapturedImg(null); }} disabled={processingId === c.n} className="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">
+                                                <button onClick={() => { setSelected(c); setPayVerified(false); setPayMode(c.d.pay || ""); setDiscount(parseInt(c.d.discount || 0)); }} disabled={processingId === c.n} className="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">
                                                     <i className="fa-solid fa-pen"></i> Edit Details
                                                 </button>
                                             </div>
@@ -641,7 +649,7 @@
                         {selected && (
                             <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto pb-24">
                                 <div className="glass p-6 md:p-10 w-full max-w-5xl border border-amber-500 rounded-3xl bg-[#0a0a0a] shadow-2xl relative my-auto mt-20 md:mt-auto">
-                                    <button onClick={() => setSelected(null)} className="absolute top-4 right-6 text-4xl text-slate-400 hover:text-white btn-press">&times;</button>
+                                    <button onClick={closeModalAndReset} className="absolute top-4 right-6 text-4xl text-slate-400 hover:text-white btn-press">&times;</button>
                                     <div className="text-center mb-6"><h3 className="text-4xl font-black text-amber-500 italic mb-1">#{selected.n}</h3><span className="bg-amber-500 text-black px-4 py-1 rounded-full text-sm font-black">{selected.cat}</span></div>
                                     <div className="grid md:grid-cols-2 gap-8">
                                         <div className="flex flex-col items-center justify-center bg-black/40 p-5 rounded-2xl border border-slate-800 shadow-inner">
@@ -663,16 +671,28 @@
                                                 {selected.d.pI && selected.d.pI.startsWith('http') && <button onClick={() => setEnlargedImg(selected.d.pI)} className="bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold btn-press shadow-md"><i className="fa-solid fa-credit-card"></i> PAN Card</button>}
                                             </div>
 
-                                            {/* STAFF DOCUMENT UPLOAD */}
+                                            {/* STAFF DOCUMENT UPLOAD (INDIVIDUAL UPLOAD LOGIC) */}
                                             <div className="w-full mt-4 space-y-3 border-t border-slate-700 pt-4">
-                                                <h4 className="text-amber-500 font-bold text-sm text-center">Staff Uploads</h4>
-                                                <div className="bg-slate-900 p-3 rounded-lg border border-slate-700">
-                                                    <label className="text-[10px] text-slate-400 font-bold block mb-1">Upload Bill Receipt</label>
-                                                    <input type="file" id="staff_bill_upload" accept="image/*" className="w-full text-xs text-slate-300 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-black hover:file:bg-amber-400"/>
+                                                <h4 className="text-amber-500 font-bold text-sm text-center mb-2"><i className="fa-solid fa-cloud-arrow-up"></i> Staff Uploads</h4>
+                                                
+                                                <div className="bg-slate-900 p-3 rounded-lg border border-slate-700 flex justify-between items-center">
+                                                    <span className="text-[10px] text-slate-400 font-bold">1. Upload Bill</span>
+                                                    {uploadingType === 'bill' ? <span className="text-amber-500 text-xs font-bold animate-pulse">Uploading...</span> : billLink ? <span className="text-green-500 text-xs font-bold">✅ Done</span> : (
+                                                        <label className="bg-amber-600 hover:bg-amber-500 px-3 py-1.5 rounded text-white text-[10px] font-bold cursor-pointer btn-press">
+                                                            <i className="fa-solid fa-receipt"></i> Choose
+                                                            <input type="file" accept="image/*" hidden onChange={(e)=>handleIndividualUpload(e, 'bill', setBillLink)} />
+                                                        </label>
+                                                    )}
                                                 </div>
-                                                <div className="bg-slate-900 p-3 rounded-lg border border-slate-700">
-                                                    <label className="text-[10px] text-slate-400 font-bold block mb-1">Upload E-Card</label>
-                                                    <input type="file" id="staff_card_upload" accept="image/*" className="w-full text-xs text-slate-300 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500"/>
+
+                                                <div className="bg-slate-900 p-3 rounded-lg border border-slate-700 flex justify-between items-center">
+                                                    <span className="text-[10px] text-slate-400 font-bold">2. Upload E-Card</span>
+                                                    {uploadingType === 'ecard' ? <span className="text-amber-500 text-xs font-bold animate-pulse">Uploading...</span> : ecardLink ? <span className="text-green-500 text-xs font-bold">✅ Done</span> : (
+                                                        <label className="bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded text-white text-[10px] font-bold cursor-pointer btn-press">
+                                                            <i className="fa-solid fa-id-badge"></i> Choose
+                                                            <input type="file" accept="image/*" hidden onChange={(e)=>handleIndividualUpload(e, 'ecard', setEcardLink)} />
+                                                        </label>
+                                                    )}
                                                 </div>
                                             </div>
                                             
@@ -693,8 +713,8 @@
                                             </div>
                                             <div className="bg-red-900/20 p-3 rounded-lg border border-red-800 mt-2"><label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={payVerified} onChange={(e)=>setPayVerified(e.target.checked)} className="w-6 h-6 accent-red-500" /><span className="text-white font-black text-sm">मैंने पेमेंट ले लिया है (Verified)</span></label></div>
                                             <div className="flex gap-3 mt-4">
-                                                <button onClick={()=>masterUpdate(selected, 'Sold', true)} disabled={!payVerified || processingId === selected.n} className={`flex-1 font-black py-3 rounded-xl text-lg shadow-lg btn-press flex items-center justify-center gap-2 ${payVerified ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-600'}`}>
-                                                    {processingId === selected.n ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-check"></i>} {processingId === selected.n ? "Please Wait..." : "VERIFY"}
+                                                <button onClick={()=>masterUpdate(selected, 'Sold', true)} disabled={!payVerified || processingId === selected.n || uploadingType} className={`flex-1 font-black py-3 rounded-xl text-lg shadow-lg btn-press flex items-center justify-center gap-2 ${payVerified ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-600'}`}>
+                                                    {processingId === selected.n ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-check"></i>} {processingId === selected.n ? "Wait..." : "VERIFY"}
                                                 </button>
                                                 <button onClick={()=>masterUpdate(selected, 'Rejected', true)} disabled={processingId === selected.n} className="flex-1 bg-red-800 text-white font-black py-3 rounded-xl text-lg shadow-lg btn-press flex items-center justify-center gap-2">
                                                     {processingId === selected.n ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-xmark"></i>} REJECT
@@ -706,7 +726,7 @@
                             </div>
                         )}
 
-                        {/* 📍 STAFF SUCCESS POPUP (WITH FULL DOCUMENT LINKS FOR WHATSAPP) 📍 */}
+                        {/* 📍 STAFF SUCCESS POPUP 📍 */}
                         {staffSuccessModal && (
                             <div className="fixed inset-0 z-[300] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md pb-safe">
                                 <div className={`glass p-6 md:p-8 max-w-md w-full text-center border-t-8 rounded-3xl bg-[#0a0a0a] shadow-[0_0_30px_rgba(59,130,246,0.3)] ${staffSuccessModal.isReject ? 'border-red-500' : 'border-blue-500'}`}>
@@ -739,12 +759,6 @@
                             </div>
                         )}
                         
-                        {enlargedImg && (
-                            <div className="fixed inset-0 z-[500] bg-black/95 flex items-center justify-center p-4 backdrop-blur-xl" onClick={() => setEnlargedImg(null)}>
-                                <button onClick={() => setEnlargedImg(null)} className="absolute top-5 right-5 text-white text-5xl font-black hover:text-red-500 transition-colors">&times;</button>
-                                <img src={enlargedImg} className="max-w-full max-h-[90vh] rounded-2xl border-4 border-amber-500 shadow-[0_0_50px_rgba(251,191,36,0.5)] object-contain" />
-                            </div>
-                        )}
                     </div>
                 );
             }
@@ -832,117 +846,116 @@
                         </div>
                     )}
 
+                    {/* CUSTOMER BOOKING MODAL */}
                     {selected && !staff && (
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <form onSubmit={bookCard} className="glass p-6 md:p-10 w-full max-w-3xl border border-amber-500 rounded-3xl shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
-                                <button type="button" onClick={() => {
-                                    setSelected(null); setCapturedImg(null); setAFrontImg(null); setABackImg(null); setPanImg(null);
-                                }} className="absolute top-4 right-6 text-4xl text-slate-400 hover:text-white btn-press">&times;</button>
+                                <button type="button" onClick={closeModalAndReset} className="absolute top-4 right-6 text-4xl text-slate-400 hover:text-white btn-press">&times;</button>
                                 <div className="text-center mb-6"><h3 className="text-3xl md:text-5xl font-black text-amber-500 mb-1 uppercase">CARD #{selected.n}</h3><span className="bg-amber-500 text-black px-4 py-1 rounded-full text-sm font-black">{selected.cat} | ₹{selected.price}</span></div>
                                 
                                 <div className="space-y-5">
                                     
-                                    {/* 📦 1. NATIVE SELFIE CAMERA 📦 */}
-                                    <div className="bg-black/50 p-6 rounded-2xl border-2 border-dashed border-amber-500 text-center">
-                                        <h4 className="text-amber-400 font-black mb-4"><i className="fa-solid fa-user-circle"></i> 1. लाइव सेल्फी (Face Photo) *</h4>
-                                        {capturedImg ? (
+                                    {/* 📦 1. INDIVIDUAL UPLOAD: SELFIE 📦 */}
+                                    <div className="bg-black/50 p-4 rounded-xl border-2 border-dashed border-amber-500 text-center">
+                                        <h4 className="text-amber-400 font-black mb-3"><i className="fa-solid fa-user-circle"></i> 1. लाइव सेल्फी (Face Photo) *</h4>
+                                        {uploadingType === 'selfie' ? (
+                                            <div className="text-amber-500 font-bold animate-pulse py-4"><i className="fa-solid fa-spinner fa-spin"></i> Uploading to Drive...</div>
+                                        ) : selfieLink ? (
                                             <div>
-                                                <img src={capturedImg} className="mx-auto rounded-full w-[150px] h-[150px] border-4 border-amber-500 object-cover shadow-lg" />
-                                                <div className="flex justify-center gap-3 mt-4">
-                                                    <button type="button" onClick={()=>setEnlargedImg(capturedImg)} className="bg-blue-600 px-4 py-2 rounded-lg font-bold text-white shadow-md btn-press"><i className="fa-solid fa-eye"></i> View</button>
-                                                    <label className="bg-red-600 px-4 py-2 rounded-lg font-bold text-white shadow-md cursor-pointer btn-press"><i className="fa-solid fa-camera"></i> Retake<input type="file" accept="image/*" capture="user" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} /></label>
-                                                </div>
+                                                <img src={selfieLink} className="mx-auto rounded-full w-[100px] h-[100px] border-4 border-green-500 object-cover shadow-lg" />
+                                                <div className="text-green-500 font-black mt-2 text-sm bg-green-900/30 py-1 rounded-lg">✅ Uploaded Successfully</div>
+                                                <button type="button" onClick={()=>setSelfieLink(null)} className="mt-2 text-red-400 font-bold text-xs underline">✖ Retake</button>
                                             </div>
                                         ) : (
                                             <div className="flex justify-center gap-3">
-                                                <label className="bg-amber-500 hover:bg-amber-400 px-6 py-4 rounded-2xl font-black text-black shadow-[0_0_20px_rgba(251,191,36,0.4)] cursor-pointer flex-1 text-lg btn-press transition-transform">
-                                                    <i className="fa-solid fa-camera text-2xl mb-1 block"></i> OPEN CAMERA
-                                                    <input type="file" accept="image/*" capture="user" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} />
+                                                <label className="bg-amber-500 hover:bg-amber-400 px-5 py-3 rounded-xl font-black text-black shadow-lg cursor-pointer flex-1 btn-press">
+                                                    <i className="fa-solid fa-camera text-xl mb-1 block"></i> Open Camera
+                                                    <input type="file" accept="image/*" capture="user" hidden onChange={(e)=>handleIndividualUpload(e, 'selfie', setSelfieLink)} />
                                                 </label>
-                                                <label className="bg-slate-800 border border-slate-600 px-4 py-4 rounded-2xl font-bold text-slate-300 shadow-lg cursor-pointer flex-none btn-press">
+                                                <label className="bg-slate-800 border border-slate-600 px-4 py-3 rounded-xl font-bold text-slate-300 shadow-lg cursor-pointer flex-none btn-press">
                                                     <i className="fa-solid fa-images text-xl mb-1 block"></i> Gallery
-                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} />
+                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleIndividualUpload(e, 'selfie', setSelfieLink)} />
                                                 </label>
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* 📦 2. NATIVE AADHAAR FRONT 📦 */}
-                                    <div className="bg-black/40 p-5 rounded-xl border border-dashed border-indigo-500 text-center">
+                                    {/* 📦 2. INDIVIDUAL UPLOAD: AADHAAR FRONT 📦 */}
+                                    <div className="bg-black/40 p-4 rounded-xl border border-dashed border-indigo-500 text-center">
                                         <h4 className="text-indigo-400 font-black mb-3 text-sm"><i className="fa-regular fa-id-card"></i> 2. आधार कार्ड (Front)</h4>
-                                        {aFrontImg ? (
+                                        {uploadingType === 'aFront' ? (
+                                            <div className="text-indigo-400 font-bold animate-pulse py-4"><i className="fa-solid fa-spinner fa-spin"></i> Uploading...</div>
+                                        ) : aFrontLink ? (
                                             <div>
-                                                <img src={aFrontImg} className="mx-auto rounded-lg w-full max-w-[250px] border-2 border-indigo-500 shadow-md" />
-                                                <div className="flex justify-center gap-2 mt-3">
-                                                    <button type="button" onClick={()=>setEnlargedImg(aFrontImg)} className="bg-blue-600 px-4 py-1.5 rounded-lg text-xs font-bold text-white btn-press"><i className="fa-solid fa-eye"></i> View</button>
-                                                    <label className="bg-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer btn-press">Retake<input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} /></label>
-                                                </div>
+                                                <img src={aFrontLink} className="mx-auto rounded-lg h-[80px] border-2 border-green-500 object-cover shadow-lg" />
+                                                <div className="text-green-500 font-black mt-2 text-sm">✅ Uploaded</div>
+                                                <button type="button" onClick={()=>setAFrontLink(null)} className="mt-1 text-red-400 font-bold text-xs underline">✖ Remove</button>
                                             </div>
                                         ) : (
                                             <div className="flex justify-center gap-3">
-                                                <label className="bg-indigo-600 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                                <label className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
                                                     <i className="fa-solid fa-camera mb-1 block text-lg"></i> Scan Front
-                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} />
+                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleIndividualUpload(e, 'aFront', setAFrontLink)} />
                                                 </label>
-                                                <label className="bg-slate-700 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                                <label className="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
                                                     <i className="fa-solid fa-upload mb-1 block text-lg"></i> Upload
-                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} />
+                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleIndividualUpload(e, 'aFront', setAFrontLink)} />
                                                 </label>
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* 📦 3. NATIVE AADHAAR BACK 📦 */}
-                                    <div className="bg-black/40 p-5 rounded-xl border border-dashed border-indigo-500 text-center">
+                                    {/* 📦 3. INDIVIDUAL UPLOAD: AADHAAR BACK 📦 */}
+                                    <div className="bg-black/40 p-4 rounded-xl border border-dashed border-indigo-500 text-center">
                                         <h4 className="text-indigo-400 font-black mb-3 text-sm"><i className="fa-regular fa-id-card"></i> 3. आधार कार्ड (Back)</h4>
-                                        {aBackImg ? (
+                                        {uploadingType === 'aBack' ? (
+                                            <div className="text-indigo-400 font-bold animate-pulse py-4"><i className="fa-solid fa-spinner fa-spin"></i> Uploading...</div>
+                                        ) : aBackLink ? (
                                             <div>
-                                                <img src={aBackImg} className="mx-auto rounded-lg w-full max-w-[250px] border-2 border-indigo-500 shadow-md" />
-                                                <div className="flex justify-center gap-2 mt-3">
-                                                    <button type="button" onClick={()=>setEnlargedImg(aBackImg)} className="bg-blue-600 px-4 py-1.5 rounded-lg text-xs font-bold text-white btn-press"><i className="fa-solid fa-eye"></i> View</button>
-                                                    <label className="bg-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer btn-press">Retake<input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} /></label>
-                                                </div>
+                                                <img src={aBackLink} className="mx-auto rounded-lg h-[80px] border-2 border-green-500 object-cover shadow-lg" />
+                                                <div className="text-green-500 font-black mt-2 text-sm">✅ Uploaded</div>
+                                                <button type="button" onClick={()=>setABackLink(null)} className="mt-1 text-red-400 font-bold text-xs underline">✖ Remove</button>
                                             </div>
                                         ) : (
                                             <div className="flex justify-center gap-3">
-                                                <label className="bg-indigo-600 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                                <label className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
                                                     <i className="fa-solid fa-camera mb-1 block text-lg"></i> Scan Back
-                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} />
+                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleIndividualUpload(e, 'aBack', setABackLink)} />
                                                 </label>
-                                                <label className="bg-slate-700 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                                <label className="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
                                                     <i className="fa-solid fa-upload mb-1 block text-lg"></i> Upload
-                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} />
+                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleIndividualUpload(e, 'aBack', setABackLink)} />
                                                 </label>
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* 📦 4. NATIVE PAN CARD 📦 */}
-                                    <div className="bg-black/40 p-5 rounded-xl border border-dashed border-red-500 text-center">
+                                    {/* 📦 4. INDIVIDUAL UPLOAD: PAN CARD 📦 */}
+                                    <div className="bg-black/40 p-4 rounded-xl border border-dashed border-red-500 text-center">
                                         <h4 className="text-red-400 font-black mb-3 text-sm"><i className="fa-solid fa-credit-card"></i> 4. पैन कार्ड (PAN Card)</h4>
-                                        {panImg ? (
+                                        {uploadingType === 'pan' ? (
+                                            <div className="text-red-400 font-bold animate-pulse py-4"><i className="fa-solid fa-spinner fa-spin"></i> Uploading...</div>
+                                        ) : panLink ? (
                                             <div>
-                                                <img src={panImg} className="mx-auto rounded-lg w-full max-w-[250px] border-2 border-red-500 shadow-md" />
-                                                <div className="flex justify-center gap-2 mt-3">
-                                                    <button type="button" onClick={()=>setEnlargedImg(panImg)} className="bg-blue-600 px-4 py-1.5 rounded-lg text-xs font-bold text-white btn-press"><i className="fa-solid fa-eye"></i> View</button>
-                                                    <label className="bg-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer btn-press">Retake<input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} /></label>
-                                                </div>
+                                                <img src={panLink} className="mx-auto rounded-lg h-[80px] border-2 border-green-500 object-cover shadow-lg" />
+                                                <div className="text-green-500 font-black mt-2 text-sm">✅ Uploaded</div>
+                                                <button type="button" onClick={()=>setPanLink(null)} className="mt-1 text-red-400 font-bold text-xs underline">✖ Remove</button>
                                             </div>
                                         ) : (
                                             <div className="flex justify-center gap-3">
-                                                <label className="bg-red-600 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                                <label className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
                                                     <i className="fa-solid fa-camera mb-1 block text-lg"></i> Scan PAN
-                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} />
+                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleIndividualUpload(e, 'pan', setPanLink)} />
                                                 </label>
-                                                <label className="bg-slate-700 px-4 py-3 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
+                                                <label className="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-sm font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
                                                     <i className="fa-solid fa-upload mb-1 block text-lg"></i> Upload
-                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} />
+                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleIndividualUpload(e, 'pan', setPanLink)} />
                                                 </label>
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* FORM DETAILS WITH DOB */}
+                                    {/* FORM DETAILS */}
                                     <div><label className="text-xs font-bold text-slate-400 ml-1">पूरा नाम (Full Name) *</label><input name="Customer_Name" required className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none" /></div>
                                     
                                     <div className="grid grid-cols-2 gap-4">
@@ -964,10 +977,10 @@
                                         <div><label className="text-xs font-bold text-green-400 ml-1"><i className="fa-solid fa-hashtag"></i> Txn ID (रेफरेंस) *</label><input name="Payment_Ref" required placeholder="UTR Number / Payment ID" className="w-full bg-black p-3 rounded-xl font-black border border-green-500 text-green-400 text-base focus:border-amber-500 outline-none shadow-inner" /></div>
                                     </div>
                                     
-                                    <button type="submit" disabled={processingId === "BOOKING" || !capturedImg} className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black py-4 rounded-xl text-xl md:text-2xl uppercase italic shadow-lg mt-2 disabled:opacity-50 btn-press flex items-center justify-center gap-2">
-                                        {processingId === "BOOKING" ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-paper-plane"></i>} {processingId === "BOOKING" ? "UPLOADING... ⏳" : "CONFIRM BOOKING 🔱"}
+                                    <button type="submit" disabled={processingId === "BOOKING" || uploadingType !== null} className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black py-4 rounded-xl text-xl md:text-2xl uppercase italic shadow-lg mt-2 disabled:opacity-50 btn-press flex items-center justify-center gap-2">
+                                        {processingId === "BOOKING" ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-paper-plane"></i>} {processingId === "BOOKING" ? "PROCESSING... ⏳" : "CONFIRM BOOKING 🔱"}
                                     </button>
-                                    {!capturedImg && <p className="text-red-500 text-center font-bold text-[10px] mt-1">बुकिंग के लिए लाइव सेल्फी लेना अनिवार्य है।</p>}
+                                    {!selfieLink && <p className="text-red-500 text-center font-bold text-[10px] mt-1">बुकिंग के लिए लाइव सेल्फी पहले अपलोड करें।</p>}
                                 </div>
                             </form>
                         </div>
