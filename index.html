@@ -42,8 +42,7 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
         
-        // 🚀 हुकुम की नई लिंक 🚀
-        const APP_URL = "https://script.google.com/macros/s/AKfycbxt-DO5B-pU6uSJoaC1e4lh-j9pdw5zfKSq0A4VfjjOwMNjgt-RpX-p8QocuP2aYOSEVw/exec";
+        const APP_URL = "https://script.google.com/macros/s/AKfycbzxJ4WPnCrwOIVbSmKAAhkv7c9o7gQGmAtUoUNWOjqv-Rc3op_nPmFSjoKSDWRN19GamQ/exec";
         
         const COMPANY = "Digital Problem Solution Group";
         const SLOGAN = "समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा";
@@ -103,7 +102,7 @@
             {r:51, n:"Electric Iron", d:"कपड़ों पर लाएं परफेक्ट चमक।"}
         ];
 
-        // 🛠️ अदृश्य कंप्रेशर मशीन (DP 250px पर फिक्स)
+        // 🛠️ DP Compressor Machine (250px Fix)
         const compressImage = (file) => {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -112,7 +111,7 @@
                     img.src = event.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 250; const MAX_HEIGHT = 250;
+                        const MAX_WIDTH = 250; const MAX_HEIGHT = 250; 
                         let width = img.width; let height = img.height;
                         if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
                         else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
@@ -131,7 +130,7 @@
             const [activeTab, setActiveTab] = useState('ALL'); 
             const [selected, setSelected] = useState(null);
             
-            // 🛡️ 12-HOUR SMART LOCK LOGIC (Refresh Safe - कोई 2 दिन तक खुला नहीं रख सकता)
+            // 🛡️ 12-HOUR SMART LOCK LOGIC (Refresh Safe)
             const [staff, setStaff] = useState(() => {
                 try { 
                     const sessStr = localStorage.getItem('dps_session');
@@ -176,11 +175,8 @@
             const [discount, setDiscount] = useState(0);
             const [payVerified, setPayVerified] = useState(false);
             
-            // 📸 4 डिब्बों की असली इमेजेस (जैसा आपने कोड दिया था)
+            // 📸 ONLY 1 DP 
             const [capturedImg, setCapturedImg] = useState(null);    
-            const [aFrontImg, setAFrontImg] = useState(null);        
-            const [aBackImg, setABackImg] = useState(null);          
-            const [panImg, setPanImg] = useState(null);              
 
             const [enlargedImg, setEnlargedImg] = useState(null);
             const [showLogin, setShowLogin] = useState(false);
@@ -189,9 +185,42 @@
             const [otpStep, setOtpStep] = useState(false);
             const [otpValue, setOtpValue] = useState("");
             const [staffTempCreds, setStaffTempCreds] = useState(null);
-            const [expectedOtp, setExpectedOtp] = useState(null); // Real OTP Storage
+            const [expectedOtp, setExpectedOtp] = useState(null);
 
-            // 🌟 डेटा लाने का लॉजिक (GITHUB COMPATIBLE - JSON TRUCK FETCH)
+            const [isCamOpen, setIsCamOpen] = useState(false);
+            const [camFacing, setCamFacing] = useState('user'); 
+
+            const openFullScreenCamera = async (facing) => {
+                setCamFacing(facing); setIsCamOpen(true); startCamera(facing);
+            };
+
+            const startCamera = async (facing) => {
+                if(window.localStream) window.localStream.getTracks().forEach(track => track.stop());
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: {ideal: 1280}, height: {ideal: 720} } });
+                    window.localStream = stream; document.getElementById('fullScreenVideo').srcObject = stream;
+                } catch(e) { alert("कैमरा एक्सेस नहीं हो पाया!"); setIsCamOpen(false); }
+            };
+
+            const captureFullScreenPhoto = () => {
+                const video = document.getElementById('fullScreenVideo');
+                const canvas = document.createElement('canvas');
+                const MAX_W = 250, MAX_H = 250;
+                let w = video.videoWidth, h = video.videoHeight;
+                if(w > h) { if(w > MAX_W) { h *= MAX_W/w; w = MAX_W; } } else { if(h > MAX_H) { w *= MAX_H/h; h = MAX_H; } }
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, w, h);
+                setCapturedImg(canvas.toDataURL('image/jpeg', 0.6)); 
+                closeFullScreenCamera();
+            };
+
+            const closeFullScreenCamera = () => {
+                if(window.localStream) { window.localStream.getTracks().forEach(track => track.stop()); window.localStream = null; }
+                setIsCamOpen(false);
+            };
+
+            // 🌟 FETCH API DATA LOADING (GitHub Compatible)
             const loadData = async () => {
                 try {
                     const res = await fetch(APP_URL + "?action=GET_DATA&_cb=" + new Date().getTime());
@@ -225,21 +254,19 @@
                                     name: (rD && rD[6])||"", mob: (rD && rD[7])||"", dob: (rD && rD[8])||"", 
                                     vill: (rD && rD[9])||"", adhar: (rD && rD[10])||"", pan: (rD && rD[11])||"", 
                                     pay: (rD && rD[12])||"", ref: (rD && rD[13])||"", 
-                                    dp: (rD && rD[26])||"", pI: (rD && rD[27])||"", aF: (rD && rD[28])||"", aB: (rD && rD[29])||"", discount: (rD && rD[17])||"0" 
+                                    dp: (rD && rD[26])||"", discount: (rD && rD[17])||"0" 
                                 }
                             });
                         }
                         if(locksChanged) { localStorage.setItem('dps_locks', JSON.stringify([...currentLocks])); setLocalLocks(currentLocks); }
                         setCards(temp); setLoading(false);
                     }
-                } catch(e) { fallbackLoad(); }
-            };
-
-            const fallbackLoad = () => {
-                if(cards.length === 0) {
-                    let temp = [];
-                    for(let i=1; i<=1000; i++) temp.push({ n: i, status: 'Available', cat: i<=100?"VIP Card":i<=600?"Gold Card":"Silver Card", price: (i<=100?500:i<=600?100:50) });
-                    setCards(temp); setLoading(false);
+                } catch (error) {
+                    if(cards.length === 0) {
+                        let temp = [];
+                        for(let i=1; i<=1000; i++) temp.push({ n: i, status: 'Available', cat: i<=100?"VIP Card":i<=600?"Gold Card":"Silver Card", price: (i<=100?500:i<=600?100:50) });
+                        setCards(temp); setLoading(false);
+                    }
                 }
             };
 
@@ -253,12 +280,12 @@
                 } catch(e) { alert("बिक्री बोर्ड लोड नहीं हो पाया!"); }
             };
 
-            const handleNativeCapture = async (e, setterFn) => {
+            const handleNativeCapture = async (e) => {
                 const file = e.target.files[0];
-                if(file) { const compressedBase64 = await compressImage(file); setterFn(compressedBase64); }
+                if(file) { const compressedBase64 = await compressImage(file); setCapturedImg(compressedBase64); }
             };
 
-            // 🔐 STRICT OTP SENDING (No Bypass - GITHUB FETCH)
+            // 🔐 STRICT OTP SENDING (JSON FETCH)
             const handleLoginAttempt = async () => {
                 let u = document.getElementById('l_id').value;
                 let p = document.getElementById('l_pass').value;
@@ -284,7 +311,7 @@
                 } else { alert("Access Denied: Wrong ID or Password!"); }
             };
 
-            // 🔐 STRICT OTP VERIFY & 12 HOUR LOCK
+            // 🔐 STRICT OTP VERIFY
             const handleOtpVerify = () => {
                 if(otpValue === expectedOtp && expectedOtp !== null) {
                     const expiryTime = new Date().getTime() + (12 * 60 * 60 * 1000); 
@@ -296,11 +323,12 @@
                 }
             };
 
-            // 🚀 कस्टमर बुकिंग सिस्टम (JSON TRUCK FETCH - डब्बा कभी नहीं फटेगा)
+            // 🚀 CUSTOMER BOOKING (JSON TRUCK FETCH)
             const bookCard = async (e) => {
                 e.preventDefault(); 
-                if(!capturedImg) { alert("कृपया अपनी सेल्फी (Face Photo) ज़रूर अपलोड करें!"); return; }
-                setProcessingId("BOOKING");
+                if(!capturedImg) { alert("कृपया अपनी लाइव सेल्फी (DP) ज़रूर लें!"); return; }
+                
+                setProcessingId("BOOKING"); 
                 const fd = new FormData(e.target); 
                 const n = selected.n;
                 
@@ -309,17 +337,20 @@
                     Customer_Name: fd.get("Customer_Name"), Mobile: fd.get("Mobile"), DOB: fd.get("DOB") || "", 
                     Village: fd.get("Village") || "", Aadhaar: fd.get("Aadhaar"), PAN: fd.get("PAN") || "",
                     Payment_Mode: fd.get("Payment_Mode"), Payment_Ref: fd.get("Payment_Ref") || "",
-                    selfie: capturedImg || "", aFront: aFrontImg || "", aBack: aBackImg || "", pan: panImg || ""
+                    selfie: capturedImg || ""
                 };
 
-                try {
-                    const res = await fetch(APP_URL, {
-                        method: 'POST',
+                try { 
+                    let res = await fetch(APP_URL, { 
+                        method: 'POST', 
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify(payload)
-                    });
-                    const data = await res.json();
-
+                        body: JSON.stringify(payload) 
+                    }); 
+                    let data = await res.json();
+                    if(data.status === "ALREADY_BOOKED") {
+                        alert("❌ यह कार्ड पहले से बुक हो चुका है!");
+                        setProcessingId(null); return;
+                    }
                     if(data.status === "SUCCESS") {
                         setLocalLocks(prev => { const ns = new Set(prev).add(n); localStorage.setItem('dps_locks', JSON.stringify([...ns])); return ns; });
                         setSuccessModal({
@@ -328,21 +359,15 @@
                             vill: fd.get("Village") || "N/A", ref: fd.get("Payment_Ref") || "N/A", token: `DPSG-TK-${n.toString().padStart(3,'0')}`
                         });
                         closeModalAndReset(); 
-                    } else if(data.status === "ALREADY_BOOKED") {
-                        alert("माफ़ करें, यह कार्ड किसी और ने बुक कर लिया है। कृपया दूसरा कार्ड चुनें।");
                     } else { alert("Error: " + data.message); }
                     setProcessingId(null); setTimeout(loadData, 1500);
-                } catch(err) {
-                    alert("सर्वर में समस्या आ रही है। कृपया दोबारा कोशिश करें।");
-                    setProcessingId(null);
-                }
+                } catch(err){ alert("सर्वर में समस्या आ रही है।"); setProcessingId(null); }
             };
 
-            // 🚀 मास्टर अपडेट सिस्टम (JSON TRUCK FETCH)
+            // 🚀 STAFF UPDATE (JSON TRUCK FETCH)
             const masterUpdate = async (c, status, isInsideForm = false) => {
                 setProcessingId(isInsideForm ? "UPLOADING_STAFF" : c.n);
                 setCards(prev => prev.map(card => card.n === c.n ? { ...card, status: status === 'Sold' ? 'Sold' : 'Available' } : card));
-                
                 if(status === 'Available' || status === 'Rejected') { 
                     setLocalLocks(p => { const ns = new Set(p); ns.delete(c.n); localStorage.setItem('dps_locks', JSON.stringify([...ns])); return ns; }); 
                 }
@@ -350,7 +375,7 @@
                 let sName = c.d.name, sMob = c.d.mob, sAdhar = c.d.adhar, sPan = c.d.pan;
                 let sPay = c.d.pay, sRef = c.d.ref, sPaid = c.price, finalDisc = 0, sDob = c.d.dob, sVill = c.d.vill;
                 let changesArr = [];
-
+                
                 if(isInsideForm) {
                     sName = document.getElementById('s_name').value; sMob = document.getElementById('s_mob').value;
                     sAdhar = document.getElementById('s_adhar').value; sPan = document.getElementById('s_pan').value;
@@ -363,28 +388,19 @@
                 }
                 let changesStr = changesArr.length > 0 ? changesArr.join(", ") + " सुधारे गए" : "कोई बदलाव नहीं";
 
-                let bill64 = "", ecard64 = "";
-                if(isInsideForm) {
-                    const billInput = document.getElementById('staff_bill_upload');
-                    const cardInput = document.getElementById('staff_card_upload');
-                    if(billInput && billInput.files[0]) bill64 = await compressImage(billInput.files[0]);
-                    if(cardInput && cardInput.files[0]) ecard64 = await compressImage(cardInput.files[0]);
-                }
-
                 const payload = {
-                    action: "UPDATE", S_No: c.n.toString(), Status: status, staffID: staff.id, staffPass: staff.pass,
+                    action: "UPDATE", S_No: c.n.toString(), Category: c.cat, Status: status, staffID: staff.id,
                     Customer_Name: sName, Mobile: sMob, DOB: sDob, Village: sVill, Aadhaar: sAdhar, PAN: sPan,
                     Payment_Mode: sPay, Payment_Ref: sRef, Paid: sPaid, Discount: finalDisc, Changes_Made: changesStr,
-                    selfie: capturedImg || "", aFront: aFrontImg || "", aBack: aBackImg || "", pan: panImg || "",
-                    bill: bill64, ecard: ecard64
+                    selfie: capturedImg || ""
                 };
 
-                try {
-                    await fetch(APP_URL, {
-                        method: 'POST',
+                try { 
+                    await fetch(APP_URL, { 
+                        method: 'POST', 
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify(payload)
-                    });
+                        body: JSON.stringify(payload) 
+                    }); 
                     
                     setProcessingId(null); closeModalAndReset(); setVerifyOutsideModal(null); setPayVerified(false);
                     if(status === 'Sold') {
@@ -392,22 +408,15 @@
                         setStaffSuccessModal({...c, finalPaid: sPaid, finalName: sName, finalMob: sMob, finalPan: sPan, finalAdhar: sAdhar, finalVill: sVill, finalDob: sDob, finalDisc, finalPayMode: sPay, changesStr});
                     } else {
                         setSessionStats(prev => { const nState = { ...prev, rejected: [{n: c.n, name: sName || "Unknown"}, ...prev.rejected] }; localStorage.setItem('dps_session_stats', JSON.stringify(nState)); return nState; });
-                        setStaffSuccessModal({...c, isReject: true, finalName: sName, finalMob: sMob, finalDob: sDob, finalVill: sVill, finalAdhar: sAdhar, finalPan: sPan}); 
+                        setStaffSuccessModal({...c, isReject: true, finalName: sName, finalMob: sMob}); 
                     }
                     setTimeout(loadData, 1500);
-                } catch(err) {
-                    alert("Update Failed: " + err); setProcessingId(null);
-                }
+                } catch(error) { alert("Update Failed"); setProcessingId(null); }
             };
 
-            const closeModalAndReset = () => { setSelected(null); setCapturedImg(null); setAFrontImg(null); setABackImg(null); setPanImg(null); setDiscount(0); };
+            const closeModalAndReset = () => { setSelected(null); setCapturedImg(null); setDiscount(0); };
             const handleOutsideVerify = (c) => { setPayVerified(false); setVerifyOutsideModal(c); };
             const sendToGroupCopy = (text) => { navigator.clipboard.writeText(text).then(() => { alert("✅ व्हाट्सएप ग्रुप के लिए मैसेज कॉपी हो गया है! पेस्ट करके सेंड कर दें।"); window.open("https://chat.whatsapp.com/DOFkpAfbugQ2ATQxr4m6L2", "_blank"); }); };
-
-            const renderImageButton = (imgData, label, icon) => {
-                if (!imgData || imgData === "" || imgData === "N/A" || imgData === "OLD_GARBAGE_REMOVED") return null;
-                return <button onClick={() => setEnlargedImg(imgData)} className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold btn-press shadow-md m-1"><i className={`fa-solid ${icon}`}></i> {label}</button>;
-            };
 
             const renderCard = (c) => {
                 const isLocked = localLocks.has(c.n) || c.status === 'Pending';
@@ -471,17 +480,11 @@
                                         <div key={c.n} className="bg-slate-900/90 p-4 rounded-2xl border-l-[6px] border-amber-500 shadow-lg flex flex-col gap-4">
                                             <div className="flex items-center gap-4">
                                                 {c.d.dp && c.d.dp.startsWith('http') ? <img src={c.d.dp} onClick={() => setEnlargedImg(c.d.dp)} className="w-16 h-16 rounded-full border-2 border-amber-500 object-cover cursor-pointer" alt="DP" /> : 
-                                                 c.d.dp === "OLD_GARBAGE_REMOVED" ? <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black border border-dashed border-red-500 text-red-500 text-center leading-tight p-1">Old<br/>Error</div> :
                                                  <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black border border-dashed border-slate-600 text-slate-500">NO DP</div>}
                                                 <div className="flex-1">
                                                     <p className="text-xl font-black text-white leading-none mb-1">#{c.n} <span className="text-amber-400 text-lg">- {c.d.name || "N/A"}</span></p>
-                                                    <p className="text-xs text-slate-400 font-bold"><i className="fa-solid fa-phone"></i> {c.d.mob || "N/A"} | DOB: {c.d.dob || "N/A"} | {c.d.pay || "N/A"}</p>
-                                                    <p className="text-[10px] text-green-400 font-bold mt-1">Tk: {c.token} {c.d.ref && `| Ref: ${c.d.ref}`}</p>
-                                                    <div className="flex flex-wrap mt-2">
-                                                        {renderImageButton(c.d.aF, "Aadhaar F", "fa-id-card")}
-                                                        {renderImageButton(c.d.aB, "Aadhaar B", "fa-id-card")}
-                                                        {renderImageButton(c.d.pI, "PAN", "fa-credit-card")}
-                                                    </div>
+                                                    <p className="text-xs text-slate-400 font-bold"><i className="fa-solid fa-phone"></i> {c.d.mob || "N/A"}</p>
+                                                    <p className="text-[10px] text-green-400 font-bold mt-1">Aadhaar: {c.d.adhar} | PAN: {c.d.pan || "N/A"}</p>
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
@@ -564,7 +567,6 @@
                             </div>
                         )}
 
-                        {/* STAFF EDIT MODAL */}
                         {selected && staff && (
                             <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto pb-24">
                                 <div className="glass p-6 md:p-10 w-full max-w-5xl border border-amber-500 rounded-3xl bg-[#0a0a0a] shadow-2xl relative my-auto mt-20 md:mt-auto">
@@ -573,43 +575,26 @@
                                     <div className="grid md:grid-cols-2 gap-8">
                                         <div className="flex flex-col items-center justify-center bg-black/40 p-5 rounded-2xl border border-slate-800 shadow-inner">
                                             
-                                            <div className="text-center mb-4">
+                                            <div className="text-center mb-4 w-full">
+                                                <h4 className="text-amber-500 font-bold mb-4 text-center">Customer DP (Selfie)</h4>
                                                 {capturedImg ? <img src={capturedImg} className="w-[150px] h-[150px] rounded-full mx-auto object-cover border-4 border-green-500 shadow-lg" /> : 
                                                  selected.d.dp && selected.d.dp.startsWith('http') ? <img src={selected.d.dp} onClick={() => setEnlargedImg(selected.d.dp)} className="w-[150px] h-[150px] rounded-full mx-auto object-cover border-4 border-amber-500 cursor-pointer shadow-lg" /> : 
                                                  <div className="w-[150px] h-[150px] rounded-full bg-slate-900 mx-auto flex items-center justify-center text-sm text-red-500 font-black border-4 border-red-500 border-dashed">NO DP</div>}
                                                 <div className="flex justify-center gap-2 mt-4">
-                                                    <label className="bg-amber-500 text-black px-3 py-2 rounded-lg text-[10px] font-black cursor-pointer hover:bg-amber-400 btn-press"><i className="fa-solid fa-camera"></i> Live Photo<input type="file" accept="image/*" capture="user" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} /></label>
-                                                    <label className="bg-indigo-500 text-white px-3 py-2 rounded-lg text-[10px] font-black cursor-pointer hover:bg-indigo-400 btn-press"><i className="fa-solid fa-image"></i> Gallery<input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} /></label>
-                                                </div>
-                                            </div>
-
-                                            <div className="w-full space-y-3 border-t border-slate-700 pt-4">
-                                                <h4 className="text-amber-500 font-bold text-sm text-center">Customer Documents</h4>
-                                                
-                                                <div className="flex justify-between items-center bg-slate-900 p-2 rounded-lg">
-                                                    <span className="text-xs text-slate-400 font-bold">Aadhaar (F): {selected.d.aF ? "✅" : "❌"}</span>
-                                                    <div className="flex gap-1">
-                                                        <label className="bg-indigo-600 px-2 py-1.5 rounded text-[10px] text-white font-bold cursor-pointer btn-press"><i className="fa-solid fa-camera"></i><input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} /></label>
-                                                        <label className="bg-slate-700 px-2 py-1.5 rounded text-[10px] text-white font-bold cursor-pointer btn-press"><i className="fa-solid fa-folder-open"></i><input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} /></label>
-                                                    </div>
-                                                </div>
-                                                <div className="flex justify-between items-center bg-slate-900 p-2 rounded-lg">
-                                                    <span className="text-xs text-slate-400 font-bold">Aadhaar (B): {selected.d.aB ? "✅" : "❌"}</span>
-                                                    <div className="flex gap-1">
-                                                        <label className="bg-indigo-600 px-2 py-1.5 rounded text-[10px] text-white font-bold cursor-pointer btn-press"><i className="fa-solid fa-camera"></i><input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} /></label>
-                                                        <label className="bg-slate-700 px-2 py-1.5 rounded text-[10px] text-white font-bold cursor-pointer btn-press"><i className="fa-solid fa-folder-open"></i><input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} /></label>
-                                                    </div>
-                                                </div>
-                                                <div className="flex justify-between items-center bg-slate-900 p-2 rounded-lg">
-                                                    <span className="text-xs text-slate-400 font-bold">PAN Card: {selected.d.pI ? "✅" : "❌"}</span>
-                                                    <div className="flex gap-1">
-                                                        <label className="bg-red-600 px-2 py-1.5 rounded text-[10px] text-white font-bold cursor-pointer btn-press"><i className="fa-solid fa-camera"></i><input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} /></label>
-                                                        <label className="bg-slate-700 px-2 py-1.5 rounded text-[10px] text-white font-bold cursor-pointer btn-press"><i className="fa-solid fa-folder-open"></i><input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} /></label>
-                                                    </div>
+                                                    <label className="bg-amber-500 text-black px-3 py-2 rounded-lg text-xs font-black cursor-pointer hover:bg-amber-400 btn-press"><i className="fa-solid fa-camera"></i> Live Photo<input type="file" accept="image/*" capture="user" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} /></label>
+                                                    <label className="bg-indigo-500 text-white px-3 py-2 rounded-lg text-xs font-black cursor-pointer hover:bg-indigo-400 btn-press"><i className="fa-solid fa-image"></i> Gallery<input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} /></label>
                                                 </div>
                                             </div>
                                         </div>
+
                                         <div className="space-y-4">
+                                            {/* LIVE QR CODE INSIDE EDIT MODAL */}
+                                            <div className="bg-white p-4 rounded-xl border-4 border-amber-500 text-center mb-4 shadow-[0_0_20px_rgba(251,191,36,0.2)]">
+                                                <h4 className="text-black font-black text-lg mb-1"><i className="fa-solid fa-qrcode text-amber-500"></i> ग्राहक से लेने योग्य राशि</h4>
+                                                <p className="text-red-600 font-black text-2xl mb-2">₹ {selected.price - discount}</p>
+                                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=${staffUpi}%26pn=DPSG%26am=${selected.price - discount}%26tr=${selected.mid}`} alt="Live QR" className="mx-auto border-2 border-slate-200 rounded p-1 w-[150px] h-[150px]" />
+                                            </div>
+
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div><label className="text-[10px] text-slate-400 font-bold">Name</label><input id="s_name" defaultValue={selected.d.name} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
                                                 <div><label className="text-[10px] text-slate-400 font-bold">Mobile</label><input id="s_mob" defaultValue={selected.d.mob} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
@@ -698,7 +683,7 @@
                         <p className="text-amber-500 text-xl md:text-2xl font-bold mt-4 italic">" {SLOGAN} "</p>
                         <div className="banner-row mt-10">
                             {[
-                                {t:'VIP', p:'500', c:'card-VIP', d:'पूरा परिवार मान्य | 6 महीने | 100% फ्री ई-मित्र सेवा'},
+                                {t:'VIP', p:'500', c:'card-VIP', d:'पूरा परिवार मान्य | 6 महीने | 100% ফ্রি ई-मित्र सेवा'},
                                 {t:'GOLD', p:'100', c:'card-Gold', d:'1 व्यक्ति | 3 महीने | 50% ई-मित्र छूट | गारंटीड उपहार'},
                                 {t:'SILVER', p:'50', c:'card-Silver', d:'1 व्यक्ति | 1 महीना | सीमित सेवा | लकी ड्रा मौका'}
                             ].map((b, i) => (
@@ -714,7 +699,7 @@
                     </div>
 
                     <div className="grid lg:grid-cols-12 gap-10">
-                        {/* 📍 51 PRIZES RESTORED 📍 */}
+                        {/* 📍 51 PRIZES 📍 */}
                         <div className="lg:col-span-4 glass p-6 h-[800px] flex flex-col border-t-[8px] border-amber-500">
                             <h2 className="text-3xl font-black italic text-amber-500 mb-6 text-center underline">51 MEGA PRIZES</h2>
                             <div className="overflow-y-auto pr-2 space-y-4 flex-1 custom-scroll">
@@ -759,7 +744,7 @@
                         </div>
                     )}
 
-                    {/* 📍 CUSTOMER BOOKING MODAL (CAMERA + GALLERY OPTIONS) 📍 */}
+                    {/* 📍 CUSTOMER BOOKING MODAL (1 DP ONLY + LIVE QR HIDDEN FOR CUSTOMER AS BEFORE) 📍 */}
                     {selected && !staff && (
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <form onSubmit={bookCard} className="glass p-6 md:p-10 w-full max-w-3xl border border-amber-500 rounded-3xl shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
@@ -768,23 +753,22 @@
                                 
                                 <div className="space-y-5">
                                     
-                                    {/* 📦 1. SELFIE (CAMERA & GALLERY) 📦 */}
+                                    {/* 📦 1. ONLY DP (CAMERA & GALLERY) 📦 */}
                                     <div className="bg-black/50 p-6 rounded-2xl border-2 border-dashed border-amber-500 text-center">
                                         <h4 className="text-amber-400 font-black mb-4"><i className="fa-solid fa-user-circle"></i> 1. लाइव सेल्फी या गैलरी फोटो *</h4>
                                         {capturedImg ? (
                                             <div>
-                                                <img src={capturedImg} className="mx-auto rounded-full w-[150px] h-[150px] border-4 border-amber-500 object-cover shadow-lg" />
+                                                <img src={capturedImg} onClick={()=>setEnlargedImg(capturedImg)} className="mx-auto rounded-full w-[150px] h-[150px] border-4 border-amber-500 object-cover shadow-lg cursor-pointer" />
                                                 <div className="flex justify-center gap-3 mt-4">
-                                                    <label className="bg-red-600 px-4 py-2 rounded-lg font-bold text-white shadow-md cursor-pointer btn-press"><i className="fa-solid fa-camera"></i> Camera<input type="file" accept="image/*" capture="user" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} /></label>
-                                                    <label className="bg-indigo-500 px-4 py-2 rounded-lg font-bold text-white shadow-md cursor-pointer btn-press"><i className="fa-solid fa-folder-open"></i> Gallery<input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} /></label>
+                                                    <button type="button" onClick={()=>setEnlargedImg(capturedImg)} className="bg-blue-600 px-4 py-2 rounded-lg font-bold text-white shadow-md btn-press"><i className="fa-solid fa-eye"></i> View</button>
+                                                    <button type="button" onClick={()=>setCapturedImg(null)} className="bg-red-600 px-4 py-2 rounded-lg font-bold text-white shadow-md btn-press"><i className="fa-solid fa-trash"></i> Delete</button>
                                                 </div>
                                             </div>
                                         ) : (
                                             <div className="flex justify-center gap-3">
-                                                <label className="bg-amber-500 hover:bg-amber-400 px-4 py-3 rounded-2xl font-black text-black shadow-lg cursor-pointer flex-1 text-sm md:text-base btn-press">
+                                                <button type="button" onClick={()=>openFullScreenCamera('user')} className="bg-amber-500 hover:bg-amber-400 px-4 py-3 rounded-2xl font-black text-black shadow-lg cursor-pointer flex-1 text-sm md:text-base btn-press">
                                                     <i className="fa-solid fa-camera text-2xl mb-1 block"></i> Open Camera
-                                                    <input type="file" accept="image/*" capture="user" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} />
-                                                </label>
+                                                </button>
                                                 <label className="bg-slate-800 hover:bg-slate-700 px-4 py-3 rounded-2xl font-black text-white shadow-lg cursor-pointer flex-1 text-sm md:text-base border border-slate-600 btn-press">
                                                     <i className="fa-solid fa-image text-2xl mb-1 block"></i> Open Gallery
                                                     <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} />
@@ -793,82 +777,7 @@
                                         )}
                                     </div>
 
-                                    {/* 📦 2. AADHAAR FRONT (CAMERA & GALLERY) 📦 */}
-                                    <div className="bg-black/40 p-5 rounded-xl border border-dashed border-indigo-500 text-center">
-                                        <h4 className="text-indigo-400 font-black mb-3 text-sm"><i className="fa-regular fa-id-card"></i> 2. आधार कार्ड (Front)</h4>
-                                        {aFrontImg ? (
-                                            <div>
-                                                <img src={aFrontImg} className="mx-auto rounded-lg w-full max-w-[250px] border-2 border-indigo-500 shadow-md" />
-                                                <div className="flex justify-center gap-2 mt-3">
-                                                    <label className="bg-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer btn-press"><i className="fa-solid fa-camera"></i> Camera<input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} /></label>
-                                                    <label className="bg-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer btn-press"><i className="fa-solid fa-folder-open"></i> Gallery<input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} /></label>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="flex justify-center gap-3">
-                                                <label className="bg-indigo-600 px-4 py-3 rounded-xl text-xs font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
-                                                    <i className="fa-solid fa-camera mb-1 block text-lg"></i> Scan Camera
-                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} />
-                                                </label>
-                                                <label className="bg-slate-800 border border-slate-600 px-4 py-3 rounded-xl text-xs font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
-                                                    <i className="fa-solid fa-image mb-1 block text-lg"></i> Select Gallery
-                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setAFrontImg)} />
-                                                </label>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* 📦 3. AADHAAR BACK (CAMERA & GALLERY) 📦 */}
-                                    <div className="bg-black/40 p-5 rounded-xl border border-dashed border-indigo-500 text-center">
-                                        <h4 className="text-indigo-400 font-black mb-3 text-sm"><i className="fa-regular fa-id-card"></i> 3. आधार कार्ड (Back)</h4>
-                                        {aBackImg ? (
-                                            <div>
-                                                <img src={aBackImg} className="mx-auto rounded-lg w-full max-w-[250px] border-2 border-indigo-500 shadow-md" />
-                                                <div className="flex justify-center gap-2 mt-3">
-                                                    <label className="bg-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer btn-press"><i className="fa-solid fa-camera"></i> Camera<input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} /></label>
-                                                    <label className="bg-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer btn-press"><i className="fa-solid fa-folder-open"></i> Gallery<input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} /></label>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="flex justify-center gap-3">
-                                                <label className="bg-indigo-600 px-4 py-3 rounded-xl text-xs font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
-                                                    <i className="fa-solid fa-camera mb-1 block text-lg"></i> Scan Camera
-                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} />
-                                                </label>
-                                                <label className="bg-slate-800 border border-slate-600 px-4 py-3 rounded-xl text-xs font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
-                                                    <i className="fa-solid fa-image mb-1 block text-lg"></i> Select Gallery
-                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setABackImg)} />
-                                                </label>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* 📦 4. PAN CARD (CAMERA & GALLERY) 📦 */}
-                                    <div className="bg-black/40 p-5 rounded-xl border border-dashed border-red-500 text-center">
-                                        <h4 className="text-red-400 font-black mb-3 text-sm"><i className="fa-solid fa-credit-card"></i> 4. पैन कार्ड (PAN Card)</h4>
-                                        {panImg ? (
-                                            <div>
-                                                <img src={panImg} className="mx-auto rounded-lg w-full max-w-[250px] border-2 border-red-500 shadow-md" />
-                                                <div className="flex justify-center gap-2 mt-3">
-                                                    <label className="bg-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer btn-press"><i className="fa-solid fa-camera"></i> Camera<input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} /></label>
-                                                    <label className="bg-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold text-white cursor-pointer btn-press"><i className="fa-solid fa-folder-open"></i> Gallery<input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} /></label>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="flex justify-center gap-3">
-                                                <label className="bg-red-600 px-4 py-3 rounded-xl text-xs font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
-                                                    <i className="fa-solid fa-camera mb-1 block text-lg"></i> Scan Camera
-                                                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} />
-                                                </label>
-                                                <label className="bg-slate-800 border border-slate-600 px-4 py-3 rounded-xl text-xs font-bold text-white shadow-lg cursor-pointer flex-1 btn-press">
-                                                    <i className="fa-solid fa-image mb-1 block text-lg"></i> Select Gallery
-                                                    <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setPanImg)} />
-                                                </label>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* FORM DETAILS */}
+                                    {/* FORM DETAILS WITH AADHAR/PAN AS TEXT FIELDS */}
                                     <div><label className="text-xs font-bold text-slate-400 ml-1">पूरा नाम (Full Name) *</label><input name="Customer_Name" required className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none" /></div>
                                     
                                     <div className="grid grid-cols-2 gap-4">
@@ -877,13 +786,13 @@
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div><label className="text-xs font-bold text-slate-400 ml-1">आधार (Aadhaar) *</label><input name="Aadhaar" type="tel" pattern="[0-9]{12}" required className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none" /></div>
+                                        <div><label className="text-xs font-bold text-slate-400 ml-1">आधार नंबर (Aadhaar) *</label><input name="Aadhaar" type="tel" pattern="[0-9]{12}" required className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none" /></div>
                                         <div><label className="text-xs font-bold text-slate-400 ml-1">गाँव / शहर (Village/City)</label><input name="Village" className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none" /></div>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div><label className="text-xs font-bold text-slate-400 ml-1">पेमेंट मोड (Payment Mode) *</label><select name="Payment_Mode" required onChange={(e)=>setPayMode(e.target.value)} className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none"><option value="" disabled selected>चुनें (Select)</option><option value="Cash">नकद (Cash)</option><option value="PhonePe/GPay">UPI / App</option><option value="Airtel Payment Bank">Airtel Payment Bank</option></select></div>
-                                        {payMode === 'Airtel Payment Bank' && <div><label className="text-xs font-black text-red-500 ml-1">PAN CARD *</label><input name="PAN" required pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" placeholder="ABCDE1234F" className="w-full bg-black p-3 rounded-xl font-black border-2 border-red-600 text-white text-base uppercase shadow-inner" /></div>}
+                                        {payMode === 'Airtel Payment Bank' && <div><label className="text-xs font-black text-red-500 ml-1">PAN नंबर (PAN CARD) *</label><input name="PAN" required pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" placeholder="ABCDE1234F" className="w-full bg-black p-3 rounded-xl font-black border-2 border-red-600 text-white text-base uppercase shadow-inner" /></div>}
                                     </div>
                                     
                                     <div className="grid md:grid-cols-1 gap-4">
@@ -931,7 +840,7 @@
 
                     {!staff && (
                         <div className="mt-20 mb-10 text-center">
-                            {/* 📍 OTP LOGIN RESTORED (WITH JSON FETCH) 📍 */}
+                            {/* 📍 OTP LOGIN (STRICT + JSON FETCH) 📍 */}
                             {showLogin ? (
                                 <div className="glass p-6 max-w-sm mx-auto rounded-3xl border border-indigo-500 bg-[#0a0a0a] shadow-xl">
                                     <h4 className="text-2xl font-black text-indigo-400 mb-6 tracking-widest uppercase">
