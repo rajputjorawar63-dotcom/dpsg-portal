@@ -42,7 +42,8 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
         
-        const APP_URL = "https://script.google.com/macros/s/AKfycbzxJ4WPnCrwOIVbSmKAAhkv7c9o7gQGmAtUoUNWOjqv-Rc3op_nPmFSjoKSDWRN19GamQ/exec";
+        // 🚀 हुकुम की नई और फाइनल लिंक 🚀
+        const APP_URL = "https://script.google.com/macros/s/AKfycbyP-Vqg29arsDirWjyfQbw3f5z1IyrBTtBybpzQ0yUAdxlwSDlaGQQSQuAAaqYcGUIwKg/exec";
         
         const COMPANY = "Digital Problem Solution Group";
         const SLOGAN = "समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा";
@@ -102,7 +103,7 @@
             {r:51, n:"Electric Iron", d:"कपड़ों पर लाएं परफेक्ट चमक।"}
         ];
 
-        // 🛠️ DP Compressor Machine (250px Fix)
+        // 🛠️ DP Compressor Machine (250px Fix - मक्खन की तरह ड्राइव में सेव होगी)
         const compressImage = (file) => {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -190,6 +191,7 @@
             const [isCamOpen, setIsCamOpen] = useState(false);
             const [camFacing, setCamFacing] = useState('user'); 
 
+            // कैमरे को आगे-पीछे सेट करने का फंक्शन
             const openFullScreenCamera = async (facing) => {
                 setCamFacing(facing); setIsCamOpen(true); startCamera(facing);
             };
@@ -199,7 +201,13 @@
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: {ideal: 1280}, height: {ideal: 720} } });
                     window.localStream = stream; document.getElementById('fullScreenVideo').srcObject = stream;
-                } catch(e) { alert("कैमरा एक्सेस नहीं हो पाया!"); setIsCamOpen(false); }
+                } catch(e) { alert("कैमरा एक्सेस नहीं हो पाया! कृपया ब्राउज़र को कैमरे की परमिशन दें।"); setIsCamOpen(false); }
+            };
+
+            const toggleCamera = () => {
+                const newFacing = camFacing === 'user' ? 'environment' : 'user';
+                setCamFacing(newFacing);
+                startCamera(newFacing);
             };
 
             const captureFullScreenPhoto = () => {
@@ -326,7 +334,7 @@
             // 🚀 CUSTOMER BOOKING (JSON TRUCK FETCH)
             const bookCard = async (e) => {
                 e.preventDefault(); 
-                if(!capturedImg) { alert("कृपया अपनी लाइव सेल्फी (DP) ज़रूर लें!"); return; }
+                if(!capturedImg) { alert("कृपया अपनी लाइव सेल्फी (DP) ज़रूर लें या अपलोड करें!"); return; }
                 
                 setProcessingId("BOOKING"); 
                 const fd = new FormData(e.target); 
@@ -480,6 +488,7 @@
                                         <div key={c.n} className="bg-slate-900/90 p-4 rounded-2xl border-l-[6px] border-amber-500 shadow-lg flex flex-col gap-4">
                                             <div className="flex items-center gap-4">
                                                 {c.d.dp && c.d.dp.startsWith('http') ? <img src={c.d.dp} onClick={() => setEnlargedImg(c.d.dp)} className="w-16 h-16 rounded-full border-2 border-amber-500 object-cover cursor-pointer" alt="DP" /> : 
+                                                 c.d.dp === "OLD_GARBAGE_REMOVED" ? <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black border border-dashed border-red-500 text-red-500 text-center leading-tight p-1">Old<br/>Error</div> :
                                                  <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black border border-dashed border-slate-600 text-slate-500">NO DP</div>}
                                                 <div className="flex-1">
                                                     <p className="text-xl font-black text-white leading-none mb-1">#{c.n} <span className="text-amber-400 text-lg">- {c.d.name || "N/A"}</span></p>
@@ -491,7 +500,7 @@
                                                 <button onClick={() => handleOutsideVerify(c)} disabled={processingId === c.n} className="bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">{processingId === c.n ? "Wait..." : "Verify"}</button>
                                                 <button onClick={() => masterUpdate(c, 'Rejected', false)} disabled={processingId === c.n} className="bg-red-700 hover:bg-red-600 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">{processingId === c.n ? "Wait..." : "Reject"}</button>
                                                 <button onClick={() => {if(!staffUpi){alert("Please add UPI ID first!");return;} setQuickQrCard(c);}} disabled={processingId === c.n} className="bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1"><i className="fa-solid fa-qrcode"></i> Pay QR</button>
-                                                <button onClick={() => { setSelected(c); setPayVerified(false); setPayMode(c.d.pay || ""); setDiscount(parseInt(c.d.discount || 0)); setCapturedImg(null); }} disabled={processingId === c.n} className="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1"><i className="fa-solid fa-pen"></i> Edit Details</button>
+                                                <button onClick={() => { setSelected(c); setPayVerified(false); setDiscount(parseInt(c.d.discount || 0)); setCapturedImg(null); }} disabled={processingId === c.n} className="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1"><i className="fa-solid fa-pen"></i> Edit Details</button>
                                             </div>
                                         </div>
                                     ))}
@@ -567,6 +576,7 @@
                             </div>
                         )}
 
+                        {/* STAFF EDIT MODAL */}
                         {selected && staff && (
                             <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto pb-24">
                                 <div className="glass p-6 md:p-10 w-full max-w-5xl border border-amber-500 rounded-3xl bg-[#0a0a0a] shadow-2xl relative my-auto mt-20 md:mt-auto">
@@ -581,7 +591,7 @@
                                                  selected.d.dp && selected.d.dp.startsWith('http') ? <img src={selected.d.dp} onClick={() => setEnlargedImg(selected.d.dp)} className="w-[150px] h-[150px] rounded-full mx-auto object-cover border-4 border-amber-500 cursor-pointer shadow-lg" /> : 
                                                  <div className="w-[150px] h-[150px] rounded-full bg-slate-900 mx-auto flex items-center justify-center text-sm text-red-500 font-black border-4 border-red-500 border-dashed">NO DP</div>}
                                                 <div className="flex justify-center gap-2 mt-4">
-                                                    <label className="bg-amber-500 text-black px-3 py-2 rounded-lg text-xs font-black cursor-pointer hover:bg-amber-400 btn-press"><i className="fa-solid fa-camera"></i> Live Photo<input type="file" accept="image/*" capture="user" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} /></label>
+                                                    <label className="bg-amber-500 text-black px-3 py-2 rounded-lg text-xs font-black cursor-pointer hover:bg-amber-400 btn-press"><i className="fa-solid fa-camera"></i> Capture New<input type="file" accept="image/*" capture="user" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} /></label>
                                                     <label className="bg-indigo-500 text-white px-3 py-2 rounded-lg text-xs font-black cursor-pointer hover:bg-indigo-400 btn-press"><i className="fa-solid fa-image"></i> Gallery<input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} /></label>
                                                 </div>
                                             </div>
@@ -683,7 +693,7 @@
                         <p className="text-amber-500 text-xl md:text-2xl font-bold mt-4 italic">" {SLOGAN} "</p>
                         <div className="banner-row mt-10">
                             {[
-                                {t:'VIP', p:'500', c:'card-VIP', d:'पूरा परिवार मान्य | 6 महीने | 100% ফ্রি ई-मित्र सेवा'},
+                                {t:'VIP', p:'500', c:'card-VIP', d:'पूरा परिवार मान्य | 6 महीने | 100% फ्री ई-मित्र सेवा'},
                                 {t:'GOLD', p:'100', c:'card-Gold', d:'1 व्यक्ति | 3 महीने | 50% ई-मित्र छूट | गारंटीड उपहार'},
                                 {t:'SILVER', p:'50', c:'card-Silver', d:'1 व्यक्ति | 1 महीना | सीमित सेवा | लकी ड्रा मौका'}
                             ].map((b, i) => (
@@ -744,7 +754,7 @@
                         </div>
                     )}
 
-                    {/* 📍 CUSTOMER BOOKING MODAL (1 DP ONLY + LIVE QR HIDDEN FOR CUSTOMER AS BEFORE) 📍 */}
+                    {/* 📍 CUSTOMER BOOKING MODAL (1 DP ONLY) 📍 */}
                     {selected && !staff && (
                         <div key={selected.n} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
                             <form onSubmit={bookCard} className="glass p-6 md:p-10 w-full max-w-3xl border border-amber-500 rounded-3xl shadow-2xl relative mt-20 md:mt-0 bg-[#0a0a0a]">
@@ -765,11 +775,11 @@
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="flex justify-center gap-3">
-                                                <button type="button" onClick={()=>openFullScreenCamera('user')} className="bg-amber-500 hover:bg-amber-400 px-4 py-3 rounded-2xl font-black text-black shadow-lg cursor-pointer flex-1 text-sm md:text-base btn-press">
+                                            <div className="flex flex-col md:flex-row justify-center gap-3">
+                                                <button type="button" onClick={()=>openFullScreenCamera('user')} className="bg-amber-500 hover:bg-amber-400 px-4 py-3 rounded-2xl font-black text-black shadow-lg cursor-pointer flex-1 text-sm md:text-base btn-press flex flex-col items-center">
                                                     <i className="fa-solid fa-camera text-2xl mb-1 block"></i> Open Camera
                                                 </button>
-                                                <label className="bg-slate-800 hover:bg-slate-700 px-4 py-3 rounded-2xl font-black text-white shadow-lg cursor-pointer flex-1 text-sm md:text-base border border-slate-600 btn-press">
+                                                <label className="bg-slate-800 hover:bg-slate-700 px-4 py-3 rounded-2xl font-black text-white shadow-lg cursor-pointer flex-1 text-sm md:text-base border border-slate-600 btn-press flex flex-col items-center">
                                                     <i className="fa-solid fa-image text-2xl mb-1 block"></i> Open Gallery
                                                     <input type="file" accept="image/*" hidden onChange={(e)=>handleNativeCapture(e, setCapturedImg)} />
                                                 </label>
@@ -777,7 +787,7 @@
                                         )}
                                     </div>
 
-                                    {/* FORM DETAILS WITH AADHAR/PAN AS TEXT FIELDS */}
+                                    {/* FORM DETAILS WITH AADHAAR/PAN AS TEXT FIELDS */}
                                     <div><label className="text-xs font-bold text-slate-400 ml-1">पूरा नाम (Full Name) *</label><input name="Customer_Name" required className="w-full bg-slate-900 p-3 rounded-xl font-bold border border-slate-700 text-white text-base focus:border-amber-500 outline-none" /></div>
                                     
                                     <div className="grid grid-cols-2 gap-4">
@@ -874,12 +884,13 @@
                         </div>
                     )}
 
-                    {/* 📸 FULL SCREEN CAMERA OVERLAY 📸 */}
+                    {/* 📸 FULL SCREEN CAMERA OVERLAY (SWITCH CAMERA BUTTON ADDED) 📸 */}
                     {isCamOpen && (
                         <div className="fixed inset-0 z-[99999] bg-black flex flex-col justify-center items-center">
                             <video id="fullScreenVideo" autoPlay playsInline className="absolute inset-0 w-full h-full object-cover bg-black"></video>
                             <div className="absolute top-0 w-full p-4 flex justify-between z-10 bg-gradient-to-b from-black/80 to-transparent">
                                 <button type="button" onClick={closeFullScreenCamera} className="bg-red-600 text-white px-5 py-2 rounded-xl font-black btn-press shadow-lg border-2 border-white/20"><i className="fa-solid fa-arrow-left"></i> BACK</button>
+                                <button type="button" onClick={toggleCamera} className="bg-blue-600 text-white px-5 py-2 rounded-xl font-black btn-press shadow-lg border-2 border-white/20"><i className="fa-solid fa-camera-rotate"></i> FLIP</button>
                             </div>
                             <div className="absolute bottom-0 w-full p-8 flex justify-center z-10 bg-gradient-to-t from-black/80 to-transparent pb-16">
                                 <button type="button" onClick={captureFullScreenPhoto} className="bg-green-500 text-black px-10 py-5 rounded-full text-2xl font-black shadow-[0_0_30px_rgba(0,255,0,0.6)] btn-press border-4 border-white"><i className="fa-solid fa-camera"></i> CAPTURE DP</button>
