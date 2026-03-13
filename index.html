@@ -42,7 +42,29 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
         
-        // 🚨 हुकुम की एकदम नई लिंक 🚨
+        // 🚨 3. ब्रह्मास्त्र ढाल (Error Boundary) - जो साइट को कभी ब्लैक नहीं होने देगी 🚨
+        class ErrorBoundary extends React.Component {
+            constructor(props) { super(props); this.state = { hasError: false }; }
+            static getDerivedStateFromError(error) { return { hasError: true }; }
+            componentDidCatch(error, errorInfo) { console.error("DPSG Crash Prevented!", error); }
+            render() {
+                if (this.state.hasError) {
+                    return (
+                        <div className="flex flex-col items-center justify-center h-screen bg-[#050505] text-amber-500 p-6 text-center">
+                            <i className="fa-solid fa-triangle-exclamation text-7xl mb-4 animate-bounce"></i>
+                            <h2 className="text-2xl font-black mb-2">सिस्टम सुरक्षित है!</h2>
+                            <p className="text-slate-400 font-bold mb-6">नेटवर्क या डेटा की वजह से एक छोटा सा झटका लगा था। आपकी स्क्रीन को ब्लैक होने से बचा लिया गया है।</p>
+                            <button onClick={() => window.location.reload()} className="bg-amber-500 text-black px-6 py-3 rounded-xl font-black text-lg btn-press shadow-[0_0_20px_rgba(251,191,36,0.5)]">
+                                <i className="fa-solid fa-rotate-right"></i> DPSG फिर से चालू करें
+                            </button>
+                        </div>
+                    );
+                }
+                return this.props.children; 
+            }
+        }
+
+        // 🚨 हुकुम की एकदम नई लिंक (1000% वही लिंक) 🚨
         const APP_URL = "https://script.google.com/macros/s/AKfycbwzvEMIWpfJfvpTaaOpZVRhZetZH61EmBgB0L3TCPkkK2BUH3JVWCVZPdpNKM-4SR__EA/exec";
         
         const COMPANY = "Digital Problem Solution Group";
@@ -125,12 +147,11 @@
             });
         };
 
-        const App = () => {
+        const MainApp = () => {
             const [cards, setCards] = useState([]);
             const [activeTab, setActiveTab] = useState('ALL'); 
             const [selected, setSelected] = useState(null);
             
-            // 🔍 Search Box State 🔍
             const [searchQuery, setSearchQuery] = useState("");
 
             const [staff, setStaff] = useState(() => {
@@ -304,11 +325,22 @@
                 }
             };
 
-            // 🚨 30-SECOND AUTO REFRESH 🚨
+            // 🚨 2. व्हाट्सएप 'स्लीप' सेंसर (Visibility API) - यह साइट को क्रैश होने से बचाएगा 🚨
             useEffect(() => { 
+                let itvl;
+                const startTimer = () => { itvl = setInterval(loadData, 30000); };
+                const stopTimer = () => { clearInterval(itvl); };
+                
                 loadData(); 
-                const itvl = setInterval(loadData, 30000); 
-                return () => clearInterval(itvl); 
+                startTimer();
+
+                const handleVisibilityChange = () => {
+                    if (document.hidden) { stopTimer(); } // व्हाट्सएप पर जाते ही रिफ्रेश बंद 
+                    else { loadData(); startTimer(); }    // वापस आते ही शांति से रिफ्रेश चालू
+                };
+                document.addEventListener("visibilitychange", handleVisibilityChange);
+                
+                return () => { stopTimer(); document.removeEventListener("visibilitychange", handleVisibilityChange); }; 
             }, []);
 
             const fetchSoldList = async () => {
@@ -453,7 +485,6 @@
                 } catch(error) { alert("Update Failed"); setProcessingId(null); }
             };
 
-            // ⚠️ NEW REJECT HANDLER (POPUP WARNING) ⚠️
             const handleRejectClick = (c, isInsideForm = false) => {
                 if (window.confirm("हुकुम, क्या आप वाकई इस कार्ड को रिजेक्ट करना चाहते हैं?")) {
                     masterUpdate(c, 'Rejected', isInsideForm);
@@ -492,8 +523,8 @@
                 const availableCards = cards.filter(c => c.status === 'Available' && !localLocks.has(c.n) && c.status !== 'Processing_Hide' && c.status !== 'Rejected');
                 let totalRev = 0, upiC = 0, cashC = 0, airtelC = 0, totalDisc = 0;
                 soldCards.forEach(c => {
-                    let d = parseInt(c.d.discount || 0); totalRev += (c.price - d); totalDisc += d;
-                    if(c.d.pay === "PhonePe/GPay") upiC++; else if(c.d.pay === "Airtel Payment Bank") airtelC++; else cashC++;
+                    let d = parseInt(c?.d?.discount || 0); totalRev += (c.price - d); totalDisc += d;
+                    if(c?.d?.pay === "PhonePe/GPay") upiC++; else if(c?.d?.pay === "Airtel Payment Bank") airtelC++; else cashC++;
                 });
                 let vipA = availableCards.filter(c=>c.cat==="VIP Card").length;
                 let goldA = availableCards.filter(c=>c.cat==="Gold Card").length;
@@ -523,7 +554,6 @@
                 </div>
             );
 
-            // 📸 STAFF DOC BOX (MADE BIGGER - AADHAAR SIZE) 📸
             const renderStaffDocBox = (label, newImgData, dbImgUrl, targetKey) => {
                 const displayImg = newImgData || (dbImgUrl && dbImgUrl.startsWith('http') ? dbImgUrl : null);
                 return (
@@ -548,19 +578,21 @@
                 const stats = getFinanceStats();
                 const reportText = `🔱 *DPSG DAILY FINANCE REPORT* 🔱\n_"समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा"_\n━━━━━━━━━━━━━━━━━━━━━━\n📊 *TODAY'S STOCK*\n• *कुल कार्ड:* 1000\n• *बिक चुके:* ${stats.soldCards.length}\n• *पेंडिंग:* ${stats.pendingCards.length}\n• *बचे हुए:* ${stats.availableCards.length}\n\n💰 *FINANCE & SALES*\n• *कुल सेल:* ₹${stats.totalRev}\n• *कुल डिस्काउंट:* ₹${stats.totalDisc}\n\n💳 *PAYMENT MODE:*\n• *UPI / App:* ${stats.upiC}\n• *Cash:* ${stats.cashC}\n• *Airtel:* ${stats.airtelC}\n━━━━━━━━━━━━━━━━━━━━━━\n🙏 जय माता दी! 🚩`;
 
-                // 🛡️ STRICT PENDING FILTER FOR DASHBOARD (No Sold or Rejected will show here)
+                // 🚨 1. सर्च बॉक्स का शॉक-एब्जॉर्बर (अब क्रैश नहीं होगा) 🚨
                 let dashboardPendingList = cards.filter(c => {
                     if (c.status === 'Sold' || c.status === 'Rejected') return false;
                     if (c.status === 'Pending' || localLocks.has(c.n)) return true;
                     return false;
                 });
 
-                if (searchQuery.trim() !== "") {
-                    dashboardPendingList = dashboardPendingList.filter(c => 
-                        c.n.toString().includes(searchQuery.trim()) || 
-                        (c.d.name && c.d.name.toLowerCase().includes(searchQuery.trim().toLowerCase())) ||
-                        (c.d.mob && c.d.mob.includes(searchQuery.trim()))
-                    );
+                if (searchQuery && searchQuery.trim() !== "") {
+                    const query = searchQuery.trim().toLowerCase();
+                    dashboardPendingList = dashboardPendingList.filter(c => {
+                        const nStr = (c.n || "").toString().toLowerCase();
+                        const nameStr = (c?.d?.name || "").toString().toLowerCase();
+                        const mobStr = (c?.d?.mob || "").toString().toLowerCase();
+                        return nStr.includes(query) || nameStr.includes(query) || mobStr.includes(query);
+                    });
                 }
 
                 return (
@@ -578,7 +610,6 @@
                                         <input type="text" placeholder="Your UPI ID for QR (e.g. name@paytm)" value={staffUpi} onChange={(e)=>{setStaffUpi(e.target.value); localStorage.setItem('dps_staff_upi', e.target.value);}} className="bg-black border border-slate-600 text-white p-2 rounded-lg w-full font-bold text-sm outline-none focus:border-amber-500" />
                                     </div>
                                     
-                                    {/* 🔍 SEARCH BOX (NEW) */}
                                     <div className="bg-black p-3 rounded-xl border-2 border-amber-500 flex items-center gap-3 shadow-[0_0_15px_rgba(251,191,36,0.2)] mt-4">
                                         <i className="fa-solid fa-magnifying-glass text-amber-500 text-xl pl-2"></i>
                                         <input type="text" placeholder="सर्च करें: कार्ड नंबर, नाम या मोबाइल..." value={searchQuery} onChange={(e)=>setSearchQuery(e.target.value)} className="bg-transparent border-none text-white p-2 w-full font-bold text-sm outline-none" />
@@ -590,20 +621,20 @@
                                     dashboardPendingList.map(c => (
                                         <div key={c.n} className="bg-slate-900/90 p-4 rounded-2xl border-l-[6px] border-amber-500 shadow-lg flex flex-col gap-4">
                                             <div className="flex items-center gap-4">
-                                                {c.d.dp && c.d.dp.startsWith('http') ? <img src={c.d.dp} onClick={() => setEnlargedImg(c.d.dp)} className="w-16 h-16 rounded-full border-2 border-amber-500 object-cover cursor-pointer" alt="DP" /> : 
-                                                 c.d.dp === "OLD_GARBAGE_REMOVED" ? <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black border border-dashed border-red-500 text-red-500 text-center leading-tight p-1">Old<br/>Error</div> :
+                                                {c?.d?.dp && c.d.dp.startsWith('http') ? <img src={c.d.dp} onClick={() => setEnlargedImg(c.d.dp)} className="w-16 h-16 rounded-full border-2 border-amber-500 object-cover cursor-pointer" alt="DP" /> : 
+                                                 c?.d?.dp === "OLD_GARBAGE_REMOVED" ? <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black border border-dashed border-red-500 text-red-500 text-center leading-tight p-1">Old<br/>Error</div> :
                                                  <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black border border-dashed border-slate-600 text-slate-500">NO DP</div>}
                                                 <div className="flex-1">
-                                                    <p className="text-xl font-black text-white leading-none mb-1">#{c.n} <span className="text-amber-400 text-lg">- {c.d.name || "N/A"}</span></p>
-                                                    <p className="text-xs text-slate-400 font-bold"><i className="fa-solid fa-phone"></i> {c.d.mob || "N/A"}</p>
-                                                    <p className="text-[10px] text-green-400 font-bold mt-1">Aadhaar: {c.d.adhar} | PAN: {c.d.pan || "N/A"}</p>
+                                                    <p className="text-xl font-black text-white leading-none mb-1">#{c.n} <span className="text-amber-400 text-lg">- {c?.d?.name || "N/A"}</span></p>
+                                                    <p className="text-xs text-slate-400 font-bold"><i className="fa-solid fa-phone"></i> {c?.d?.mob || "N/A"}</p>
+                                                    <p className="text-[10px] text-green-400 font-bold mt-1">Aadhaar: {c?.d?.adhar || "N/A"} | PAN: {c?.d?.pan || "N/A"}</p>
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
                                                 <button onClick={() => handleOutsideVerify(c)} disabled={processingId === c.n} className="bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">{processingId === c.n ? "Wait..." : "Verify"}</button>
                                                 <button onClick={() => handleRejectClick(c, false)} disabled={processingId === c.n} className="bg-red-700 hover:bg-red-600 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1">{processingId === c.n ? "Wait..." : "Reject"}</button>
                                                 <button onClick={() => {if(!staffUpi){alert("Please add UPI ID first!");return;} setQuickQrCard(c);}} disabled={processingId === c.n} className="bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1"><i className="fa-solid fa-qrcode"></i> Pay QR</button>
-                                                <button onClick={() => { setSelected(c); setPayVerified(false); setDiscount(parseInt(c.d.discount || 0)); setCapturedImg(null); setPanImg(null); setAFrontImg(null); setABackImg(null); }} disabled={processingId === c.n} className="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1"><i className="fa-solid fa-pen"></i> Edit Details</button>
+                                                <button onClick={() => { setSelected(c); setPayVerified(false); setDiscount(parseInt(c?.d?.discount || 0)); setCapturedImg(null); setPanImg(null); setAFrontImg(null); setABackImg(null); }} disabled={processingId === c.n} className="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg font-black text-xs shadow-md btn-press flex items-center justify-center gap-1"><i className="fa-solid fa-pen"></i> Edit Details</button>
                                             </div>
                                         </div>
                                     ))}
@@ -659,9 +690,9 @@
                             <div className="fixed inset-0 z-[150] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm">
                                 <div className="bg-white p-8 rounded-3xl text-center max-w-sm w-full shadow-[0_0_50px_rgba(251,191,36,0.3)] relative">
                                     <button onClick={() => setQuickQrCard(null)} className="absolute top-3 right-5 text-3xl text-slate-400 hover:text-red-500 btn-press">&times;</button>
-                                    <h3 className="text-xl font-black text-black mb-1">Pay ₹{quickQrCard.price - (quickQrCard.d.discount || 0)}</h3>
+                                    <h3 className="text-xl font-black text-black mb-1">Pay ₹{quickQrCard.price - (quickQrCard?.d?.discount || 0)}</h3>
                                     <p className="text-[10px] font-bold text-slate-500 mb-4">{COMPANY}</p>
-                                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${staffUpi}%26pn=Digital%20Problem%20Solution%20Group%26am=${quickQrCard.price - (quickQrCard.d.discount || 0)}%26tr=${quickQrCard.mid}%26tn=Membership_${quickQrCard.mid}`} alt="Live QR" className="mx-auto border-4 border-slate-100 rounded-xl" />
+                                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${staffUpi}%26pn=Digital%20Problem%20Solution%20Group%26am=${quickQrCard.price - (quickQrCard?.d?.discount || 0)}%26tr=${quickQrCard.mid}%26tn=Membership_${quickQrCard.mid}`} alt="Live QR" className="mx-auto border-4 border-slate-100 rounded-xl" />
                                 </div>
                             </div>
                         )}
@@ -679,36 +710,34 @@
                             </div>
                         )}
 
-                        {/* 📍 STAFF EDIT MODAL (QR MOVED DOWN & GAP FIXED) 📍 */}
                         {selected && staff && (
                             <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto pb-24">
                                 <div className="glass p-5 md:p-8 w-full max-w-5xl border border-amber-500 rounded-3xl bg-[#0a0a0a] shadow-2xl relative my-auto mt-20 md:mt-auto">
                                     <button onClick={closeModalAndReset} className="absolute top-4 right-6 text-4xl text-slate-400 hover:text-white btn-press">&times;</button>
                                     <div className="text-center mb-6"><h3 className="text-4xl font-black text-amber-500 italic mb-1">#{selected.n}</h3><span className="bg-amber-500 text-black px-4 py-1 rounded-full text-sm font-black">{selected.cat}</span></div>
                                     
-                                    <div className="grid md:grid-cols-2 gap-4"> {/* GAP REDUCED TO REMOVE EMPTY SPACE */}
+                                    <div className="grid md:grid-cols-2 gap-4"> 
                                         
-                                        {/* 📸 4 Photos Display for Staff 📸 */}
                                         <div className="bg-black/40 p-4 rounded-2xl border border-slate-800 shadow-inner h-fit">
                                             <h4 className="text-amber-500 font-bold mb-3 text-center border-b border-slate-700 pb-2"><i className="fa-solid fa-folder-open"></i> Customer Documents</h4>
                                             <div className="grid grid-cols-2 gap-3">
-                                                {renderStaffDocBox("Live Selfie (DP)", capturedImg, selected.d.dp, 'DP')}
-                                                {renderStaffDocBox("PAN Card", panImg, selected.d.panPic, 'PAN')}
-                                                {renderStaffDocBox("Aadhaar (Front)", aFrontImg, selected.d.aFrontPic, 'AF')}
-                                                {renderStaffDocBox("Aadhaar (Back)", aBackImg, selected.d.aBackPic, 'AB')}
+                                                {renderStaffDocBox("Live Selfie (DP)", capturedImg, selected?.d?.dp, 'DP')}
+                                                {renderStaffDocBox("PAN Card", panImg, selected?.d?.panPic, 'PAN')}
+                                                {renderStaffDocBox("Aadhaar (Front)", aFrontImg, selected?.d?.aFrontPic, 'AF')}
+                                                {renderStaffDocBox("Aadhaar (Back)", aBackImg, selected?.d?.aBackPic, 'AB')}
                                             </div>
                                         </div>
 
                                         <div className="space-y-3">
                                             <div className="grid grid-cols-2 gap-3">
-                                                <div><label className="text-[10px] text-slate-400 font-bold">Name</label><input id="s_name" defaultValue={selected.d.name} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
-                                                <div><label className="text-[10px] text-slate-400 font-bold">Mobile</label><input id="s_mob" defaultValue={selected.d.mob} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
-                                                <div><label className="text-[10px] text-slate-400 font-bold">DOB</label><input id="s_dob" defaultValue={selected.d.dob} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
-                                                <div><label className="text-[10px] text-slate-400 font-bold">Village</label><input id="s_vill" defaultValue={selected.d.vill} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
-                                                <div><label className="text-[10px] text-slate-400 font-bold">Aadhaar No</label><input id="s_adhar" defaultValue={selected.d.adhar} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
-                                                <div><label className="text-[10px] text-slate-400 font-bold">PAN No</label><input id="s_pan" defaultValue={selected.d.pan} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white uppercase font-bold text-sm" /></div>
-                                                <div><label className="text-[10px] text-slate-400 font-bold">Pay Mode</label><select id="s_pay" defaultValue={selected.d.pay} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm"><option value="Cash">Cash</option><option value="PhonePe/GPay">UPI / App</option><option value="Airtel Payment Bank">Airtel Bank</option></select></div>
-                                                <div><label className="text-[10px] text-green-400 font-bold">Txn ID/Ref</label><input id="s_ref" defaultValue={selected.d.ref} className="w-full bg-black p-2 rounded-lg border border-green-800 text-green-400 font-bold text-sm" /></div>
+                                                <div><label className="text-[10px] text-slate-400 font-bold">Name</label><input id="s_name" defaultValue={selected?.d?.name} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
+                                                <div><label className="text-[10px] text-slate-400 font-bold">Mobile</label><input id="s_mob" defaultValue={selected?.d?.mob} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
+                                                <div><label className="text-[10px] text-slate-400 font-bold">DOB</label><input id="s_dob" defaultValue={selected?.d?.dob} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
+                                                <div><label className="text-[10px] text-slate-400 font-bold">Village</label><input id="s_vill" defaultValue={selected?.d?.vill} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
+                                                <div><label className="text-[10px] text-slate-400 font-bold">Aadhaar No</label><input id="s_adhar" defaultValue={selected?.d?.adhar} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm" /></div>
+                                                <div><label className="text-[10px] text-slate-400 font-bold">PAN No</label><input id="s_pan" defaultValue={selected?.d?.pan} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white uppercase font-bold text-sm" /></div>
+                                                <div><label className="text-[10px] text-slate-400 font-bold">Pay Mode</label><select id="s_pay" defaultValue={selected?.d?.pay} className="w-full bg-slate-900 p-2 rounded-lg border border-slate-700 text-white font-bold text-sm"><option value="Cash">Cash</option><option value="PhonePe/GPay">UPI / App</option><option value="Airtel Payment Bank">Airtel Bank</option></select></div>
+                                                <div><label className="text-[10px] text-green-400 font-bold">Txn ID/Ref</label><input id="s_ref" defaultValue={selected?.d?.ref} className="w-full bg-black p-2 rounded-lg border border-green-800 text-green-400 font-bold text-sm" /></div>
                                             </div>
                                             
                                             <div className="grid grid-cols-2 gap-3 mt-1">
@@ -716,7 +745,6 @@
                                                 <div><label className="text-[10px] text-green-400 font-bold">Final Paid (₹)</label><input id="s_paid" type="number" value={selected.price - discount} readOnly className="w-full bg-green-900/30 p-2 rounded-lg border border-green-700 text-green-400 font-black text-sm outline-none" /></div>
                                             </div>
                                             
-                                            {/* 📱 QR CODE MOVED TO BOTTOM 📱 */}
                                             <div className="bg-white p-3 rounded-xl border-4 border-amber-500 shadow-[0_0_20px_rgba(251,191,36,0.2)] flex items-center justify-between mt-3">
                                                 <div className="text-left">
                                                     <h4 className="text-black font-black text-sm mb-1"><i className="fa-solid fa-qrcode text-amber-500"></i> Payment QR</h4>
@@ -977,7 +1005,13 @@
                 </div>
             );
         };
-        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+        // 🚨 4. पूरी वेबसाइट को ब्रह्मास्त्र ढाल (Error Boundary) के अंदर पैक करना 🚨
+        ReactDOM.createRoot(document.getElementById('root')).render(
+            <ErrorBoundary>
+                <MainApp />
+            </ErrorBoundary>
+        );
     </script>
 </body>
 </html>
