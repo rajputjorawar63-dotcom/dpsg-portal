@@ -1,1 +1,359 @@
-hi
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPSG E-Mitra Mall</title>
+    <style>
+        :root {
+            --primary-color: #0d47a1;
+            --secondary-color: #ff9800;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            color: var(--text-color);
+        }
+        /* Header & Branding */
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 20px 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 26px;
+            letter-spacing: 1px;
+        }
+        .header p {
+            margin: 5px 0 0 0;
+            font-size: 16px;
+            color: var(--secondary-color);
+            font-weight: bold;
+            font-style: italic;
+        }
+        /* Main Container */
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        /* Tabs */
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #666;
+            transition: 0.3s;
+        }
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+        }
+        /* Form Elements */
+        .form-section { display: none; }
+        .form-section.active { display: block; }
+        
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #444;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 15px;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 5px rgba(13, 71, 161, 0.3);
+        }
+        /* Custom File Upload */
+        .file-upload-box {
+            border: 2px dashed #0d47a1;
+            padding: 20px;
+            text-align: center;
+            margin-top: 10px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+        .file-upload-box:hover { background-color: #e3f2fd; }
+        .file-upload-box input[type="file"] { display: none; }
+        .file-list { margin-top: 10px; font-size: 14px; color: green; font-weight: bold; }
+        
+        /* Buttons */
+        button {
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: 0.3s;
+        }
+        button:hover { background-color: #08306b; }
+        
+        /* Loading Overlay */
+        #loader {
+            display: none;
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+        /* Result Box */
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            text-align: center;
+            font-weight: bold;
+        }
+        .success { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .error { background-color: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🔱 Digital Problem Solution Group (DPSG) 🔱</h1>
+        <p>"आपकी समस्या, समाधान हमारा"</p>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('bookingTab')">📝 नई सर्विस बुक करें</div>
+            <div class="tab" onclick="switchTab('trackTab')">🔍 अपना काम ट्रैक करें</div>
+        </div>
+
+        <div id="bookingTab" class="form-section active">
+            <form id="bookingForm">
+                <label>📋 सेवा का विभाग चुनें (Category):</label>
+                <select id="category" required onchange="updateServices()">
+                    <option value="">-- विभाग चुनें --</option>
+                    <option value="Airtel">🏦 एयरटेल पेमेंट बैंक (Airtel Bank)</option>
+                    <option value="ID_Cards">🪪 पहचान पत्र (PAN, Voter, Aadhaar)</option>
+                    <option value="Pension">👴 पेंशन सेवाएँ (Pension Services)</option>
+                    <option value="PF">💼 पी.एफ. सेवाएँ (PF Withdrawal/UAN)</option>
+                    <option value="Tech">💻 तकनीकी सेवाएँ (Website, Software)</option>
+                    <option value="Samasya">🆘 अन्य समस्या / हेल्पडेस्क</option>
+                </select>
+
+                <label>🔖 कौन सा काम करवाना है?:</label>
+                <select id="serviceName" required>
+                    <option value="">-- पहले विभाग चुनें --</option>
+                </select>
+
+                <label>👤 आपका पूरा नाम (अनिवार्य):</label>
+                <input type="text" id="custName" placeholder="अपना नाम लिखें" required>
+
+                <label>📞 आपका मोबाइल नंबर (अनिवार्य):</label>
+                <input type="number" id="custMobile" placeholder="10 अंकों का नंबर" required>
+
+                <label>💬 अपना संदेश या समस्या यहाँ लिखें (Optional):</label>
+                <textarea id="custMessage" rows="3" placeholder="अगर आपके पास कोई डॉक्यूमेंट नहीं है, तो यहाँ लिख दें..."></textarea>
+
+                <label>📂 डॉक्यूमेंट / फोटो / वीडियो अपलोड करें (Optional):</label>
+                <p style="font-size:12px; color:#666; margin-top:0;">आप एक साथ कई फोटो, PDF या वीडियो सेलेक्ट कर सकते हैं।</p>
+                <div class="file-upload-box" onclick="document.getElementById('fileInput').click()">
+                    📸 <b>यहाँ क्लिक करके फाइलें चुनें</b>
+                    <input type="file" id="fileInput" multiple accept="image/*,application/pdf,video/*" onchange="showFiles()">
+                </div>
+                <div id="fileList" class="file-list"></div>
+
+                <button type="button" id="submitBtn" onclick="submitBooking()">✅ सुरक्षित जमा करें</button>
+                <div id="bookingLoader" id="loader">⏳ कृपया प्रतीक्षा करें, आपका डेटा सुरक्षित भेजा जा रहा है...</div>
+                <div id="bookingResult" class="result-box"></div>
+            </form>
+        </div>
+
+        <div id="trackTab" class="form-section">
+            <label>📞 अपना रजिस्टर मोबाइल नंबर डालें:</label>
+            <input type="number" id="trackMobile" placeholder="10 अंकों का नंबर दर्ज करें" required>
+            
+            <button type="button" onclick="trackStatus()">🔍 स्थिति (Status) चेक करें</button>
+            <div id="trackLoader" id="loader">⏳ खंगाल रहे हैं...</div>
+            <div id="trackResult" class="result-box"></div>
+        </div>
+    </div>
+
+    <script>
+        // 🛑 मालिक, यहाँ आपकी मास्टर लिंक डली हुई है 🛑
+        const SCRIPT_URL = "Https://script.google.com/macros/s/AKfycbxXyV0oYan5PWI8Y3cv9ByKfYxg5R8jrf5jQIta-PVWBLASMtVydJ6sImkQvxndZONg/exec";
+
+        // सेवाओं की लिस्ट (Sub-categories)
+        const services = {
+            "Airtel": ["नया बैंक खाता खोलना", "खाते की KYC करना", "पैसे निकालना/जमा करना", "अन्य एयरटेल सर्विस"],
+            "ID_Cards": ["नया पैन कार्ड", "पैन कार्ड सुधार", "वोटर आईडी कार्ड", "आधार कार्ड सुधार", "मूल निवास / जाति प्रमाण पत्र"],
+            "Pension": ["पेंशन का वार्षिक सत्यापन (दिसंबर)", "नई पेंशन का फॉर्म", "पेंशन PPO नंबर निकालना", "अन्य पेंशन समस्या"],
+            "PF": ["PF का पैसा निकालना (Advance/Full)", "UAN एक्टिवेट करना", "KYC अपडेट करना", "पासबुक चेक करना"],
+            "Tech": ["नई वेबसाइट बनवाना", "डोमेन / होस्टिंग रिन्यूअल", "सॉफ्टवेयर इंस्टॉलेशन", "मोबाइल अनलॉकिंग / एप्पल आईडी"],
+            "Samasya": ["सरकारी योजना का फॉर्म", "पुलिस वेरिफिकेशन", "बीमा (Insurance)", "कोई अन्य कस्टम कार्य"]
+        };
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function updateServices() {
+            const cat = document.getElementById("category").value;
+            const servDropdown = document.getElementById("serviceName");
+            servDropdown.innerHTML = '<option value="">-- कार्य चुनें --</option>';
+            if(cat && services[cat]) {
+                services[cat].forEach(s => {
+                    let opt = document.createElement('option');
+                    opt.value = s; opt.innerText = s;
+                    servDropdown.appendChild(opt);
+                });
+            }
+        }
+
+        function showFiles() {
+            const files = document.getElementById('fileInput').files;
+            const fileList = document.getElementById('fileList');
+            if (files.length > 0) {
+                fileList.innerHTML = "✅ " + files.length + " फाइलें चुन ली गई हैं।";
+            } else {
+                fileList.innerHTML = "";
+            }
+        }
+
+        // फाइल को Base64 (मशीनी भाषा) में बदलने का जादुई कोड
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve({ name: file.name, mimeType: file.type, base64: reader.result });
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        async function submitBooking() {
+            const cat = document.getElementById("category").value;
+            const sName = document.getElementById("serviceName").value;
+            const name = document.getElementById("custName").value;
+            const mobile = document.getElementById("custMobile").value;
+            const msg = document.getElementById("custMessage").value;
+            const fileInput = document.getElementById("fileInput");
+
+            if(!cat || !sName || !name || !mobile) {
+                alert("कृपया अपना नाम, नंबर और सेवा का चुनाव ज़रूर करें!");
+                return;
+            }
+
+            document.getElementById("submitBtn").style.display = "none";
+            document.getElementById("bookingLoader").style.display = "block";
+            const resBox = document.getElementById("bookingResult");
+            resBox.style.display = "none";
+
+            try {
+                // सारी फाइलों को प्रोसेस करना
+                let fileArray = [];
+                if (fileInput.files.length > 0) {
+                    for (let i = 0; i < fileInput.files.length; i++) {
+                        let fData = await getBase64(fileInput.files[i]);
+                        fileArray.push(fData);
+                    }
+                }
+
+                const payload = {
+                    action: "BOOK_SERVICE",
+                    categoryType: cat,
+                    serviceName: sName,
+                    name: name,
+                    mobile: mobile,
+                    customerMessage: msg,
+                    files: fileArray
+                };
+
+                const response = await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if(result.status === "SUCCESS") {
+                    resBox.className = "result-box success";
+                    resBox.innerHTML = `🎉 आपका काम सफलतापूर्वक DPSG को भेज दिया गया है!<br>आपका ट्रैकिंग नंबर है: <b>${result.token}</b><br>हमारा स्टाफ जल्द ही आपसे संपर्क करेगा।`;
+                    document.getElementById("bookingForm").reset();
+                    document.getElementById('fileList').innerHTML = "";
+                } else {
+                    resBox.className = "result-box error";
+                    resBox.innerHTML = "❌ कुछ तकनीकी समस्या आ गई: " + result.message;
+                }
+            } catch (err) {
+                resBox.className = "result-box error";
+                resBox.innerHTML = "❌ इंटरनेट या सर्वर की समस्या। कृपया दोबारा प्रयास करें।";
+            }
+
+            document.getElementById("submitBtn").style.display = "block";
+            document.getElementById("bookingLoader").style.display = "none";
+            resBox.style.display = "block";
+        }
+
+        async function trackStatus() {
+            const mobile = document.getElementById("trackMobile").value;
+            if(!mobile) { alert("कृपया मोबाइल नंबर डालें!"); return; }
+
+            document.getElementById("trackLoader").style.display = "block";
+            const resBox = document.getElementById("trackResult");
+            resBox.style.display = "none";
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "TRACK_STATUS", mobile: mobile })
+                });
+                const result = await response.json();
+
+                if(result.status === "SUCCESS") {
+                    let stColor = result.currentStatus === "Done" ? "green" : "red";
+                    resBox.className = "result-box success";
+                    resBox.innerHTML = `🔖 <b>सेवा:</b> ${result.service}<br>
+                                        📊 <b>वर्तमान स्थिति:</b> <span style="color:${stColor}; font-weight:bold;">${result.currentStatus}</span><br>
+                                        📝 <b>स्टाफ का संदेश:</b> ${result.staffNote}`;
+                } else {
+                    resBox.className = "result-box error";
+                    resBox.innerHTML = "❌ " + result.message;
+                }
+            } catch(e) {
+                resBox.className = "result-box error";
+                resBox.innerHTML = "❌ सर्वर से संपर्क नहीं हो पाया।";
+            }
+            document.getElementById("trackLoader").style.display = "none";
+            resBox.style.display = "block";
+        }
+    </script>
+</body>
+</html>
