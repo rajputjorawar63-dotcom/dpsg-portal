@@ -53,7 +53,7 @@
                         <div className="flex flex-col items-center justify-center h-screen bg-[#050505] text-amber-500 p-6 text-center">
                             <i className="fa-solid fa-triangle-exclamation text-7xl mb-4 animate-bounce"></i>
                             <h2 className="text-2xl font-black mb-2">सिस्टम सुरक्षित है!</h2>
-                            <p className="text-slate-400 font-bold mb-6">नेटवर्क या डेटा की वजह से एक छोटा सा झटका लगा था। आपकी स्क्रीन को ब्लैक होने से बचा लिया गया है।</p>
+                            <p className="text-slate-400 font-bold mb-6">नेटवर्क या डेटा की वजह से एक छोटा सा झटका लगा था। आपकी स्क्रीन को ब्लैक होने से बचा लिया गया গোলা गया है।</p>
                             <button onClick={() => window.location.reload()} className="bg-amber-500 text-black px-6 py-3 rounded-xl font-black text-lg btn-press shadow-[0_0_20px_rgba(251,191,36,0.5)]">
                                 <i className="fa-solid fa-rotate-right"></i> DPSG फिर से चालू करें
                             </button>
@@ -97,7 +97,7 @@
             {r:23, n:"₹101 Cash", d:"बचत कार्ड के साथ जीतें ₹101 नकद।"},
             {r:24, n:"Photo Frame", d:"राधा कृष्ण की कृपा का सुंदर फ्रेम।"},
             {r:25, n:"Wall Clock", d:"समय की कीमत समझें और जीतें घड़ी।"},
-            {r:26, n:"Tea Cup Set", d:"सुंदर टी cup सेट के साथ स्वागत करें।"},
+            {r:26, n:"Tea Cup Set", d:"सुंदर टी कप सेट के साथ स्वागत करें।"},
             {r:27, n:"Movie Ticket", d:"पसंदीदा फिल्म की टिकट।"},
             {r:28, n:"Umbrella", d:"यह रंगीन और मजबूत छाता रहेगा साथ।"},
             {r:29, n:"Sunglasses", d:"दिखें सबसे अलग और स्टाइलिश।"},
@@ -348,7 +348,7 @@
                     const res = await fetch(APP_URL + "?action=GET_SOLD_LIST&_cb=" + new Date().getTime());
                     const data = await res.json();
                     setSoldListData(data); setShowSalesBoard(true);
-                } catch(e) { alert("बिक्री बोर्ड लोड नहीं हो पाया!"); }
+                } catch(e) { alert("बिक्री बोर्ड लोड কমপক্ষে नहीं हो पाया!"); }
             };
 
             const handleLoginAttempt = async () => {
@@ -822,7 +822,7 @@
                         <p className="text-amber-500 text-xl md:text-2xl font-bold mt-4 italic">" {SLOGAN} "</p>
                         <div className="banner-row mt-10">
                             {[
-                                {t:'VIP', p:'500', c:'card-VIP', d:'पूरा परिवार मान्य | 6 महीने | 100% फ्री ई-मित्र सेवा'},
+                                {t:'VIP', p:'500', c:'card-VIP', d:'पूरा परिवार मान्य | 6 महीने | 100% ফ্রি ई-मित्र सेवा'},
                                 {t:'GOLD', p:'100', c:'card-Gold', d:'1 व्यक्ति | 3 महीने | 50% ई-मित्र छूट | गारंटीड उपहार'},
                                 {t:'SILVER', p:'50', c:'card-Silver', d:'1 व्यक्ति | 1 महीना | सीमित सेवा | लकी ड्रा मौका'}
                             ].map((b, i) => (
