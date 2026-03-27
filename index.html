@@ -53,7 +53,7 @@
                         <div className="flex flex-col items-center justify-center h-screen bg-[#050505] text-amber-500 p-6 text-center">
                             <i className="fa-solid fa-triangle-exclamation text-7xl mb-4 animate-bounce"></i>
                             <h2 className="text-2xl font-black mb-2">सिस्टम सुरक्षित है!</h2>
-                            <p className="text-slate-400 font-bold mb-6">नेटवर्क या डेटा की वजह से एक छोटा सा झटका लगा था। आपकी स्क्रीन को ब्लैक होने से बचा लिया गया গোলা गया है।</p>
+                            <p className="text-slate-400 font-bold mb-6">नेटवर्क या डेटा की वजह से एक छोटा सा झटका लगा था। आपकी स्क्रीन को ब्लैक होने से बचा लिया गया है।</p>
                             <button onClick={() => window.location.reload()} className="bg-amber-500 text-black px-6 py-3 rounded-xl font-black text-lg btn-press shadow-[0_0_20px_rgba(251,191,36,0.5)]">
                                 <i className="fa-solid fa-rotate-right"></i> DPSG फिर से चालू करें
                             </button>
@@ -64,12 +64,13 @@
             }
         }
 
-        // 🚨 हुकुम की एकदम नई लिंक (1000% वही लिंक) 🚨
-        const APP_URL = "https://script.google.com/macros/s/AKfycbwzvEMIWpfJfvpTaaOpZVRhZetZH61EmBgB0L3TCPkkK2BUH3JVWCVZPdpNKM-4SR__EA/exec";
+        // 🚨 हुकुम की एकदम नई लिंक (100% Secure) 🚨
+        const APP_URL = "https://script.google.com/macros/s/AKfycbzHfyhhYR_bAyUuwr_SPDsERNj_wzmXntThvC05KUG3i-LWPFyr2994TgQaxzrtRHu68Q/exec";
         
         const COMPANY = "Digital Problem Solution Group";
         const SLOGAN = "समस्या आपकी समाधान हमारा, उचित मूल्य बेहतरीन सेवा";
-        const ADMINS = { "Jorawar@DPS": "Jorawar@6020", "Parkash@DPS": "Parkash@6020", "Rajkumar@DPS": "Rajkumar@6020" };
+        
+        // 🚨 हैक-प्रूफ सुरक्षा: ADMINS के सारे पासवर्ड यहाँ से हमेशा के लिए हटा दिए गए हैं! 🚨
 
         const PRIZES = [
             {r:1, n:"₹5000 Cash", d:"किस्मत चमकेगी और जेब भरेगी सीधा ₹5000 कैश के साथ।"},
@@ -211,7 +212,6 @@
             const [otpStep, setOtpStep] = useState(false);
             const [otpValue, setOtpValue] = useState("");
             const [staffTempCreds, setStaffTempCreds] = useState(null);
-            const [expectedOtp, setExpectedOtp] = useState(null);
 
             const [isCamOpen, setIsCamOpen] = useState(false);
             const [camFacing, setCamFacing] = useState('user'); 
@@ -348,43 +348,62 @@
                     const res = await fetch(APP_URL + "?action=GET_SOLD_LIST&_cb=" + new Date().getTime());
                     const data = await res.json();
                     setSoldListData(data); setShowSalesBoard(true);
-                } catch(e) { alert("बिक्री बोर्ड लोड কমপক্ষে नहीं हो पाया!"); }
+                } catch(e) { alert("बिक्री बोर्ड लोड नहीं हो पाया!"); }
             };
 
+            // 🚨 नया 1000% सुरक्षित सर्वर-साइड लॉगिन 🚨
             const handleLoginAttempt = async () => {
                 let u = document.getElementById('l_id').value;
                 let p = document.getElementById('l_pass').value;
-                if(ADMINS[u] === p) {
-                    setProcessingId("OTP_SENDING");
-                    setStaffTempCreds({id: u, pass: p});
-                    try {
-                        const payload = { action: 'SEND_OTP', staffEmail: 'Chanchalbaisa722@gmail.com' };
-                        const res = await fetch(APP_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                            body: JSON.stringify(payload)
-                        });
-                        const data = await res.json();
-                        
-                        if(data.status === "SUCCESS") {
-                            setExpectedOtp(data.otp); 
-                            setOtpStep(true); 
-                            setProcessingId(null);
-                            alert("सुरक्षा अलर्ट: ओनर की ईमेल और टेलीग्राम पर OTP भेज दिया गया है।");
-                        } else { alert("OTP Error: " + data.message); setProcessingId(null); }
-                    } catch(e) { setProcessingId(null); alert("OTP भेजने में तकनीकी समस्या आई।"); }
-                } else { alert("Access Denied: Wrong ID or Password!"); }
+                if(!u || !p) { alert("कृपया स्टाफ ID और पासवर्ड दर्ज करें!"); return; }
+
+                setProcessingId("OTP_SENDING");
+                setStaffTempCreds({id: u}); 
+                try {
+                    const payload = { action: 'SEND_OTP', staffId: u, password: p };
+                    const res = await fetch(APP_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json();
+                    
+                    if(data.status === "SUCCESS") {
+                        setOtpStep(true); 
+                        setProcessingId(null);
+                        alert("सुरक्षा अलर्ट: ओनर की ईमेल और टेलीग्राम पर OTP भेज दिया गया है।");
+                    } else { 
+                        alert("❌ Error: " + (data.message || "Invalid Credentials")); 
+                        setProcessingId(null); 
+                    }
+                } catch(e) { setProcessingId(null); alert("सर्वर से संपर्क टूट गया है। तकनीकी समस्या।"); }
             };
 
-            const handleOtpVerify = () => {
-                if(otpValue === expectedOtp && expectedOtp !== null) {
-                    const expiryTime = new Date().getTime() + (12 * 60 * 60 * 1000); 
-                    const sess = { ...staffTempCreds, expiry: expiryTime };
-                    localStorage.setItem('dps_session', JSON.stringify(sess));
-                    setStaff(sess); setShowLogin(false); setOtpStep(false);
-                } else {
-                    alert("❌ गलत OTP! कृपया सही सुरक्षा कोड दर्ज करें।");
-                }
+            // 🚨 नया 1000% सुरक्षित सर्वर-साइड OTP चेकर 🚨
+            const handleOtpVerify = async () => {
+                if(!otpValue || otpValue.length < 6) { alert("कृपया 6 अंकों का OTP दर्ज करें!"); return; }
+                
+                setProcessingId("OTP_VERIFYING");
+                try {
+                    const payload = { action: 'VERIFY_OTP', staffId: staffTempCreds.id, otp: otpValue };
+                    const res = await fetch(APP_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json();
+
+                    if(data.status === "SUCCESS") {
+                        const expiryTime = new Date().getTime() + (12 * 60 * 60 * 1000); 
+                        const sess = { id: staffTempCreds.id, expiry: expiryTime };
+                        localStorage.setItem('dps_session', JSON.stringify(sess));
+                        setStaff(sess); setShowLogin(false); setOtpStep(false);
+                        setProcessingId(null);
+                    } else {
+                        alert("❌ " + (data.message || "गलत या एक्सपायर OTP!"));
+                        setProcessingId(null);
+                    }
+                } catch(e) { setProcessingId(null); alert("सर्वर से संपर्क टूट गया है।"); }
             };
 
             const bookCard = async (e) => {
@@ -822,7 +841,7 @@
                         <p className="text-amber-500 text-xl md:text-2xl font-bold mt-4 italic">" {SLOGAN} "</p>
                         <div className="banner-row mt-10">
                             {[
-                                {t:'VIP', p:'500', c:'card-VIP', d:'पूरा परिवार मान्य | 6 महीने | 100% ফ্রি ई-मित्र सेवा'},
+                                {t:'VIP', p:'500', c:'card-VIP', d:'पूरा परिवार मान्य | 6 महीने | 100% फ्री ई-मित्र सेवा'},
                                 {t:'GOLD', p:'100', c:'card-Gold', d:'1 व्यक्ति | 3 महीने | 50% ई-मित्र छूट | गारंटीड उपहार'},
                                 {t:'SILVER', p:'50', c:'card-Silver', d:'1 व्यक्ति | 1 महीना | सीमित सेवा | लकी ड्रा मौका'}
                             ].map((b, i) => (
@@ -976,8 +995,9 @@
                                         <>
                                             <p className="text-xs text-slate-400 mb-4 font-bold">ओनर की ईमेल और टेलीग्राम पर 6 अंकों का सुरक्षा कोड भेजा गया है।</p>
                                             <input value={otpValue} onChange={(e)=>setOtpValue(e.target.value)} placeholder="6 Digit OTP" maxLength="6" className="w-full bg-black p-4 rounded-xl border-2 border-green-500 mb-6 text-green-400 text-center font-black tracking-[0.5em] text-2xl outline-none" />
-                                            <button onClick={handleOtpVerify} className="w-full bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-xl btn-press text-lg shadow-lg">
-                                                <i className="fa-solid fa-check-double"></i> VERIFY OTP & ENTER
+                                            <button onClick={handleOtpVerify} disabled={processingId === "OTP_VERIFYING"} className="w-full bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-xl btn-press text-lg shadow-lg flex items-center justify-center gap-2">
+                                                {processingId === "OTP_VERIFYING" ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-check-double"></i>} 
+                                                {processingId === "OTP_VERIFYING" ? "VERIFYING..." : "VERIFY OTP & ENTER"}
                                             </button>
                                         </>
                                     )}
@@ -1006,7 +1026,6 @@
             );
         };
 
-        // 🚨 4. पूरी वेबसाइट को ब्रह्मास्त्र ढाल (Error Boundary) के अंदर पैक करना 🚨
         ReactDOM.createRoot(document.getElementById('root')).render(
             <ErrorBoundary>
                 <MainApp />
